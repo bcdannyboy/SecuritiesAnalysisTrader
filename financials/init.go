@@ -5,7 +5,7 @@ type FinancialsAPI struct {
 	APIKey string
 }
 
-func New(APIURL string, APIKey string) *FinancialsAPI {
+func New(APIKey string, APIURL string) *FinancialsAPI {
 	return &FinancialsAPI{
 		APIURL: APIURL,
 		APIKey: APIKey,

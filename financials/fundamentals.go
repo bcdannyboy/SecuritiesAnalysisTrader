@@ -22,14 +22,14 @@ func (FA *FinancialsAPI) BalanceSheet(Symbol string, Type string, DateFrom strin
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/balancesheet?KEY=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
+	URL := fmt.Sprintf("%s/balancesheets?api-key=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
 
 	PossibleTypes := []string{"year", "quarter", "ttm"}
 
 	if Type != "" && utils.StringSliceContains(PossibleTypes, Type) {
 		URL = fmt.Sprintf("%s&type=%s", URL, Type)
 	} else {
-		URL = fmt.Sprintf("%s&type=annual", URL)
+		URL = fmt.Sprintf("%s&type=year", URL)
 	}
 
 	if DateFrom != "" {
@@ -39,6 +39,8 @@ func (FA *FinancialsAPI) BalanceSheet(Symbol string, Type string, DateFrom strin
 	if DateTo != "" {
 		URL = fmt.Sprintf("%s&date_to=%s", URL, DateTo)
 	}
+
+	fmt.Println(URL)
 
 	StatusCode, ResponseObject, err := utils.SendHTTPGETRequest(URL, map[string]string{}, map[string]string{}, false)
 	if err != nil {
@@ -73,7 +75,7 @@ func (FA *FinancialsAPI) IncomeStatements(Symbol string, Type string, DateFrom s
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/incomestatements?KEY=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
+	URL := fmt.Sprintf("%s/incomestatements?api-key=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
 
 	PossibleTypes := []string{"year", "quarter", "ttm"}
 
@@ -124,7 +126,7 @@ func (FA *FinancialsAPI) CashFlows(Symbol string, Type string, DateFrom string, 
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/cashflows?KEY=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
+	URL := fmt.Sprintf("%s/cashflows?api-key=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
 
 	PossibleTypes := []string{"year", "quarter", "ttm"}
 
@@ -174,7 +176,7 @@ func (FA *FinancialsAPI) Dividends(Symbol string, Type string, DateTo string) (*
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/dividens?KEY=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
+	URL := fmt.Sprintf("%s/dividens?api-key=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
 
 	PossibleTypes := []string{"year", "quarter", "ttm"}
 
@@ -220,7 +222,7 @@ func (FA *FinancialsAPI) StockSplits(Symbol string, Type string, DateTo string) 
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/stocksplits?KEY=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
+	URL := fmt.Sprintf("%s/stocksplits?api-key=%s&ticker=%s", FA.APIURL, FA.APIKey, Symbol)
 
 	PossibleTypes := []string{"year", "quarter", "ttm"}
 
@@ -266,7 +268,7 @@ func (FA *FinancialsAPI) EconomicCalendar(Country string, Date string, ISO_Count
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/macrocalendar?KEY=%s", FA.APIURL, FA.APIKey)
+	URL := fmt.Sprintf("%s/macrocalendar?api-key=%s", FA.APIURL, FA.APIKey)
 
 	if Country != "" {
 		URL = fmt.Sprintf("%s&country=%s", URL, Country)
@@ -314,7 +316,7 @@ func (FA *FinancialsAPI) SECFilings(Ticker string) (*SECFilingsResponse, error) 
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/secfilings?KEY=%s&stock_ticker_symbol=%s", FA.APIURL, FA.APIKey, Ticker)
+	URL := fmt.Sprintf("%s/secfilings?api-key=%s&stock_ticker_symbol=%s", FA.APIURL, FA.APIKey, Ticker)
 
 	StatusCode, ResponseObject, err := utils.SendHTTPGETRequest(URL, map[string]string{}, map[string]string{}, false)
 	if err != nil {
@@ -349,7 +351,7 @@ func (FA *FinancialsAPI) ETFHoldings(Series_ID string, Series_LEI string, Date_F
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/etfholdings?KEY=%s", FA.APIURL, FA.APIKey)
+	URL := fmt.Sprintf("%s/etfholdings?api-key=%s", FA.APIURL, FA.APIKey)
 
 	if Series_ID != "" {
 		URL = fmt.Sprintf("%s&series_id=%s", URL, Series_ID)
@@ -399,7 +401,7 @@ func (FA *FinancialsAPI) ETFInfo(Series_ID string, Series_LEI string, CIK string
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/etfinfo?KEY=%s", FA.APIURL, FA.APIKey)
+	URL := fmt.Sprintf("%s/etfinfo?api-key=%s", FA.APIURL, FA.APIKey)
 
 	if CIK != "" {
 		URL = fmt.Sprintf("%s&cik=%s", URL, CIK)
@@ -445,7 +447,7 @@ func (FA *FinancialsAPI) BondsYield(Country string, Region string, Type string) 
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/etfinfo?KEY=%s", FA.APIURL, FA.APIKey)
+	URL := fmt.Sprintf("%s/etfinfo?api-key=%s", FA.APIURL, FA.APIKey)
 
 	StatusCode, ResponseObject, err := utils.SendHTTPGETRequest(URL, map[string]string{}, map[string]string{}, false)
 	if err != nil {
@@ -477,7 +479,7 @@ func (FA *FinancialsAPI) FinancialRatios(Ticker string) (*FinancialRatiosRespons
 	 * 	error: The error object.
 	 */
 
-	URL := fmt.Sprintf("%s/financialratios?KEY=%s&stock_ticker_symbol=%s", FA.APIURL, FA.APIKey, Ticker)
+	URL := fmt.Sprintf("%s/financialratios?api-key=%s&stock_ticker_symbol=%s", FA.APIURL, FA.APIKey, Ticker)
 
 	StatusCode, ResponseObject, err := utils.SendHTTPGETRequest(URL, map[string]string{}, map[string]string{}, false)
 	if err != nil {
