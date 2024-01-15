@@ -39,4 +39,9 @@ func main() {
 	//	panic(fmt.Sprintf("Failed to analyze balance sheet: %s", err.Error()))
 	//}
 
+	//cashflow_statement, cashflow_statement_growth, cashflow_statement_as_reported, cashflow_statement_as_reported_growth, discrepancies_between_both_sheet_types, err := Fundamentals.AnalyzeCashFlow(APIClient, "AAPL")
+	//if err != nil {
+	//	panic(fmt.Sprintf("Failed to analyze cash flow: %s", err.Error()))
+	//}
+
 }

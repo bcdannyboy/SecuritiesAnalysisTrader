@@ -5,6 +5,7 @@ import (
 	"github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 	"math"
+	"reflect"
 )
 
 func AnalyzeCashFlow(APIClient *fmpcloud.APIClient, Symbol string) ([]objects.CashFlowStatement, []objects.CashFlowStatementGrowth, []objects.CashFlowStatementAsReported, []*CashFlowStatementAsReportedGrowth, []*DiscrepancyCashFlowStatementAndCashFlowStatementAsReported, error) {
@@ -39,6 +40,7 @@ func AnalyzeCashFlow(APIClient *fmpcloud.APIClient, Symbol string) ([]objects.Ca
 	}
 
 	CF_DISCREPANCIES = IdentifyDiscrepanciesBetweenCashFlowStatementAndCashFlowStatementAsReported(CF_STMT, CF_STMT_AS_REPORTED)
+	CF_STMT_AS_REPORTED_GROWTH = GetGrowthOfCashFlowStatementAsReported(CF_STMT_AS_REPORTED)
 
 	return CF_STMT, CF_STMT_GROWTH, CF_STMT_AS_REPORTED, CF_STMT_AS_REPORTED_GROWTH, CF_DISCREPANCIES, nil
 }
@@ -103,4 +105,53 @@ func IdentifyDiscrepanciesBetweenCashFlowStatementAndCashFlowStatementAsReported
 	}
 
 	return discrepancies
+}
+
+func GetGrowthOfCashFlowStatementAsReported(CFS_STMT_AS_REPORTED []objects.CashFlowStatementAsReported) []*CashFlowStatementAsReportedGrowth {
+	Growth := []*CashFlowStatementAsReportedGrowth{}
+	LastStatement := objects.CashFlowStatementAsReported{}
+
+	for i, cfs_stmt_as_reported := range CFS_STMT_AS_REPORTED {
+		NewGrowthObj := &CashFlowStatementAsReportedGrowth{
+			Date:   cfs_stmt_as_reported.Date,
+			Symbol: cfs_stmt_as_reported.Symbol,
+			Period: cfs_stmt_as_reported.Period,
+		}
+
+		if i > 0 {
+			// Here, reflect is used to iterate over the fields of the struct
+			valCFS := reflect.ValueOf(cfs_stmt_as_reported)
+			valLast := reflect.ValueOf(LastStatement)
+			valGrowth := reflect.ValueOf(NewGrowthObj).Elem()
+
+			for j := 0; j < valCFS.NumField(); j++ {
+				fieldCFS := valCFS.Field(j)
+				fieldLast := valLast.Field(j)
+				fieldGrowth := valGrowth.Field(j)
+
+				// Check if the field is of type float64
+				if fieldCFS.Kind() == reflect.Float64 {
+					growthValue := fieldCFS.Float() - fieldLast.Float()
+					fieldGrowth.SetFloat(growthValue)
+				}
+
+				// For interface{} types, use type assertion
+				if fieldCFS.Kind() == reflect.Interface && !fieldCFS.IsNil() {
+					curVal, okCur := fieldCFS.Interface().(float64)
+					lastVal, okLast := fieldLast.Interface().(float64)
+					if okCur && okLast {
+						fieldGrowth.SetFloat(curVal - lastVal)
+					}
+				}
+			}
+		}
+
+		// Append the new growth object to the slice
+		Growth = append(Growth, NewGrowthObj)
+
+		// Update the LastStatement for the next iteration
+		LastStatement = cfs_stmt_as_reported
+	}
+
+	return Growth
 }
