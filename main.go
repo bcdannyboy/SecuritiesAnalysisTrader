@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Fundamentals"
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"os"
@@ -35,9 +34,9 @@ func main() {
 		panic(fmt.Sprintf("Failed to confirm initialization of API client: %s", err.Error()))
 	}
 
-	err = Fundamentals.AnalyzeBalanceSheet(APIClient, "AAPL", "quarter")
-	if err != nil {
-		panic(fmt.Sprintf("Failed to analyze balance sheet: %s", err.Error())
-	}
+	//balance_sheet, balance_sheet_growth, balance_sheet_as_reported, balance_sheet_as_reported_growth, discrepancies_between_both_sheet_types, err := Fundamentals.AnalyzeBalanceSheet(APIClient, "AAPL", "quarter")
+	//if err != nil {
+	//	panic(fmt.Sprintf("Failed to analyze balance sheet: %s", err.Error()))
+	//}
 
 }

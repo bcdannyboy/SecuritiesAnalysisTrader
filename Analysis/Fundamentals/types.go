@@ -36,3 +36,19 @@ type GrowthBalanceSheetStatementAsReported struct {
 	GrowthAccumulatedothercomprehensiveincomelossnetoftax float64     `json:"growthaccumulatedothercomprehensiveincomelossnetoftax"`
 	GrowthOthershorttermborrowings                        float64     `json:"growthothershorttermborrowings"`
 }
+
+type DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported struct {
+	Date                                       string  `json:"dateMatch"`
+	Symbol                                     string  `json:"symbolMatch"`
+	Period                                     string  `json:"periodMatch"`
+	CashAndCashEquivalentsMatch                float64 `json:"cashAndCashEquivalentsMatch"`
+	PropertyPlantEquipmentNetMatch             float64 `json:"propertyPlantEquipmentNetMatch"`
+	CommonStockMatch                           float64 `json:"commonStockMatch"`
+	RetainedEarningsMatch                      float64 `json:"retainedEarningsMatch"`
+	TotalCurrentAssetsMatch                    float64 `json:"totalCurrentAssetsMatch"`
+	TotalAssetsMatch                           float64 `json:"totalAssetsMatch"`
+	TotalCurrentLiabilitiesMatch               float64 `json:"totalCurrentLiabilitiesMatch"`
+	TotalLiabilitiesMatch                      float64 `json:"totalLiabilitiesMatch"`
+	TotalStockholdersEquityMatch               float64 `json:"totalStockholdersEquityMatch"`
+	TotalLiabilitiesAndStockholdersEquityMatch float64 `json:"totalLiabilitiesAndStockholdersEquityMatch"`
+}
