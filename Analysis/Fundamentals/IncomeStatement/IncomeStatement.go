@@ -1,4 +1,4 @@
-package Fundamentals
+package IncomeStatement
 
 import (
 	"fmt"
@@ -119,19 +119,33 @@ func GetGrowthOfIncomeStatementAsReported(IS_STMT_AS_REPORTED []objects.IncomeSt
 				fieldLast := valLast.Field(j)
 				fieldGrowth := valGrowth.Field(j)
 
-				if fieldIS.Kind() == reflect.Float64 {
+				// Handle float64 type fields
+				if fieldIS.Kind() == reflect.Float64 && fieldLast.Kind() == reflect.Float64 {
 					growthValue := fieldIS.Float() - fieldLast.Float()
-					fieldGrowth.SetFloat(growthValue)
+					if fieldGrowth.Kind() == reflect.Float64 {
+						fieldGrowth.SetFloat(growthValue)
+					} else if fieldGrowth.Kind() == reflect.Interface {
+						fieldGrowth.Set(reflect.ValueOf(growthValue))
+					}
 				}
 
+				// Handle interface type fields containing float64
 				if fieldIS.Kind() == reflect.Interface && !fieldIS.IsNil() {
 					curVal, okCur := fieldIS.Interface().(float64)
 					lastVal, okLast := fieldLast.Interface().(float64)
 					if okCur && okLast {
-						fieldGrowth.SetFloat(curVal - lastVal)
+						growthValue := curVal - lastVal
+						if fieldGrowth.Kind() == reflect.Float64 {
+							fieldGrowth.SetFloat(growthValue)
+						} else if fieldGrowth.Kind() == reflect.Interface {
+							fieldGrowth.Set(reflect.ValueOf(growthValue))
+						}
 					}
 				}
+
+				// Add more handling for other types if necessary
 			}
+
 		}
 
 		Growth = append(Growth, NewGrowthObj)

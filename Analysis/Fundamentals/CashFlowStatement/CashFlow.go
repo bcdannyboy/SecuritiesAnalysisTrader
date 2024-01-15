@@ -1,4 +1,4 @@
-package Fundamentals
+package CashFlowStatement
 
 import (
 	"fmt"
@@ -130,21 +130,30 @@ func GetGrowthOfCashFlowStatementAsReported(CFS_STMT_AS_REPORTED []objects.CashF
 				fieldLast := valLast.Field(j)
 				fieldGrowth := valGrowth.Field(j)
 
-				// Check if the field is of type float64
-				if fieldCFS.Kind() == reflect.Float64 {
+				if fieldCFS.Kind() == reflect.Float64 && fieldLast.Kind() == reflect.Float64 {
+					// Directly set for float64 types
 					growthValue := fieldCFS.Float() - fieldLast.Float()
-					fieldGrowth.SetFloat(growthValue)
-				}
-
-				// For interface{} types, use type assertion
-				if fieldCFS.Kind() == reflect.Interface && !fieldCFS.IsNil() {
+					if fieldGrowth.Kind() == reflect.Float64 {
+						fieldGrowth.SetFloat(growthValue)
+					} else if fieldGrowth.Kind() == reflect.Interface {
+						fieldGrowth.Set(reflect.ValueOf(growthValue))
+					}
+				} else if fieldCFS.Kind() == reflect.Interface && !fieldCFS.IsNil() {
+					// Handle interface{} types containing float64
 					curVal, okCur := fieldCFS.Interface().(float64)
 					lastVal, okLast := fieldLast.Interface().(float64)
 					if okCur && okLast {
-						fieldGrowth.SetFloat(curVal - lastVal)
+						growthValue := curVal - lastVal
+						if fieldGrowth.Kind() == reflect.Float64 {
+							fieldGrowth.SetFloat(growthValue)
+						} else if fieldGrowth.Kind() == reflect.Interface {
+							fieldGrowth.Set(reflect.ValueOf(growthValue))
+						}
 					}
 				}
+				// Add more handling for other types if necessary
 			}
+
 		}
 
 		// Append the new growth object to the slice

@@ -1,14 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"os"
 )
 
 func main() {
-
 	err := godotenv.Load()
 	if err != nil {
 		panic(fmt.Sprintf("Error loading .env file: %s", err.Error()))
@@ -32,6 +33,27 @@ func main() {
 	_, err = APIClient.CompanyValuation.Rating("AAPL")
 	if err != nil {
 		panic(fmt.Sprintf("Failed to confirm initialization of API client: %s", err.Error()))
+	}
+
+	fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, "AAPL", "quarter")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to pull company fundamentals: %s", err.Error()))
+	}
+
+	jFundamentals, err := json.MarshalIndent(fundamentals, "", "  ")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to marshal fundamentals: %s", err.Error()))
+	}
+
+	file, err := os.Create("aapl_fundamentals.json")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create aapl_fundamentals.json: %s", err.Error()))
+	}
+	defer file.Close()
+
+	_, err = file.Write(jFundamentals)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to write aapl_fundamentals.json: %s", err.Error()))
 	}
 
 }

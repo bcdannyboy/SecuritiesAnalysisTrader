@@ -1,4 +1,4 @@
-package Fundamentals
+package FullFinancialStatement
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package Fundamentals
+package BalanceSheet
 
 import (
 	"fmt"
@@ -72,21 +72,22 @@ func GetGrowthOfBalanceSheetStatementAsReported(BS_STMT_AS_REPORTED []objects.Ba
 				fieldLast := valLast.Field(j)
 				fieldGrowth := valGrowth.Field(j)
 
-				// Check if the field is of type float64
-				if fieldBS.Kind() == reflect.Float64 {
-					growthValue := fieldBS.Float() - fieldLast.Float()
-					fieldGrowth.SetFloat(growthValue)
+				// Calculate growthValue as usual
+				var growthValue float64
+				if fieldBS.Kind() == reflect.Float64 && fieldLast.Kind() == reflect.Float64 {
+					growthValue = fieldBS.Float() - fieldLast.Float()
 				}
 
-				// For interface{} types, use type assertion
-				if fieldBS.Kind() == reflect.Interface && !fieldBS.IsNil() {
-					curVal, okCur := fieldBS.Interface().(float64)
-					lastVal, okLast := fieldLast.Interface().(float64)
-					if okCur && okLast {
-						fieldGrowth.SetFloat(curVal - lastVal)
-					}
+				// Set the value based on the kind of fieldGrowth
+				if fieldGrowth.Kind() == reflect.Float64 {
+					fieldGrowth.SetFloat(growthValue)
+				} else if fieldGrowth.Kind() == reflect.Interface {
+					// Convert growthValue to interface{} and set it
+					fieldGrowth.Set(reflect.ValueOf(growthValue))
 				}
+				// Handle other cases as necessary
 			}
+
 		}
 
 		// Append the new growth object to the slice
