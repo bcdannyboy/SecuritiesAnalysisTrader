@@ -49,4 +49,9 @@ func main() {
 	//	panic(fmt.Sprintf("Failed to analyze income statement: %s", err.Error()))
 	//}
 
+	//full_financial_statement_as_reported, financial_statement_growth, err := Fundamentals.AnalyzeFinancialStatement(APIClient, "AAPL", "quarter")
+	//if err != nil {
+	//	panic(fmt.Sprintf("Failed to analyze financial statement: %s", err.Error()))
+	//}
+
 }

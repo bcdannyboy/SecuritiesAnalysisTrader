@@ -8,7 +8,7 @@ import (
 	"reflect"
 )
 
-func AnalyzeCashFlow(APIClient *fmpcloud.APIClient, Symbol string) ([]objects.CashFlowStatement, []objects.CashFlowStatementGrowth, []objects.CashFlowStatementAsReported, []*CashFlowStatementAsReportedGrowth, []*DiscrepancyCashFlowStatementAndCashFlowStatementAsReported, error) {
+func AnalyzeCashFlow(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.CashFlowStatement, []objects.CashFlowStatementGrowth, []objects.CashFlowStatementAsReported, []*CashFlowStatementAsReportedGrowth, []*DiscrepancyCashFlowStatementAndCashFlowStatementAsReported, error) {
 	var CF_STMT []objects.CashFlowStatement
 	var CF_STMT_GROWTH []objects.CashFlowStatementGrowth
 	var CF_STMT_AS_REPORTED []objects.CashFlowStatementAsReported
@@ -17,7 +17,7 @@ func AnalyzeCashFlow(APIClient *fmpcloud.APIClient, Symbol string) ([]objects.Ca
 
 	CF_STMT, err := APIClient.CompanyValuation.CashFlowStatement(objects.RequestCashFlowStatement{
 		Symbol: Symbol,
-		Period: "quarter",
+		Period: Period,
 	})
 	if err != nil {
 		return CF_STMT, CF_STMT_GROWTH, CF_STMT_AS_REPORTED, CF_STMT_AS_REPORTED_GROWTH, CF_DISCREPANCIES, fmt.Errorf("Failed to get cash flow statement: %s", err.Error())
