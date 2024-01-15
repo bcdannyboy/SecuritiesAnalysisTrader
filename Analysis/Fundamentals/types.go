@@ -52,3 +52,82 @@ type DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported struct {
 	TotalStockholdersEquityMatch               float64 `json:"totalStockholdersEquityMatch"`
 	TotalLiabilitiesAndStockholdersEquityMatch float64 `json:"totalLiabilitiesAndStockholdersEquityMatch"`
 }
+
+type CashFlowStatementAsReportedGrowth struct {
+	Date                                                                                                                 string      `json:"date"`
+	Symbol                                                                                                               string      `json:"symbol"`
+	Period                                                                                                               string      `json:"period"`
+	PaymentsforrepurchaseofcommonstockGrowth                                                                             float64     `json:"paymentsforrepurchaseofcommonstockgrowth"`
+	SharebasedcompensationGrowth                                                                                         float64     `json:"sharebasedcompensationgrowth"`
+	NetincomelossGrowth                                                                                                  float64     `json:"netincomelossgrowth"`
+	IncreasedecreaseinaccountspayableGrowth                                                                              float64     `json:"increasedecreaseinaccountspayablegrowth"`
+	ProceedsfrompaymentsforotherfinancingactivitiesGrowth                                                                float64     `json:"proceedsfrompaymentsforotherfinancingactivitiesgrowth"`
+	PaymentsrelatedtotaxwithholdingforsharebasedcompensationGrowth                                                       float64     `json:"paymentsrelatedtotaxwithholdingforsharebasedcompensationgrowth"`
+	IncreasedecreaseinotheroperatingliabilitiesGrowth                                                                    float64     `json:"increasedecreaseinotheroperatingliabilitiesgrowth"`
+	OthernoncashincomeexpenseGrowth                                                                                      float64     `json:"othernoncashincomeexpensegrowth"`
+	PaymentstoacquirebusinessesnetofcashacquiredGrowth                                                                   float64     `json:"paymentstoacquirebusinessesnetofcashacquiredgrowth"`
+	DeferredincometaxexpensebenefitGrowth                                                                                float64     `json:"deferredincometaxexpensebenefitgrowth"`
+	CashcashequivalentsrestrictedcashandrestrictedcashequivalentsGrowth                                                  interface{} `json:"cashcashequivalentsrestrictedcashandrestrictedcashequivalentsgrowth"`
+	CashcashequivalentsrestrictedcashandrestrictedcashequivalentsperiodincreasedecreaseincludingexchangerateeffectGrowth float64     `json:"cashcashequivalentsrestrictedcashandrestrictedcashequivalentsperiodincreasedecreaseincludingexchangerateeffectgrowth"`
+	NetcashprovidedbyusedinoperatingactivitiesGrowth                                                                     float64     `json:"netcashprovidedbyusedinoperatingactivitiesgrowth"`
+	ProceedsfromsaleofavailableforsalesecuritiesdebtGrowth                                                               float64     `json:"proceedsfromsaleofavailableforsalesecuritiesdebtgrowth"`
+	RepaymentsoflongtermdebtGrowth                                                                                       float64     `json:"repaymentsoflongtermdebtgrowth"`
+	IncometaxespaidnetGrowth                                                                                             float64     `json:"incometaxespaidnetgrowth"`
+	ProceedsfromissuanceoflongtermdebtGrowth                                                                             float64     `json:"proceedsfromissuanceoflongtermdebtgrowth"`
+	PaymentstoacquireotherinvestmentsGrowth                                                                              float64     `json:"paymentstoacquireotherinvestmentsgrowth"`
+	NetcashprovidedbyusedininvestingactivitiesGrowth                                                                     interface{} `json:"netcashprovidedbyusedininvestingactivitiesgrowth"`
+	IncreasedecreaseincontractwithcustomerliabilityGrowth                                                                float64     `json:"increasedecreaseincontractwithcustomerliabilitygrowth"`
+	InterestpaidnetGrowth                                                                                                float64     `json:"interestpaidnetgrowth"`
+	NetcashprovidedbyusedinfinancingactivitiesGrowth                                                                     interface{} `json:"netcashprovidedbyusedinfinancingactivitiesgrowth"`
+	ProceedsfromrepaymentsofcommercialpaperGrowth                                                                        float64     `json:"proceedsfromrepaymentsofcommercialpapergrowth"`
+	ProceedsfromsaleandmaturityofotherinvestmentsGrowth                                                                  float64     `json:"proceedsfromsaleandmaturityofotherinvestmentsgrowth"`
+	PaymentstoacquireavailableforsalesecuritiesdebtGrowth                                                                interface{} `json:"paymentstoacquireavailableforsalesecuritiesdebtgrowth"`
+	PaymentstoacquirepropertyplantandequipmentGrowth                                                                     float64     `json:"paymentstoacquirepropertyplantandequipmentgrowth"`
+	PaymentsforproceedsfromotherinvestingactivitiesGrowth                                                                float64     `json:"paymentsforproceedsfromotherinvestingactivitiesgrowth"`
+	IncreasedecreaseinotherreceivablesGrowth                                                                             float64     `json:"increasedecreaseinotherreceivablesgrowth"`
+	PaymentsofdividendsGrowth                                                                                            float64     `json:"paymentsofdividendsgrowth"`
+	IncreasedecreaseininventoriesGrowth                                                                                  float64     `json:"increasedecreaseininventoriesgrowth"`
+	IncreasedecreaseinaccountsreceivableGrowth                                                                           float64     `json:"increasedecreaseinaccountsreceivablegrowth"`
+	ProceedsfromissuanceofcommonstockGrowth                                                                              float64     `json:"proceedsfromissuanceofcommonstockgrowth"`
+	DepreciationdepletionandamortizationGrowth                                                                           float64     `json:"depreciationdepletionandamortizationgrowth"`
+	ProceedsfrommaturitiesprepaymentsandcallsofavailableforsalesecuritiesGrowth                                          float64     `json:"proceedsfrommaturitiesprepaymentsandcallsofavailableforsalesecuritiesgrowth"`
+	IncreasedecreaseinotheroperatingassetsGrowth                                                                         float64     `json:"increasedecreaseinotheroperatingassetsgrowth"`
+	ProceedsfromothershorttermdebtGrowth                                                                                 float64     `json:"proceedsfromothershorttermdebtgrowth"`
+}
+
+type DiscrepancyCashFlowStatementAndCashFlowStatementAsReported struct {
+	Date                                  string  `json:"date"`
+	Symbol                                string  `json:"symbol"`
+	Period                                string  `json:"period"`
+	FillingDate                           string  `json:"fillingDate"`
+	AcceptedDate                          string  `json:"acceptedDate"`
+	NetIncomeDiscrepancyPercentage        float64 `json:"netIncomeDiscrepancyPercentage"`
+	DepreciationAndAmortizationDiscrepancyPercentage float64 `json:"depreciationAndAmortizationDiscrepancyPercentage"`
+	DeferredIncomeTaxDiscrepancyPercentage float64 `json:"deferredIncomeTaxDiscrepancyPercentage"`
+	StockBasedCompensationDiscrepancyPercentage float64 `json:"stockBasedCompensationDiscrepancyPercentage"`
+	ChangeInWorkingCapitalDiscrepancyPercentage float64 `json:"changeInWorkingCapitalDiscrepancyPercentage"`
+	AccountsReceivablesDiscrepancyPercentage float64 `json:"accountsReceivablesDiscrepancyPercentage"`
+	InventoryDiscrepancyPercentage          float64 `json:"inventoryDiscrepancyPercentage"`
+	AccountsPayablesDiscrepancyPercentage   float64 `json:"accountsPayablesDiscrepancyPercentage"`
+	OtherNonCashItemsDiscrepancyPercentage  float64 `json:"otherNonCashItemsDiscrepancyPercentage"`
+	NetCashProvidedByOperatingActivitiesDiscrepancyPercentage float64 `json:"netCashProvidedByOperatingActivitiesDiscrepancyPercentage"`
+	InvestmentsInPropertyPlantAndEquipmentDiscrepancyPercentage float64 `json:"investmentsInPropertyPlantAndEquipmentDiscrepancyPercentage"`
+	AcquisitionsNetDiscrepancyPercentage    float64 `json:"acquisitionsNetDiscrepancyPercentage"`
+	PurchasesOfInvestmentsDiscrepancyPercentage float64 `json:"purchasesOfInvestmentsDiscrepancyPercentage"`
+	SalesMaturitiesOfInvestmentsDiscrepancyPercentage float64 `json:"salesMaturitiesOfInvestmentsDiscrepancyPercentage"`
+	OtherInvestingActivitesDiscrepancyPercentage float64 `json:"otherInvestingActivitesDiscrepancyPercentage"`
+	NetCashUsedForInvestingActivitesDiscrepancyPercentage float64 `json:"netCashUsedForInvestingActivitesDiscrepancyPercentage"`
+	DebtRepaymentDiscrepancyPercentage      float64 `json:"debtRepaymentDiscrepancyPercentage"`
+	CommonStockIssuedDiscrepancyPercentage  float64 `json:"commonStockIssuedDiscrepancyPercentage"`
+	CommonStockRepurchasedDiscrepancyPercentage float64 `json:"commonStockRepurchasedDiscrepancyPercentage"`
+	DividendsPaidDiscrepancyPercentage      float64 `json:"dividendsPaidDiscrepancyPercentage"`
+	OtherFinancingActivitesDiscrepancyPercentage float64 `json:"otherFinancingActivitesDiscrepancyPercentage"`
+	NetCashUsedProvidedByFinancingActivitiesDiscrepancyPercentage float64 `json:"netCashUsedProvidedByFinancingActivitiesDiscrepancyPercentage"`
+	EffectOfForexChangesOnCashDiscrepancyPercentage float64 `json:"effectOfForexChangesOnCashDiscrepancyPercentage"`
+	NetChangeInCashDiscrepancyPercentage    float64 json:"netChangeInCashDiscrepancyPercentage"
+	CashAtEndOfPeriodDiscrepancyPercentage float64 json:"cashAtEndOfPeriodDiscrepancyPercentage"
+	CashAtBeginningOfPeriodDiscrepancyPercentage float64 json:"cashAtBeginningOfPeriodDiscrepancyPercentage"
+	OperatingCashFlowDiscrepancyPercentage float64 json:"operatingCashFlowDiscrepancyPercentage"
+	CapitalExpenditureDiscrepancyPercentage float64 json:"capitalExpenditureDiscrepancyPercentage"
+	FreeCashFlowDiscrepancyPercentage float64 json:"freeCashFlowDiscrepancyPercentage"
+}
