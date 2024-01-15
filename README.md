@@ -2,3 +2,71 @@ concepts I'm trying to implement from securities analysis:
 
 - "instead of asking 1. in what security and 2. at what price, let us ask 1. in what enterprise and 2. on what terms is the commitment proposed"
 - "nearly every issue might conceivably be cheap in one price range and dear in another"
+
+
+calcs/ratios
+
+- Economic Profit
+- Risk-Adjusted Return on Capital (RAROC)
+- Value at Risk (VaR)
+- Sharpe Ratio
+- Treynor Ratio
+- Sortino Ratio
+- Contribution Margin Ratio
+- Variable Cost Ratio
+- Break-even Point Analysis
+- Margin of Safety
+- Days to Cover (Short Interest Ratio)
+- Herfindahl-Hirschman Index (HHI)
+- Cross Elasticity of Demand
+- Income Elasticity of Demand
+- Price Elasticity of Demand
+- Balanced Scorecard
+- Activity-Based Costing (ABC)
+- Return on Invested Capital (ROIC)
+- Gross Operating Margin
+- Operating Profit Margin Decomposition
+- EBITDA/EV (Enterprise Value)
+- Cash
+- Flow Coverage Ratio
+- Operating Cycle
+- Z-Score
+- O-Score
+- Discounted Cash Flow (DCF) Analysis
+- Sensitivity Analysis
+- Capital Asset Pricing Model (CAPM)
+- Inventory Turnover Ratio for Retail
+- Debt-to-Equity Ratio for Banks
+- Price-to-Earnings Ratio for Tech Companies
+- Golden Ratio
+- P/E to Growth Ratio (PEG Ratio)
+- Jensen's Alpha
+- Earnings Before Interest, Taxes, Depreciation, and Amortization (EBITDA) Margin
+- Total Shareholder Return (TSR)
+- Residual Income
+- Activity Ratios (Inventory Turnover, Receivables Turnover, Payables Turnover)
+- Liquidity Measurement Ratios (Loan Life Coverage Ratio, Term Loan Coverage Ratio)
+- Profitability Index
+- Payback Period
+- Discounted Payback Period
+- Net Present Value (NPV)
+- Internal Rate of Return (IRR)
+- Modified Internal Rate of Return (MIRR)
+- Cost-Benefit Analysis
+- Cost of Capital
+- Weighted Average Cost of Capital (WACC)
+- Adjusted Present Value (APV)
+- Enterprise Value (EV) to EBITDA
+- Tobin's Q
+- Du Pont Return on Equity Decomposition
+- Sustainable Growth Rate Model
+- Degree of Operating Leverage
+- Degree of Financial Leverage
+- Degree of Combined Leverage
+- Monte Carlo Simulation
+- Altman Z-score
+- Beneish M-Score
+- Duffie Brothers Formula
+- Piotroski F-Score
+- Modified Jones Turnover
+- Dupont Analysis

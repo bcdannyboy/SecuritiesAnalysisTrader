@@ -1,5 +1,6 @@
 package Fundamentals
 
+// Balance Sheet
 type GrowthBalanceSheetStatementAsReported struct {
 	Date                                                  string      `json:"date"`
 	Symbol                                                string      `json:"symbol"`
@@ -53,6 +54,7 @@ type DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported struct {
 	TotalLiabilitiesAndStockholdersEquityMatch float64 `json:"totalLiabilitiesAndStockholdersEquityMatch"`
 }
 
+// CashFlow Statement
 type CashFlowStatementAsReportedGrowth struct {
 	Date                                                                                                                 string      `json:"date"`
 	Symbol                                                                                                               string      `json:"symbol"`
@@ -132,6 +134,7 @@ type DiscrepancyCashFlowStatementAndCashFlowStatementAsReported struct {
 	FreeCashFlowDiscrepancyPercentage                             float64 `json:"freeCashFlowDiscrepancyPercentage"`
 }
 
+// Income Statement
 type DiscrepancyIncomeStatementAndIncomeStatementAsReported struct {
 	Date                                      string  `json:"date"`
 	Symbol                                    string  `json:"symbol"`
@@ -180,6 +183,7 @@ type GrowthIncomeStatementAsReported struct {
 	OthercomprehensiveincomelosscashflowhedgegainlossreclassificationaftertaxGrowth                   float64     `json:"othercomprehensiveincomelosscashflowhedgegainlossreclassificationaftertaxgrowth"`
 }
 
+// Financial Ratios
 type FinancialRatiosGrowth struct {
 	Symbol                                   string  `json:"symbol" csv:"symbol"`
 	Date                                     string  `json:"date" csv:"date"`
