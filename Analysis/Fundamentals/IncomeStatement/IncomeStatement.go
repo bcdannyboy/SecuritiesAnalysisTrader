@@ -2,18 +2,19 @@ package Fundamentals
 
 import (
 	"fmt"
+	fundamentals "github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Fundamentals"
 	"github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 	"math"
 	"reflect"
 )
 
-func AnalyzeIncomeStatement(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.IncomeStatement, []objects.IncomeStatementGrowth, []objects.IncomeStatementAsReported, []*GrowthIncomeStatementAsReported, []*DiscrepancyIncomeStatementAndIncomeStatementAsReported, error) {
+func AnalyzeIncomeStatement(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.IncomeStatement, []objects.IncomeStatementGrowth, []objects.IncomeStatementAsReported, []*fundamentals.GrowthIncomeStatementAsReported, []*fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported, error) {
 	I_STMT := []objects.IncomeStatement{}
 	I_STMT_GROWTH := []objects.IncomeStatementGrowth{}
 	I_STMT_AS_REPORTED := []objects.IncomeStatementAsReported{}
-	I_STMT_AS_REPORTED_GROWTH := []*GrowthIncomeStatementAsReported{}
-	I_DISCREPANCIES := []*DiscrepancyIncomeStatementAndIncomeStatementAsReported{}
+	I_STMT_AS_REPORTED_GROWTH := []*fundamentals.GrowthIncomeStatementAsReported{}
+	I_DISCREPANCIES := []*fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported{}
 
 	I_STMT, err := APIClient.CompanyValuation.IncomeStatement(
 		objects.RequestIncomeStatement{
@@ -48,7 +49,7 @@ func AnalyzeIncomeStatement(APIClient *fmpcloud.APIClient, Symbol string, Period
 	return I_STMT, I_STMT_GROWTH, I_STMT_AS_REPORTED, I_STMT_AS_REPORTED_GROWTH, I_DISCREPANCIES, nil
 }
 
-func IdentifyDiscrepanciesBetweenIncomeStatementAndIncomeStatementAsReported(IS_STMT []objects.IncomeStatement, IS_STMT_AS_REPORTED []objects.IncomeStatementAsReported) []*DiscrepancyIncomeStatementAndIncomeStatementAsReported {
+func IdentifyDiscrepanciesBetweenIncomeStatementAndIncomeStatementAsReported(IS_STMT []objects.IncomeStatement, IS_STMT_AS_REPORTED []objects.IncomeStatementAsReported) []*fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported {
 	calculateDiscrepancyPercentage := func(value1, value2 float64) float64 {
 		if value1 == 0 && value2 == 0 {
 			return 0
@@ -58,12 +59,12 @@ func IdentifyDiscrepanciesBetweenIncomeStatementAndIncomeStatementAsReported(IS_
 		return absoluteDifference / averageValue
 	}
 
-	discrepancies := make([]*DiscrepancyIncomeStatementAndIncomeStatementAsReported, 0)
+	discrepancies := make([]*fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported, 0)
 
 	for _, is := range IS_STMT {
 		for _, isar := range IS_STMT_AS_REPORTED {
 			if is.Date == isar.Date && is.Symbol == isar.Symbol && is.Period == isar.Period {
-				discrepancy := &DiscrepancyIncomeStatementAndIncomeStatementAsReported{
+				discrepancy := &fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported{
 					Date:   is.Date,
 					Symbol: is.Symbol,
 					Period: is.Period,
@@ -97,12 +98,12 @@ func IdentifyDiscrepanciesBetweenIncomeStatementAndIncomeStatementAsReported(IS_
 	return discrepancies
 }
 
-func GetGrowthOfIncomeStatementAsReported(IS_STMT_AS_REPORTED []objects.IncomeStatementAsReported) []*GrowthIncomeStatementAsReported {
-	Growth := []*GrowthIncomeStatementAsReported{}
+func GetGrowthOfIncomeStatementAsReported(IS_STMT_AS_REPORTED []objects.IncomeStatementAsReported) []*fundamentals.GrowthIncomeStatementAsReported {
+	Growth := []*fundamentals.GrowthIncomeStatementAsReported{}
 	LastStatement := objects.IncomeStatementAsReported{}
 
 	for i, is_stmt_as_reported := range IS_STMT_AS_REPORTED {
-		NewGrowthObj := &GrowthIncomeStatementAsReported{
+		NewGrowthObj := &fundamentals.GrowthIncomeStatementAsReported{
 			Date:   is_stmt_as_reported.Date,
 			Symbol: is_stmt_as_reported.Symbol,
 			Period: is_stmt_as_reported.Period,

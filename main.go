@@ -34,29 +34,4 @@ func main() {
 		panic(fmt.Sprintf("Failed to confirm initialization of API client: %s", err.Error()))
 	}
 
-	//balance_sheet, balance_sheet_growth, balance_sheet_as_reported, balance_sheet_as_reported_growth, discrepancies_between_both_sheet_types, err := Fundamentals.AnalyzeBalanceSheet(APIClient, "AAPL", "quarter")
-	//if err != nil {
-	//	panic(fmt.Sprintf("Failed to analyze balance sheet: %s", err.Error()))
-	//}
-
-	//cashflow_statement, cashflow_statement_growth, cashflow_statement_as_reported, cashflow_statement_as_reported_growth, discrepancies_between_both_sheet_types, err := Fundamentals.AnalyzeCashFlow(APIClient, "AAPL")
-	//if err != nil {
-	//	panic(fmt.Sprintf("Failed to analyze cash flow: %s", err.Error()))
-	//}
-
-	//income_statement, income_statement_growth, income_statement_as_reported, income_statement_as_reported_growth, discrepancies_between_both_sheet_types, err := Fundamentals.AnalyzeIncomeStatement(APIClient, "AAPL", "quarter")
-	//if err != nil {
-	//	panic(fmt.Sprintf("Failed to analyze income statement: %s", err.Error()))
-	//}
-
-	//full_financial_statement_as_reported, financial_statement_growth, err := Fundamentals.AnalyzeFinancialStatement(APIClient, "AAPL", "quarter")
-	//if err != nil {
-	//	panic(fmt.Sprintf("Failed to analyze financial statement: %s", err.Error()))
-	//}
-
-	//financial_ratios, financial_ratios_ttm, financial_ratios_growth, financial_ratios_ttm_growth, err := Fundamentals.AnalyzeFinancialRatios(APIClient, "AAPL", "quarter")
-	//if err != nil {
-	//	panic(fmt.Sprintf("Failed to analyze financial ratios: %s", err.Error()))
-	//}
-
 }

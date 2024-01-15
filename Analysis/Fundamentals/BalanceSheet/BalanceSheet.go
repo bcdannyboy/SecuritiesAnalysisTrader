@@ -2,19 +2,20 @@ package Fundamentals
 
 import (
 	"fmt"
+	fundamentals "github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Fundamentals"
 	"github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 	"math"
 	"reflect"
 )
 
-func AnalyzeBalanceSheet(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.BalanceSheetStatement, []objects.BalanceSheetStatementGrowth, []objects.BalanceSheetStatementAsReported, []*GrowthBalanceSheetStatementAsReported, []*DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported, error) {
+func AnalyzeBalanceSheet(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.BalanceSheetStatement, []objects.BalanceSheetStatementGrowth, []objects.BalanceSheetStatementAsReported, []*fundamentals.GrowthBalanceSheetStatementAsReported, []*fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported, error) {
 
 	var BS_STMT []objects.BalanceSheetStatement
 	var BS_STMT_GROWTH []objects.BalanceSheetStatementGrowth
 	var BS_STMT_AS_REPORTED []objects.BalanceSheetStatementAsReported
-	var BS_STMT_AS_REPORTED_GROWTH []*GrowthBalanceSheetStatementAsReported
-	var BS_DISCREPANCIES []*DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported
+	var BS_STMT_AS_REPORTED_GROWTH []*fundamentals.GrowthBalanceSheetStatementAsReported
+	var BS_DISCREPANCIES []*fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported
 
 	BS_STMT, err := APIClient.CompanyValuation.BalanceSheetStatement(
 		objects.RequestBalanceSheetStatement{
@@ -49,12 +50,12 @@ func AnalyzeBalanceSheet(APIClient *fmpcloud.APIClient, Symbol string, Period ob
 	return BS_STMT, BS_STMT_GROWTH, BS_STMT_AS_REPORTED, BS_STMT_AS_REPORTED_GROWTH, BS_DISCREPANCIES, nil
 }
 
-func GetGrowthOfBalanceSheetStatementAsReported(BS_STMT_AS_REPORTED []objects.BalanceSheetStatementAsReported) []*GrowthBalanceSheetStatementAsReported {
-	Growth := []*GrowthBalanceSheetStatementAsReported{}
+func GetGrowthOfBalanceSheetStatementAsReported(BS_STMT_AS_REPORTED []objects.BalanceSheetStatementAsReported) []*fundamentals.GrowthBalanceSheetStatementAsReported {
+	Growth := []*fundamentals.GrowthBalanceSheetStatementAsReported{}
 	LastStatement := objects.BalanceSheetStatementAsReported{}
 
 	for i, bs_stmt_as_reported := range BS_STMT_AS_REPORTED {
-		NewGrowthObj := &GrowthBalanceSheetStatementAsReported{
+		NewGrowthObj := &fundamentals.GrowthBalanceSheetStatementAsReported{
 			Date:   bs_stmt_as_reported.Date,
 			Symbol: bs_stmt_as_reported.Symbol,
 			Period: bs_stmt_as_reported.Period,
@@ -98,7 +99,7 @@ func GetGrowthOfBalanceSheetStatementAsReported(BS_STMT_AS_REPORTED []objects.Ba
 	return Growth
 }
 
-func IdentifyDiscrepanciesBetweenBalanceSheetStatementAndBalanceSheetStatementAsReported(BS_STMT []objects.BalanceSheetStatement, BS_STMT_AS_REPORTED []objects.BalanceSheetStatementAsReported) []*DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported {
+func IdentifyDiscrepanciesBetweenBalanceSheetStatementAndBalanceSheetStatementAsReported(BS_STMT []objects.BalanceSheetStatement, BS_STMT_AS_REPORTED []objects.BalanceSheetStatementAsReported) []*fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported {
 
 	calculateDiscrepancyPercentage := func(value1, value2 float64) float64 {
 		if value1 == 0 && value2 == 0 {
@@ -109,12 +110,12 @@ func IdentifyDiscrepanciesBetweenBalanceSheetStatementAndBalanceSheetStatementAs
 		return absoluteDifference / averageValue
 	}
 
-	discrepancies := make([]*DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported, 0)
+	discrepancies := make([]*fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported, 0)
 
 	for _, bs := range BS_STMT {
 		for _, bsar := range BS_STMT_AS_REPORTED {
 			if bs.Date == bsar.Date && bs.Symbol == bsar.Symbol && bs.Period == bsar.Period {
-				discrepancy := &DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported{
+				discrepancy := &fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported{
 					Date:   bs.Date,
 					Symbol: bs.Symbol,
 					Period: bs.Period,

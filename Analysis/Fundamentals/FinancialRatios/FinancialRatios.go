@@ -2,16 +2,17 @@ package Fundamentals
 
 import (
 	"fmt"
+	fundamentals "github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Fundamentals"
 	"github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 	"reflect"
 )
 
-func AnalyzeFinancialRatios(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.FinancialRatios, []objects.FinancialRatiosTTM, []*FinancialRatiosGrowth, []*FinancialRatiosTTMGrowth, error) {
+func AnalyzeFinancialRatios(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.FinancialRatios, []objects.FinancialRatiosTTM, []*fundamentals.FinancialRatiosGrowth, []*fundamentals.FinancialRatiosTTMGrowth, error) {
 	var FIN_RATIOS []objects.FinancialRatios
 	var FIN_RATIOS_TTM []objects.FinancialRatiosTTM
-	var FR_GROWTH []*FinancialRatiosGrowth
-	var FR_TTM_GROWTH []*FinancialRatiosTTMGrowth
+	var FR_GROWTH []*fundamentals.FinancialRatiosGrowth
+	var FR_TTM_GROWTH []*fundamentals.FinancialRatiosTTMGrowth
 
 	FIN_RATIOS, err := APIClient.CompanyValuation.FinancialRatios(
 		objects.RequestFinancialRatios{
@@ -33,12 +34,12 @@ func AnalyzeFinancialRatios(APIClient *fmpcloud.APIClient, Symbol string, Period
 	return FIN_RATIOS, FIN_RATIOS_TTM, FR_GROWTH, FR_TTM_GROWTH, nil
 }
 
-func GetGrowthOfFinancialRatios(ratios []objects.FinancialRatios) []*FinancialRatiosGrowth {
-	growth := []*FinancialRatiosGrowth{}
+func GetGrowthOfFinancialRatios(ratios []objects.FinancialRatios) []*fundamentals.FinancialRatiosGrowth {
+	growth := []*fundamentals.FinancialRatiosGrowth{}
 	var lastRatios objects.FinancialRatios
 
 	for i, ratio := range ratios {
-		growthObj := &FinancialRatiosGrowth{
+		growthObj := &fundamentals.FinancialRatiosGrowth{
 			Symbol: ratio.Symbol,
 			Date:   ratio.Date,
 			Period: ratio.Period,
@@ -55,12 +56,12 @@ func GetGrowthOfFinancialRatios(ratios []objects.FinancialRatios) []*FinancialRa
 	return growth
 }
 
-func GetGrowthOfFinancialRatiosTTM(ratiosTTM []objects.FinancialRatiosTTM) []*FinancialRatiosTTMGrowth {
-	growthTTM := []*FinancialRatiosTTMGrowth{}
+func GetGrowthOfFinancialRatiosTTM(ratiosTTM []objects.FinancialRatiosTTM) []*fundamentals.FinancialRatiosTTMGrowth {
+	growthTTM := []*fundamentals.FinancialRatiosTTMGrowth{}
 	var lastRatiosTTM objects.FinancialRatiosTTM
 
 	for i, ratioTTM := range ratiosTTM {
-		growthObjTTM := &FinancialRatiosTTMGrowth{
+		growthObjTTM := &fundamentals.FinancialRatiosTTMGrowth{
 			Symbol: ratioTTM.Symbol,
 		}
 

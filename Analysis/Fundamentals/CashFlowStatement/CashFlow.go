@@ -2,18 +2,19 @@ package Fundamentals
 
 import (
 	"fmt"
+	fundamentals "github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Fundamentals"
 	"github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 	"math"
 	"reflect"
 )
 
-func AnalyzeCashFlow(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.CashFlowStatement, []objects.CashFlowStatementGrowth, []objects.CashFlowStatementAsReported, []*CashFlowStatementAsReportedGrowth, []*DiscrepancyCashFlowStatementAndCashFlowStatementAsReported, error) {
+func AnalyzeCashFlow(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.CashFlowStatement, []objects.CashFlowStatementGrowth, []objects.CashFlowStatementAsReported, []*fundamentals.CashFlowStatementAsReportedGrowth, []*fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported, error) {
 	var CF_STMT []objects.CashFlowStatement
 	var CF_STMT_GROWTH []objects.CashFlowStatementGrowth
 	var CF_STMT_AS_REPORTED []objects.CashFlowStatementAsReported
-	var CF_STMT_AS_REPORTED_GROWTH []*CashFlowStatementAsReportedGrowth
-	var CF_DISCREPANCIES []*DiscrepancyCashFlowStatementAndCashFlowStatementAsReported
+	var CF_STMT_AS_REPORTED_GROWTH []*fundamentals.CashFlowStatementAsReportedGrowth
+	var CF_DISCREPANCIES []*fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported
 
 	CF_STMT, err := APIClient.CompanyValuation.CashFlowStatement(objects.RequestCashFlowStatement{
 		Symbol: Symbol,
@@ -45,7 +46,7 @@ func AnalyzeCashFlow(APIClient *fmpcloud.APIClient, Symbol string, Period object
 	return CF_STMT, CF_STMT_GROWTH, CF_STMT_AS_REPORTED, CF_STMT_AS_REPORTED_GROWTH, CF_DISCREPANCIES, nil
 }
 
-func IdentifyDiscrepanciesBetweenCashFlowStatementAndCashFlowStatementAsReported(CF_STMT []objects.CashFlowStatement, CF_STMT_AS_REPORTED []objects.CashFlowStatementAsReported) []*DiscrepancyCashFlowStatementAndCashFlowStatementAsReported {
+func IdentifyDiscrepanciesBetweenCashFlowStatementAndCashFlowStatementAsReported(CF_STMT []objects.CashFlowStatement, CF_STMT_AS_REPORTED []objects.CashFlowStatementAsReported) []*fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported {
 
 	calculateDiscrepancyPercentage := func(value1, value2 float64) float64 {
 		if value1 == 0 && value2 == 0 {
@@ -56,12 +57,12 @@ func IdentifyDiscrepanciesBetweenCashFlowStatementAndCashFlowStatementAsReported
 		return absoluteDifference / averageValue
 	}
 
-	discrepancies := make([]*DiscrepancyCashFlowStatementAndCashFlowStatementAsReported, 0)
+	discrepancies := make([]*fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported, 0)
 
 	for _, cf := range CF_STMT {
 		for _, cfar := range CF_STMT_AS_REPORTED {
 			if cf.Date == cfar.Date && cf.Symbol == cfar.Symbol && cf.Period == cfar.Period {
-				discrepancy := &DiscrepancyCashFlowStatementAndCashFlowStatementAsReported{
+				discrepancy := &fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported{
 					Date:         cf.Date,
 					Symbol:       cf.Symbol,
 					Period:       cf.Period,
@@ -107,12 +108,12 @@ func IdentifyDiscrepanciesBetweenCashFlowStatementAndCashFlowStatementAsReported
 	return discrepancies
 }
 
-func GetGrowthOfCashFlowStatementAsReported(CFS_STMT_AS_REPORTED []objects.CashFlowStatementAsReported) []*CashFlowStatementAsReportedGrowth {
-	Growth := []*CashFlowStatementAsReportedGrowth{}
+func GetGrowthOfCashFlowStatementAsReported(CFS_STMT_AS_REPORTED []objects.CashFlowStatementAsReported) []*fundamentals.CashFlowStatementAsReportedGrowth {
+	Growth := []*fundamentals.CashFlowStatementAsReportedGrowth{}
 	LastStatement := objects.CashFlowStatementAsReported{}
 
 	for i, cfs_stmt_as_reported := range CFS_STMT_AS_REPORTED {
-		NewGrowthObj := &CashFlowStatementAsReportedGrowth{
+		NewGrowthObj := &fundamentals.CashFlowStatementAsReportedGrowth{
 			Date:   cfs_stmt_as_reported.Date,
 			Symbol: cfs_stmt_as_reported.Symbol,
 			Period: cfs_stmt_as_reported.Period,
