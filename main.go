@@ -54,4 +54,9 @@ func main() {
 	//	panic(fmt.Sprintf("Failed to analyze financial statement: %s", err.Error()))
 	//}
 
+	//financial_ratios, financial_ratios_ttm, financial_ratios_growth, financial_ratios_ttm_growth, err := Fundamentals.AnalyzeFinancialRatios(APIClient, "AAPL", "quarter")
+	//if err != nil {
+	//	panic(fmt.Sprintf("Failed to analyze financial ratios: %s", err.Error()))
+	//}
+
 }
