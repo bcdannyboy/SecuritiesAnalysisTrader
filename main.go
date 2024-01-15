@@ -44,4 +44,9 @@ func main() {
 	//	panic(fmt.Sprintf("Failed to analyze cash flow: %s", err.Error()))
 	//}
 
+	//income_statement, income_statement_growth, income_statement_as_reported, income_statement_as_reported_growth, discrepancies_between_both_sheet_types, err := Fundamentals.AnalyzeIncomeStatement(APIClient, "AAPL", "quarter")
+	//if err != nil {
+	//	panic(fmt.Sprintf("Failed to analyze income statement: %s", err.Error()))
+	//}
+
 }

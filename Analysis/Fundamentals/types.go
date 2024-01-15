@@ -131,3 +131,51 @@ type DiscrepancyCashFlowStatementAndCashFlowStatementAsReported struct {
 	CapitalExpenditureDiscrepancyPercentage                       float64 `json:"capitalExpenditureDiscrepancyPercentage"`
 	FreeCashFlowDiscrepancyPercentage                             float64 `json:"freeCashFlowDiscrepancyPercentage"`
 }
+
+type DiscrepancyIncomeStatementAndIncomeStatementAsReported struct {
+	Date                                      string  `json:"date"`
+	Symbol                                    string  `json:"symbol"`
+	Period                                    string  `json:"period"`
+	NetIncomeDiscrepancy                      float64 `json:"netIncomeDiscrepancy"`
+	GrossProfitDiscrepancy                    float64 `json:"grossProfitDiscrepancy"`
+	ResearchAndDevelopmentExpensesDiscrepancy float64 `json:"researchAndDevelopmentExpensesDiscrepancy"`
+	OperatingIncomeDiscrepancy                float64 `json:"operatingIncomeDiscrepancy"`
+	EpsDiscrepancy                            float64 `json:"epsDiscrepancy"`
+	EpsDilutedDiscrepancy                     float64 `json:"epsDilutedDiscrepancy"`
+	WeightedAverageShsOutDiscrepancy          float64 `json:"weightedAverageShsOutDiscrepancy"`
+	WeightedAverageShsOutDilDiscrepancy       float64 `json:"weightedAverageShsOutDilDiscrepancy"`
+	IncomeTaxExpenseDiscrepancy               float64 `json:"incomeTaxExpenseDiscrepancy"`
+}
+
+type GrowthIncomeStatementAsReported struct {
+	Date                                                                                              string      `json:"date"`
+	Symbol                                                                                            string      `json:"symbol"`
+	Period                                                                                            string      `json:"period"`
+	CostofgoodsandservicessoldGrowth                                                                  interface{} `json:"costofgoodsandservicessoldgrowth"`
+	NetincomelossGrowth                                                                               float64     `json:"netincomelossgrowth"`
+	ResearchanddevelopmentexpenseGrowth                                                               float64     `json:"researchanddevelopmentexpensegrowth"`
+	GrossprofitGrowth                                                                                 interface{} `json:"grossprofitgrowth"`
+	OthercomprehensiveincomelossreclassificationadjustmentfromaociforsaleofsecuritiesnetoftaxGrowth   float64     `json:"othercomprehensiveincomelossreclassificationadjustmentfromaociforsaleofsecuritiesnetoftaxgrowth"`
+	OthercomprehensiveincomelossavailableforsalesecuritiesadjustmentnetoftaxGrowth                    float64     `json:"othercomprehensiveincomelossavailableforsalesecuritiesadjustmentnetoftaxgrowth"`
+	OthercomprehensiveincomelossderivativesqualifyingashedgesnetoftaxGrowth                           float64     `json:"othercomprehensiveincomelossderivativesqualifyingashedgesnetoftaxgrowth"`
+	OthercomprehensiveincomelossforeigncurrencytransactionandtranslationadjustmentnetoftaxGrowth      float64     `json:"othercomprehensiveincomelossforeigncurrencytransactionandtranslationadjustmentnetoftaxgrowth"`
+	OthercomprehensiveincomelossderivativeinstrumentgainlossbeforereclassificationaftertaxGrowth      float64     `json:"othercomprehensiveincomelossderivativeinstrumentgainlossbeforereclassificationaftertaxgrowth"`
+	WeightedaveragenumberofdilutedsharesoutstandingGrowth                                             float64     `json:"weightedaveragenumberofdilutedsharesoutstandinggrowth"`
+	WeightedaveragenumberofsharesoutstandingbasicGrowth                                               float64     `json:"weightedaveragenumberofsharesoutstandingbasicgrowth"`
+	OthercomprehensiveincomeunrealizedgainlossonderivativesarisingduringperiodnetoftaxGrowth          float64     `json:"othercomprehensiveincomeunrealizedgainlossonderivativesarisingduringperiodnetoftaxgrowth"`
+	OperatingincomelossGrowth                                                                         float64     `json:"operatingincomelossgrowth"`
+	OthercomprehensiveincomelossreclassificationadjustmentfromaocionderivativesnetoftaxGrowth         float64     `json:"othercomprehensiveincomelossreclassificationadjustmentfromaocionderivativesnetoftaxgrowth"`
+	IncomelossfromcontinuingoperationsbeforeincometaxesextraordinaryitemsnoncontrollinginterestGrowth float64     `json:"incomelossfromcontinuingoperationsbeforeincometaxesextraordinaryitemsnoncontrollinginterestgrowth"`
+	EarningspersharebasicGrowth                                                                       float64     `json:"earningspersharebasicgrowth"`
+	IncometaxexpensebenefitGrowth                                                                     float64     `json:"incometaxexpensebenefitgrowth"`
+	RevenuefromcontractwithcustomerexcludingassessedtaxGrowth                                         interface{} `json:"revenuefromcontractwithcustomerexcludingassessedtaxgrowth"`
+	NonoperatingincomeexpenseGrowth                                                                   float64     `json:"nonoperatingincomeexpensegrowth"`
+	OperatingexpensesGrowth                                                                           interface{} `json:"operatingexpensesgrowth"`
+	EarningspersharedilutedGrowth                                                                     float64     `json:"earningspersharedilutedgrowth"`
+	OthercomprehensiveincomeunrealizedholdinggainlossonsecuritiesarisingduringperiodnetoftaxGrowth    float64     `json:"othercomprehensiveincomeunrealizedholdinggainlossonsecuritiesarisingduringperiodnetoftaxgrowth"`
+	SellinggeneralandadministrativeexpenseGrowth                                                      float64     `json:"sellinggeneralandadministrativeexpensegrowth"`
+	OthercomprehensiveincomelossnetoftaxportionattributabletoparentGrowth                             float64     `json:"othercomprehensiveincomelossnetoftaxportionattributabletoparentgrowth"`
+	ComprehensiveincomenetoftaxGrowth                                                                 float64     `json:"comprehensiveincomenetoftaxgrowth"`
+	OthercomprehensiveincomelossderivativeinstrumentgainlossafterreclassificationandtaxGrowth         float64     `json:"othercomprehensiveincomelossderivativeinstrumentgainlossafterreclassificationandtaxgrowth"`
+	OthercomprehensiveincomelosscashflowhedgegainlossreclassificationaftertaxGrowth                   float64     `json:"othercomprehensiveincomelosscashflowhedgegainlossreclassificationaftertaxgrowth"`
+}
