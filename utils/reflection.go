@@ -1,6 +1,9 @@
 package utils
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 func InterfaceToFloat64Ptr(value interface{}) *float64 {
 	switch v := value.(type) {
@@ -22,4 +25,33 @@ func InterfaceToFloat64Ptr(value interface{}) *float64 {
 		}
 		return nil // Not a type that can be converted to float64
 	}
+}
+
+func GetFloat64PtrIfNotEmpty(inp interface{}, fieldName string) *float64 {
+	if inp == nil {
+		return nil
+	}
+
+	rv := reflect.ValueOf(inp)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+
+	// Check if the struct is valid and the field exists
+	if rv.Kind() != reflect.Struct || !rv.FieldByName(fieldName).IsValid() {
+		fmt.Printf("Field %s not found in the provided struct\n", fieldName)
+		return nil
+	}
+
+	fieldValue := rv.FieldByName(fieldName)
+
+	// Assuming the field is already of type *float64
+	if fieldValue.CanInterface() {
+		fieldInterface := fieldValue.Interface()
+		if fieldPtr, ok := fieldInterface.(*float64); ok {
+			return fieldPtr
+		}
+	}
+
+	return nil
 }

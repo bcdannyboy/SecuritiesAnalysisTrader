@@ -341,87 +341,152 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			curCashFlowStatementAsReported = Fundamentals.CashFlowStatementAsReported[current_iteration]
 		}
 
-		/* Balance Sheet */
+		/* BALANCE SHEET ITEM SETUP */
+		var TotalAssets = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalAssets")
+		var TotalAssetsAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Assets")
 
-		// Net Inventory
-		var Inventory *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheet) {
-			Inventory = utils.InterfaceToFloat64Ptr(curBalanceSheet.Inventory)
-		}
+		var TotalLiabilities = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalLiabilities")
+		var TotalLiabilitiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Liabilities")
 
-		var InventoryAsReported *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
-			InventoryAsReported = utils.InterfaceToFloat64Ptr(curBalanceSheetAsReported.Inventorynet)
-		}
+		var Inventory = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "Inventory")
+		var InventoryAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Inventorynet")
 
-		// Total Assets
-		var TotalAssets *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheet) {
-			TotalAssets = utils.InterfaceToFloat64Ptr(curBalanceSheet.TotalAssets)
-		}
-
-		var TotalAssetsAsReported *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
-			TotalAssetsAsReported = utils.InterfaceToFloat64Ptr(curBalanceSheetAsReported.Assets)
-		}
-
-		// Total Liabilities
-		var TotalLiabilities *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheet) {
-			TotalLiabilities = utils.InterfaceToFloat64Ptr(curBalanceSheet.TotalLiabilities)
-		}
-
-		var TotalLiabilitiesAsReported *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
-			TotalLiabilitiesAsReported = utils.InterfaceToFloat64Ptr(curBalanceSheetAsReported.Liabilities)
-		}
-		// Intangible Assets
-		var IntangibleAssets *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheet) {
-			IntangibleAssets = utils.InterfaceToFloat64Ptr(curBalanceSheet.IntangibleAssets)
-		}
-
+		var IntangibleAssets = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "IntangibleAssets")
 		var IntangibleAssetsAsReported *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
-			if TotalAssetsAsReported != nil && InventoryAsReported != nil {
-				IntangibleAssetsAsReported = utils.InterfaceToFloat64Ptr(*TotalAssetsAsReported - *InventoryAsReported)
-			}
+		if TotalAssetsAsReported != nil && InventoryAsReported != nil {
+			IntangibleAssetsAsReported = utils.InterfaceToFloat64Ptr(*TotalAssetsAsReported - *InventoryAsReported)
 		}
 
-		// Net Debt
-		var NetDebt *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheet) {
-			NetDebt = utils.InterfaceToFloat64Ptr(curBalanceSheet.NetDebt)
-		}
-
+		var NetDebt = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "NetDebt")
+		var CurrentLongTermDebtAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Longtermdebtcurrent")
+		var NonCurrentLongTermDebtAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Longtermdebtnoncurrent")
 		var NetDebtAsReported *float64 = nil
-		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
-			if TotalLiabilitiesAsReported != nil && InventoryAsReported != nil {
-				NetDebtAsReported = utils.InterfaceToFloat64Ptr(*TotalLiabilitiesAsReported - *InventoryAsReported)
-			}
+		if TotalLiabilitiesAsReported != nil && InventoryAsReported != nil {
+			NetDebtAsReported = utils.InterfaceToFloat64Ptr(*CurrentLongTermDebtAsReported + *NonCurrentLongTermDebtAsReported)
 		}
-		// Long-Term Investments
-		// Short-Term Liabilities
-		// High Quality Liquid Assets
-		// COGS
-		// Average Inventory Total
-		// Net Fixed Assets
-		// Total Investments
-		// Working Capital
+		var LongTermInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "LongTermInvestments")
+		// TODO: no direct long term investments equivalent in balance sheet statement as reported object
+
+		var CashAndCashEquivalents = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "CashAndCashEquivalents")
+		var CashAndCashEquivalentsAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Cashandcashequivalentsatcarryingvalue")
+
+		var NetReceivables = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "NetReceivables")
+		var AccountsReceivableAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Accountsreceivablenetcurrent")
+		var NonTradeReceivablesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Nontradereceivablescurrent")
+		var NetReceivablesAsReported *float64 = nil
+		if AccountsReceivableAsReported != nil && NonTradeReceivablesAsReported != nil {
+			NetReceivablesAsReported = utils.InterfaceToFloat64Ptr(*AccountsReceivableAsReported + *NonTradeReceivablesAsReported)
+		}
+		// TODO no cogs in balance sheet statement object or balance sheet statement as reported object
+
+		var NetFixedAssets = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "PropertyPlantEquipmentNet")
+		var NetFixedAssetsAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Propertyplantandequipmentnet")
+
+		var TotalInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalInvestments")
+		// TODO: no direct relation for reported total investments
+
+		// TODO: no direct tangible assets equivalent in balance sheet statement as reported object
+
+		var DeferredTaxLiabilities = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "DeferredTaxLiabilitiesNonCurrent")
+		// TODO: no direct relation for reported deferred tax liabilities
+
+		var ShareholderEquity = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalStockholdersEquity")
+		var ShareholderEquityAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Stockholdersequity")
+
+		var AccountsPayable = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "AccountsPayable")
+		var AccountsPayableAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Accountspayablecurrent")
+
+		// TODO: no direct reference to marketable securities in balance sheet statement object
+		var TotalMarketableSecuritiesAsReported *float64 = nil
+		var CurrentMarketableSecuritiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Marketablesecuritiescurrent")
+		var NonCurrentMarketableSecuritiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Marketablesecuritiesnoncurrent")
+		if CurrentMarketableSecuritiesAsReported != nil && NonCurrentMarketableSecuritiesAsReported != nil {
+			TotalMarketableSecuritiesAsReported = utils.InterfaceToFloat64Ptr(*CurrentMarketableSecuritiesAsReported + *NonCurrentMarketableSecuritiesAsReported)
+		}
+
+		// TODO: no direct reference to shares outstanding in balance sheet statement object
+		var SharesOutstandingAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Commonstocksharesoutstanding")
+
+		var HighQualityLiquidAssets *float64 = nil
+		var HighQualityLiquidAssetsAsReported *float64 = nil
+		if CashAndCashEquivalents != nil && NetReceivables != nil {
+			HighQualityLiquidAssets = utils.InterfaceToFloat64Ptr(*CashAndCashEquivalents + *NetReceivables + curBalanceSheet.CashAndShortTermInvestments - curBalanceSheet.ShortTermInvestments)
+		}
+		if CashAndCashEquivalentsAsReported != nil && NetReceivablesAsReported != nil {
+			HighQualityLiquidAssetsAsReported = utils.InterfaceToFloat64Ptr(*CashAndCashEquivalentsAsReported + *NetReceivablesAsReported + curBalanceSheetAsReported.Cashandcashequivalentsatcarryingvalue - curBalanceSheetAsReported.Shortterminvestments)
+		}
+		if CashAndCashEquivalentsAsReported != nil && NetReceivablesAsReported != nil {
+			HighQualityLiquidAssetsAsReported = utils.InterfaceToFloat64Ptr(*CashAndCashEquivalentsAsReported + *NetReceivablesAsReported)
+		}
+
+		var WorkingCapital *float64 = nil
+		var WorkingCapitalAsReported *float64 = nil
+		if TotalAssets != nil && TotalLiabilities != nil {
+			WorkingCapital = utils.InterfaceToFloat64Ptr(*TotalAssets - *TotalLiabilities)
+		}
+		if TotalAssetsAsReported != nil && TotalLiabilitiesAsReported != nil {
+			WorkingCapitalAsReported = utils.InterfaceToFloat64Ptr(*TotalAssetsAsReported - *TotalLiabilitiesAsReported)
+		}
+
 		// Tangible Net Worth
-		// Deferred Tax Liabilities
-		// Common Shareholder Equity
-		// Total Shareholder Equity
-		// Total Inventory
-		// Cash and Cash Equivalents
-		// Accounts Receivable
-		// Marketable Securities
+		var TangibleNetWorth *float64 = nil
+		var TangibleNetWorthAsReported *float64 = nil
+		if TotalAssets != nil && IntangibleAssets != nil && TotalLiabilities != nil {
+			TangibleNetWorth = utils.InterfaceToFloat64Ptr(*TotalAssets - *IntangibleAssets - *TotalLiabilities)
+		}
+		if TotalAssetsAsReported != nil && IntangibleAssetsAsReported != nil && TotalLiabilitiesAsReported != nil {
+			TangibleNetWorthAsReported = utils.InterfaceToFloat64Ptr(*TotalAssetsAsReported - *IntangibleAssetsAsReported - *TotalLiabilitiesAsReported)
+		}
+
 		// Book Value of Equity
-		// Shares Outstanding
+		var BookValueOfEquity *float64 = nil
+		var BookValueOfEquityAsReported *float64 = nil
+		if ShareholderEquity != nil && Inventory != nil {
+			BookValueOfEquity = utils.InterfaceToFloat64Ptr(*ShareholderEquity - *Inventory)
+		}
+		if ShareholderEquityAsReported != nil && InventoryAsReported != nil {
+			BookValueOfEquityAsReported = utils.InterfaceToFloat64Ptr(*ShareholderEquityAsReported - *InventoryAsReported)
+		}
+
 		// Book Value of Debt
+		var BookValueOfDebt *float64 = nil
+		var BookValueOfDebtAsReported *float64 = nil
+		if TotalLiabilities != nil && Inventory != nil {
+			BookValueOfDebt = utils.InterfaceToFloat64Ptr(*TotalLiabilities - *Inventory)
+		}
+		if TotalLiabilitiesAsReported != nil && InventoryAsReported != nil {
+			BookValueOfDebtAsReported = utils.InterfaceToFloat64Ptr(*TotalLiabilitiesAsReported - *InventoryAsReported)
+		}
+
 		// Equity Book Value
+		var EquityBookValue *float64 = nil
+		var EquityBookValueAsReported *float64 = nil
+		if BookValueOfEquity != nil && BookValueOfDebt != nil {
+			EquityBookValue = utils.InterfaceToFloat64Ptr(*BookValueOfEquity - *BookValueOfDebt)
+		}
+		if BookValueOfEquityAsReported != nil && BookValueOfDebtAsReported != nil {
+			EquityBookValueAsReported = utils.InterfaceToFloat64Ptr(*BookValueOfEquityAsReported - *BookValueOfDebtAsReported)
+		}
+
 		// Liabilities Book Value
+		var LiabilitiesBookValue *float64 = nil
+		var LiabilitiesBookValueAsReported *float64 = nil
+		if BookValueOfEquity != nil && BookValueOfDebt != nil {
+			LiabilitiesBookValue = utils.InterfaceToFloat64Ptr(*BookValueOfEquity - *BookValueOfDebt)
+		}
+		if BookValueOfEquityAsReported != nil && BookValueOfDebtAsReported != nil {
+			LiabilitiesBookValueAsReported = utils.InterfaceToFloat64Ptr(*BookValueOfEquityAsReported - *BookValueOfDebtAsReported)
+		}
+
 		// Total Accruals to Total Assets
+		var TotalAccrualsToTotalAssets *float64 = nil
+		var TotalAccrualsToTotalAssetsAsReported *float64 = nil
+		if TotalAssets != nil && TotalLiabilities != nil && TotalAssetsAsReported != nil && TotalLiabilitiesAsReported != nil {
+			TotalAccrualsToTotalAssets = utils.InterfaceToFloat64Ptr(*TotalAssets - *TotalLiabilities)
+		}
+		if TotalAssetsAsReported != nil && TotalLiabilitiesAsReported != nil {
+			TotalAccrualsToTotalAssetsAsReported = utils.InterfaceToFloat64Ptr(*TotalAssetsAsReported - *TotalLiabilitiesAsReported)
+		}
 
 		/* Income Statement */
 
