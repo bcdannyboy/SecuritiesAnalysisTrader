@@ -34,3 +34,64 @@ type CompanyFundamentals struct {
 	FullFinancialStatement       []objects.FullFinancialStatementAsReported
 	FullFinancialStatementGrowth []objects.FinancialStatementsGrowth
 }
+
+type FundamentalsCalculationsResults struct {
+	Symbol       string
+	Fundamentals *CompanyFundamentals
+	PeriodLength objects.CompanyValuationPeriod
+
+	BalanceSheet struct {
+		DifferenceInLengthBetweenBalanceSheetStatementAndBalanceSheetStatementAsReported int
+		StatementAndReportDiscrepancyGrowth                                              map[string][]float64
+
+		TotalGapsInBalanceSheetStatementPeriods                  int
+		TotalConsecutivePeriodsWithNoGapsInBalanceSheetStatement int
+		TotalConsecutiveMissingPeriodsInBalanceSheetStatement    int
+
+		TotalGapsInBalanceSheetStatementAsReportedPeriods                  int
+		TotalConsecutivePeriodsWithNoGapsInBalanceSheetStatementAsReported int
+		TotalConsecutiveMissingPeriodsInBalanceSheetStatementAsReported    int
+
+		MeanSTDBalanceSheetStatement                 map[string][]float64
+		MeanSTDBalanceSheetStatementAsReported       map[string][]float64
+		MeanSTDBalanceSheetStatementGrowth           map[string][]float64
+		MeanSTDBalanceSheetStatementAsReportedGrowth map[string][]float64
+	}
+
+	IncomeStatement struct {
+		DifferenceInLengthBetweenIncomeStatementAndIncomeStatementAsReported int
+		StatementAndReportDiscrepancyGrowth                                  map[string][]float64
+
+		TotalGapsInIncomeStatementPeriods                  int
+		TotalConsecutivePeriodsWithNoGapsInIncomeStatement int
+		TotalConsecutiveMissingPeriodsInIncomeStatement    int
+
+		TotalGapsInIncomeStatementAsReportedPeriods                  int
+		TotalConsecutivePeriodsWithNoGapsInIncomeStatementAsReported int
+		TotalConsecutiveMissingPeriodsInIncomeStatementAsReported    int
+	}
+
+	CashFlowStatement struct {
+		DifferenceInLengthBetweenCashFlowStatementAndCashFlowStatementAsReported int
+		StatementAndReportDiscrepancyGrowth                                      map[string][]float64
+
+		TotalGapsInCashFlowStatementPeriods                  int
+		TotalConsecutivePeriodsWithNoGapsInCashFlowStatement int
+		TotalConsecutiveMissingPeriodsInCashFlowStatement    int
+
+		TotalGapsInCashFlowStatementAsReportedPeriods                  int
+		TotalConsecutivePeriodsWithNoGapsInCashFlowStatementAsReported int
+		TotalConsecutiveMissingPeriodsInCashFlowStatementAsReported    int
+	}
+
+	FinancialRatios struct {
+		FPMRatios                    []objects.FinancialRatios
+		FPMRatiosTTM                 []objects.FinancialRatiosTTM
+		FPMRatiosGrowth              []*fundamentals.FinancialRatiosGrowth
+		FPMRatiosTTMGrowth           []*fundamentals.FinancialRatiosTTMGrowth
+		AverageSTDFPMRatios          map[string][]float64
+		AverageSTDFPMRatiosTTM       map[string][]float64
+		AverageSTDFPMRatiosGrowth    map[string][]float64
+		AverageSTDFPMRatiosTTMGrowth map[string][]float64
+	}
+}

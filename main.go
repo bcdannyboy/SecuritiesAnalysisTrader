@@ -40,20 +40,17 @@ func main() {
 		panic(fmt.Sprintf("Failed to pull company fundamentals: %s", err.Error()))
 	}
 
-	jFundamentals, err := json.MarshalIndent(fundamentals, "", "  ")
+	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter")
+
+	jCalculationResults, err := json.MarshalIndent(CalculationResults, "", "	")
 	if err != nil {
-		panic(fmt.Sprintf("Failed to marshal fundamentals: %s", err.Error()))
+		panic(fmt.Sprintf("Failed to marshal calculation results: %s", err.Error()))
 	}
 
-	file, err := os.Create("aapl_fundamentals.json")
+	filename := fmt.Sprintf("calculation_results_%s.json", fundamentals.Symbol)
+	err = os.WriteFile(filename, jCalculationResults, 0644)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to create aapl_fundamentals.json: %s", err.Error()))
-	}
-	defer file.Close()
-
-	_, err = file.Write(jFundamentals)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to write aapl_fundamentals.json: %s", err.Error()))
+		panic(fmt.Sprintf("Failed to write calculation results to file: %s", err.Error()))
 	}
 
 }
