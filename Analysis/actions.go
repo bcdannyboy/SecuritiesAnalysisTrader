@@ -3,6 +3,7 @@ package Analysis
 import (
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Calculations"
+	"github.com/spacecodewor/fmpcloud-go/objects"
 )
 
 func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period string) *FundamentalsCalculationsResults {
@@ -270,4 +271,142 @@ func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period s
 	}
 
 	return CalculationResults
+}
+
+func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects.CompanyValuationPeriod) (map[string]float64, map[string]float64) {
+	FullCalcResults := map[string]float64
+	FullCalcResultsGrowth := map[string]float64
+
+	/* Balance Sheet */
+
+	// Total Assets
+	// Total Liabilities
+	// Intangible Assets
+	// Net Debt
+	// Long-Term Investments
+	// Short-Term Liabilities
+	// High Quality Liquid Assets
+	// COGS
+	// Average Inventory Total
+	// Net Fixed Assets
+	// Total Investments
+	// Working Capital
+	// Tangible Net Worth
+	// Deferred Tax Liabilities
+	// Common Shareholder Equity
+	// Total Shareholder Equity
+	// Total Inventory
+	// Cash and Cash Equivalents
+	// Accounts Receivable
+	// Marketable Securities
+	// Book Value of Equity
+	// Shares Outstanding
+	// Book Value of Debt
+	// Equity Book Value
+	// Liabilities Book Value
+	// Total Accruals to Total Assets
+
+	/* Income Statement */
+
+	// EBITDA
+	// Net Income
+	// Gross Profit
+	// Operating Income
+	// Net Revenue
+	// Net Profit Margin
+	// Operating Expenses
+	// Return on Assets
+	// NOPAT
+
+	/* Cash Flow Statement */
+
+	// Depreciation & Amortization
+	// Total Interest Payments
+	// Total Taxes Paid
+	// Change in Working Capital
+	// Capital Expenditures
+	// Operating Cash Flow
+	// Funds From Operations
+	// Free Cashflow
+	// Operating Cashflow Per Share
+	// Free Cashflow Per Share
+
+	/* Calculated or Derived */
+
+	// EBIT
+	// Non-Cash Charges
+	// Tax Rate
+	// Market Value of Equity
+	// Market Value of Debt
+	// Cost of Equity
+	// Cost of Debt
+	// Risk Free Rate
+	// Market Return
+	// Beta
+	// Percent change In Quantity Demanded
+	// Percent change in Cost of Goods Sold
+	// Percent change in Total Expenses
+	// Percent change in Quantity of Units Produced
+	// Preferred Stock Dividend Per Share
+	// Market Value of Preferred Stock
+	// Market Value of Stock
+	// Upcoming Dividend Yield
+	// Expected Growth Rate
+	// Unlevered Firm Value
+	// Net Effect of Debt
+	// Lease Payments
+	// Net Operating Income
+	// Total Debt Service
+	// Net Present Value of CashFlow
+	// Total Preferred Dividend Payments
+	// Net Credit Sales
+	// Average Accounts Receivable
+	// Carrying Cost Per Unit
+	// Ordering Cost Per Order
+	// Annual Demand
+	// Non-Interest Expenses
+	// Number of Employees
+	// Variable Costs
+	// Enterprise Value
+	// Percent Change in Income
+	// Total Loans Outstanding
+	// Total Deposits
+	// Non-Performing Assets
+	// Short Term Debt
+	// Long Term Debt
+	// Asset Turnover Ratio
+	// Equity Multiplier Ratio
+	// Percent Change in EPS
+	// Percent Change in EBIT
+	// Depreciation Expenses Alone
+	// Amortization Expenses Alone
+	// Exploration Expenses Alone
+	// Retention Ratio
+	// Return on Equity
+	// Explicit Costs
+	// Implicit Costs
+	// Period In Days
+	// Market Capitalization
+	// Equity Market Value
+	// Liabilities Market Value
+	// Quality of Earnings
+	// Accounts Receivable Turnover Ratio
+	// Supplier Purchases
+	// Average Accounts Payable
+	// Accounts Payable Turnover Ratio
+	// Days Inventory Outstanding
+	// Days Sales Outstanding
+	// WACC
+	// Total Capital
+	// Total Invested Capital
+	// Days Sales in Receivables Index
+	// Gross Margin Index
+	// Sales Growth Index
+	// Sales General and Administrative Expenses Index
+
+
+
+
+
+	return nil, nil
 }

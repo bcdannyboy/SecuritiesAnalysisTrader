@@ -121,9 +121,3 @@ type FundamentalsCalculationsResults struct {
 	MeanSTDCustomCalculations       map[string][]float64
 	MeanSTDCustomCalculationsGrowth map[string][]float64
 }
-
-type FullCustomCalculationSuite struct {
-}
-
-type FullCustomCalculationSuiteGrowth struct {
-}
