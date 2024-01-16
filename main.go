@@ -35,7 +35,7 @@ func main() {
 		panic(fmt.Sprintf("Failed to confirm initialization of API client: %s", err.Error()))
 	}
 
-	fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, "AAPL", "quarter")
+	fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, "MSFT", "quarter")
 	if err != nil {
 		panic(fmt.Sprintf("Failed to pull company fundamentals: %s", err.Error()))
 	}

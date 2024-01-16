@@ -18,7 +18,6 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]float64, error) {
 	for _, obj := range objects {
 		val := reflect.ValueOf(obj)
 
-		// If obj is a slice, iterate over its elements
 		if val.Kind() == reflect.Slice {
 			for i := 0; i < val.Len(); i++ {
 				elem := val.Index(i)
@@ -28,7 +27,6 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]float64, error) {
 				}
 			}
 		} else {
-			// Process a single struct or pointer to a struct
 			err := processElement(val, fieldStats)
 			if err != nil {
 				return nil, err
@@ -36,7 +34,7 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]float64, error) {
 		}
 	}
 
-	// Compute mean and standard deviation as a percentage of the mean for each field
+	// Compute mean and standard deviation for each field
 	for key, stats := range fieldStats {
 		count := stats[2]
 		if count == 0 {
@@ -46,30 +44,17 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]float64, error) {
 		variance := (stats[1] - (stats[0]*stats[0])/count) / count
 		stdDev := math.Sqrt(variance)
 
-		// Represent the standard deviation as a percentage of the mean
-		var stdDevPercentage float64
-		if mean != 0 {
-			stdDevPercentage = stdDev / mean
-		} else if stdDev != 0 {
-			// If mean is 0 but stdDev is not, represent stdDev as -Infinity or Infinity
-			stdDevPercentage = math.Copysign(math.Inf(1), stdDev)
-		} else {
-			// If both mean and stdDev are 0, set standard deviation percentage as 0
-			stdDevPercentage = 0
-		}
-		fieldStats[key] = []float64{mean, stdDevPercentage}
+		fieldStats[key] = []float64{mean, stdDev}
 	}
 
 	return fieldStats, nil
 }
 
 func processElement(val reflect.Value, fieldStats map[string][]float64) error {
-	// Handle pointers to structs by dereferencing
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 
-	// Ensure we are dealing with a struct
 	if val.Kind() != reflect.Struct {
 		return fmt.Errorf("expected struct or pointer to struct, got %s", val.Kind())
 	}
@@ -78,21 +63,28 @@ func processElement(val reflect.Value, fieldStats map[string][]float64) error {
 		field := val.Field(i)
 		key := val.Type().Field(i).Name
 
-		// Check if the field is float64 or an interface containing a float64
-		if field.Kind() == reflect.Float64 || (field.Kind() == reflect.Interface && reflect.TypeOf(field.Interface()).Kind() == reflect.Float64) {
+		if field.Kind() == reflect.Float64 {
 			fieldValue := field.Float()
-			stats, exists := fieldStats[key]
-			if !exists {
-				stats = []float64{0, 0, 0} // sum, sum of squares, count
+			updateFieldStats(fieldStats, key, fieldValue)
+		} else if field.Kind() == reflect.Interface && !field.IsNil() {
+			if convertedValue, ok := field.Interface().(float64); ok {
+				updateFieldStats(fieldStats, key, convertedValue)
 			}
-			stats[0] += fieldValue              // sum
-			stats[1] += fieldValue * fieldValue // sum of squares
-			stats[2]++                          // count
-			fieldStats[key] = stats
 		}
 	}
 
 	return nil
+}
+
+func updateFieldStats(fieldStats map[string][]float64, key string, value float64) {
+	stats, exists := fieldStats[key]
+	if !exists {
+		stats = []float64{0, 0, 0} // sum, sum of squares, count
+	}
+	stats[0] += value         // sum
+	stats[1] += value * value // sum of squares
+	stats[2]++                // count
+	fieldStats[key] = stats
 }
 
 func ProcessReportDates(dates []string, increment string) (string, string, int, int, int) {

@@ -115,4 +115,15 @@ type FundamentalsCalculationsResults struct {
 		AverageSTDFPMRatiosTTMGrowth            map[string][]float64
 		AverageSTDFZippedFPMRationsAndTTMRatios map[string][]float64
 	}
+
+	CustomCalculations              []*FullCustomCalculationSuite
+	CustomCalculationsGrowth        []*FullCustomCalculationSuiteGrowth
+	MeanSTDCustomCalculations       map[string][]float64
+	MeanSTDCustomCalculationsGrowth map[string][]float64
+}
+
+type FullCustomCalculationSuite struct {
+}
+
+type FullCustomCalculationSuiteGrowth struct {
 }
