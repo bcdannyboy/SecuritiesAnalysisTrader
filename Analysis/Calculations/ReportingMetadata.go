@@ -36,7 +36,7 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]float64, error) {
 		}
 	}
 
-	// Compute mean and standard deviation for each field
+	// Compute mean and standard deviation as a percentage of the mean for each field
 	for key, stats := range fieldStats {
 		count := stats[2]
 		if count == 0 {
@@ -45,7 +45,19 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]float64, error) {
 		mean := stats[0] / count
 		variance := (stats[1] - (stats[0]*stats[0])/count) / count
 		stdDev := math.Sqrt(variance)
-		fieldStats[key] = []float64{mean, stdDev}
+
+		// Represent the standard deviation as a percentage of the mean
+		var stdDevPercentage float64
+		if mean != 0 {
+			stdDevPercentage = stdDev / mean
+		} else if stdDev != 0 {
+			// If mean is 0 but stdDev is not, represent stdDev as -Infinity or Infinity
+			stdDevPercentage = math.Copysign(math.Inf(1), stdDev)
+		} else {
+			// If both mean and stdDev are 0, set standard deviation percentage as 0
+			stdDevPercentage = 0
+		}
+		fieldStats[key] = []float64{mean, stdDevPercentage}
 	}
 
 	return fieldStats, nil
@@ -59,7 +71,7 @@ func processElement(val reflect.Value, fieldStats map[string][]float64) error {
 
 	// Ensure we are dealing with a struct
 	if val.Kind() != reflect.Struct {
-		return fmt.Errorf("expected struct, got %s", val.Kind())
+		return fmt.Errorf("expected struct or pointer to struct, got %s", val.Kind())
 	}
 
 	for i := 0; i < val.NumField(); i++ {
