@@ -3,6 +3,7 @@ package Analysis
 import (
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Calculations"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 )
 
@@ -274,139 +275,253 @@ func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period s
 }
 
 func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects.CompanyValuationPeriod) (map[string]float64, map[string]float64) {
-	FullCalcResults := map[string]float64
-	FullCalcResultsGrowth := map[string]float64
+	FullCalcResults := map[string]float64{}
+	FullCalcResultsGrowth := map[string]float64{}
+	FullCalcResultsAsReported := map[string]float64{}
+	FullCalcResultsAsReportedGrowth := map[string]float64{}
+	ZippedFullCaclResultsMeanSTD := map[string]float64{}
+	ZippedFullCaclResultsGrowthMeanSTD := map[string]float64{}
 
-	/* Balance Sheet */
+	LenBalanceSheetStatements := len(Fundamentals.BalanceSheetStatements)
+	LenBalanceSheetStatementAsReported := len(Fundamentals.BalanceSheetStatementAsReported)
+	LenIncomeStatement := len(Fundamentals.IncomeStatement)
+	LenIncomeStatementAsReported := len(Fundamentals.IncomeStatementAsReported)
+	LenCashFlowStatement := len(Fundamentals.CashFlowStatement)
+	LenCashFlowStatementAsReported := len(Fundamentals.CashFlowStatementAsReported)
 
-	// Total Assets
-	// Total Liabilities
-	// Intangible Assets
-	// Net Debt
-	// Long-Term Investments
-	// Short-Term Liabilities
-	// High Quality Liquid Assets
-	// COGS
-	// Average Inventory Total
-	// Net Fixed Assets
-	// Total Investments
-	// Working Capital
-	// Tangible Net Worth
-	// Deferred Tax Liabilities
-	// Common Shareholder Equity
-	// Total Shareholder Equity
-	// Total Inventory
-	// Cash and Cash Equivalents
-	// Accounts Receivable
-	// Marketable Securities
-	// Book Value of Equity
-	// Shares Outstanding
-	// Book Value of Debt
-	// Equity Book Value
-	// Liabilities Book Value
-	// Total Accruals to Total Assets
+	// we need to handle if some companies report during different periods or missed periods for different reports
+	LongestLength := 0
+	if LenBalanceSheetStatements > LongestLength {
+		LongestLength = LenBalanceSheetStatements
+	}
+	if LenBalanceSheetStatementAsReported > LongestLength {
+		LongestLength = LenBalanceSheetStatementAsReported
+	}
+	if LenIncomeStatement > LongestLength {
+		LongestLength = LenIncomeStatement
+	}
+	if LenIncomeStatementAsReported > LongestLength {
+		LongestLength = LenIncomeStatementAsReported
+	}
+	if LenCashFlowStatement > LongestLength {
+		LongestLength = LenCashFlowStatement
+	}
+	if LenCashFlowStatementAsReported > LongestLength {
+		LongestLength = LenCashFlowStatementAsReported
+	}
 
-	/* Income Statement */
+	for current_iteration := 0; current_iteration < LongestLength; current_iteration++ {
+		curBalanceSheet := objects.BalanceSheetStatement{}
+		if current_iteration < LenBalanceSheetStatements {
+			curBalanceSheet = Fundamentals.BalanceSheetStatements[current_iteration]
+		}
 
-	// EBITDA
-	// Net Income
-	// Gross Profit
-	// Operating Income
-	// Net Revenue
-	// Net Profit Margin
-	// Operating Expenses
-	// Return on Assets
-	// NOPAT
+		curBalanceSheetAsReported := objects.BalanceSheetStatementAsReported{}
+		if current_iteration < LenBalanceSheetStatementAsReported {
+			curBalanceSheetAsReported = Fundamentals.BalanceSheetStatementAsReported[current_iteration]
+		}
 
-	/* Cash Flow Statement */
+		curIncomeStatement := objects.IncomeStatement{}
+		if current_iteration < LenIncomeStatement {
+			curIncomeStatement = Fundamentals.IncomeStatement[current_iteration]
+		}
 
-	// Depreciation & Amortization
-	// Total Interest Payments
-	// Total Taxes Paid
-	// Change in Working Capital
-	// Capital Expenditures
-	// Operating Cash Flow
-	// Funds From Operations
-	// Free Cashflow
-	// Operating Cashflow Per Share
-	// Free Cashflow Per Share
+		curIncomeStatementAsReported := objects.IncomeStatementAsReported{}
+		if current_iteration < LenIncomeStatementAsReported {
+			curIncomeStatementAsReported = Fundamentals.IncomeStatementAsReported[current_iteration]
+		}
 
-	/* Calculated or Derived */
+		curCashFlowStatement := objects.CashFlowStatement{}
+		if current_iteration < LenCashFlowStatement {
+			curCashFlowStatement = Fundamentals.CashFlowStatement[current_iteration]
+		}
 
-	// EBIT
-	// Non-Cash Charges
-	// Tax Rate
-	// Market Value of Equity
-	// Market Value of Debt
-	// Cost of Equity
-	// Cost of Debt
-	// Risk Free Rate
-	// Market Return
-	// Beta
-	// Percent change In Quantity Demanded
-	// Percent change in Cost of Goods Sold
-	// Percent change in Total Expenses
-	// Percent change in Quantity of Units Produced
-	// Preferred Stock Dividend Per Share
-	// Market Value of Preferred Stock
-	// Market Value of Stock
-	// Upcoming Dividend Yield
-	// Expected Growth Rate
-	// Unlevered Firm Value
-	// Net Effect of Debt
-	// Lease Payments
-	// Net Operating Income
-	// Total Debt Service
-	// Net Present Value of CashFlow
-	// Total Preferred Dividend Payments
-	// Net Credit Sales
-	// Average Accounts Receivable
-	// Carrying Cost Per Unit
-	// Ordering Cost Per Order
-	// Annual Demand
-	// Non-Interest Expenses
-	// Number of Employees
-	// Variable Costs
-	// Enterprise Value
-	// Percent Change in Income
-	// Total Loans Outstanding
-	// Total Deposits
-	// Non-Performing Assets
-	// Short Term Debt
-	// Long Term Debt
-	// Asset Turnover Ratio
-	// Equity Multiplier Ratio
-	// Percent Change in EPS
-	// Percent Change in EBIT
-	// Depreciation Expenses Alone
-	// Amortization Expenses Alone
-	// Exploration Expenses Alone
-	// Retention Ratio
-	// Return on Equity
-	// Explicit Costs
-	// Implicit Costs
-	// Period In Days
-	// Market Capitalization
-	// Equity Market Value
-	// Liabilities Market Value
-	// Quality of Earnings
-	// Accounts Receivable Turnover Ratio
-	// Supplier Purchases
-	// Average Accounts Payable
-	// Accounts Payable Turnover Ratio
-	// Days Inventory Outstanding
-	// Days Sales Outstanding
-	// WACC
-	// Total Capital
-	// Total Invested Capital
-	// Days Sales in Receivables Index
-	// Gross Margin Index
-	// Sales Growth Index
-	// Sales General and Administrative Expenses Index
+		curCashFlowStatementAsReported := objects.CashFlowStatementAsReported{}
+		if current_iteration < LenCashFlowStatementAsReported {
+			curCashFlowStatementAsReported = Fundamentals.CashFlowStatementAsReported[current_iteration]
+		}
 
+		/* Balance Sheet */
 
+		// Net Inventory
+		var Inventory *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheet) {
+			Inventory = utils.InterfaceToFloat64Ptr(curBalanceSheet.Inventory)
+		}
 
+		var InventoryAsReported *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
+			InventoryAsReported = utils.InterfaceToFloat64Ptr(curBalanceSheetAsReported.Inventorynet)
+		}
 
+		// Total Assets
+		var TotalAssets *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheet) {
+			TotalAssets = utils.InterfaceToFloat64Ptr(curBalanceSheet.TotalAssets)
+		}
+
+		var TotalAssetsAsReported *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
+			TotalAssetsAsReported = utils.InterfaceToFloat64Ptr(curBalanceSheetAsReported.Assets)
+		}
+
+		// Total Liabilities
+		var TotalLiabilities *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheet) {
+			TotalLiabilities = utils.InterfaceToFloat64Ptr(curBalanceSheet.TotalLiabilities)
+		}
+
+		var TotalLiabilitiesAsReported *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
+			TotalLiabilitiesAsReported = utils.InterfaceToFloat64Ptr(curBalanceSheetAsReported.Liabilities)
+		}
+		// Intangible Assets
+		var IntangibleAssets *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheet) {
+			IntangibleAssets = utils.InterfaceToFloat64Ptr(curBalanceSheet.IntangibleAssets)
+		}
+
+		var IntangibleAssetsAsReported *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
+			if TotalAssetsAsReported != nil && InventoryAsReported != nil {
+				IntangibleAssetsAsReported = utils.InterfaceToFloat64Ptr(*TotalAssetsAsReported - *InventoryAsReported)
+			}
+		}
+
+		// Net Debt
+		var NetDebt *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheet) {
+			NetDebt = utils.InterfaceToFloat64Ptr(curBalanceSheet.NetDebt)
+		}
+
+		var NetDebtAsReported *float64 = nil
+		if !utils.IsStructEmpty(curBalanceSheetAsReported) {
+			if TotalLiabilitiesAsReported != nil && InventoryAsReported != nil {
+				NetDebtAsReported = utils.InterfaceToFloat64Ptr(*TotalLiabilitiesAsReported - *InventoryAsReported)
+			}
+		}
+		// Long-Term Investments
+		// Short-Term Liabilities
+		// High Quality Liquid Assets
+		// COGS
+		// Average Inventory Total
+		// Net Fixed Assets
+		// Total Investments
+		// Working Capital
+		// Tangible Net Worth
+		// Deferred Tax Liabilities
+		// Common Shareholder Equity
+		// Total Shareholder Equity
+		// Total Inventory
+		// Cash and Cash Equivalents
+		// Accounts Receivable
+		// Marketable Securities
+		// Book Value of Equity
+		// Shares Outstanding
+		// Book Value of Debt
+		// Equity Book Value
+		// Liabilities Book Value
+		// Total Accruals to Total Assets
+
+		/* Income Statement */
+
+		// EBITDA
+		// Net Income
+		// Gross Profit
+		// Operating Income
+		// Net Revenue
+		// Net Profit Margin
+		// Operating Expenses
+		// Return on Assets
+		// NOPAT
+
+		/* Cash Flow Statement */
+
+		// Depreciation & Amortization
+		// Total Interest Payments
+		// Total Taxes Paid
+		// Change in Working Capital
+		// Capital Expenditures
+		// Operating Cash Flow
+		// Funds From Operations
+		// Free Cashflow
+		// Operating Cashflow Per Share
+		// Free Cashflow Per Share
+
+		/* Calculated or Derived */
+
+		// EBIT
+		// Non-Cash Charges
+		// Tax Rate
+		// Market Value of Equity
+		// Market Value of Debt
+		// Cost of Equity
+		// Cost of Debt
+		// Risk Free Rate
+		// Market Return
+		// Beta
+		// Percent change In Quantity Demanded
+		// Percent change in Cost of Goods Sold
+		// Percent change in Total Expenses
+		// Percent change in Quantity of Units Produced
+		// Preferred Stock Dividend Per Share
+		// Market Value of Preferred Stock
+		// Market Value of Stock
+		// Upcoming Dividend Yield
+		// Expected Growth Rate
+		// Unlevered Firm Value
+		// Net Effect of Debt
+		// Lease Payments
+		// Net Operating Income
+		// Total Debt Service
+		// Net Present Value of CashFlow
+		// Total Preferred Dividend Payments
+		// Net Credit Sales
+		// Average Accounts Receivable
+		// Carrying Cost Per Unit
+		// Ordering Cost Per Order
+		// Annual Demand
+		// Non-Interest Expenses
+		// Number of Employees
+		// Variable Costs
+		// Enterprise Value
+		// Percent Change in Income
+		// Total Loans Outstanding
+		// Total Deposits
+		// Non-Performing Assets
+		// Short Term Debt
+		// Long Term Debt
+		// Asset Turnover Ratio
+		// Equity Multiplier Ratio
+		// Percent Change in EPS
+		// Percent Change in EBIT
+		// Depreciation Expenses Alone
+		// Amortization Expenses Alone
+		// Exploration Expenses Alone
+		// Retention Ratio
+		// Return on Equity
+		// Explicit Costs
+		// Implicit Costs
+		// Period In Days
+		// Market Capitalization
+		// Equity Market Value
+		// Liabilities Market Value
+		// Quality of Earnings
+		// Accounts Receivable Turnover Ratio
+		// Supplier Purchases
+		// Average Accounts Payable
+		// Accounts Payable Turnover Ratio
+		// Days Inventory Outstanding
+		// Days Sales Outstanding
+		// WACC
+		// Total Capital
+		// Total Invested Capital
+		// Days Sales in Receivables Index
+		// Gross Margin Index
+		// Sales Growth Index
+		// Sales General and Administrative Expenses Index
+
+	}
 
 	return nil, nil
 }
