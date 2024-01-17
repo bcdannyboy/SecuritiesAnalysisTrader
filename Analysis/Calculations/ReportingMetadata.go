@@ -8,12 +8,12 @@ import (
 	"time"
 )
 
-func CalculateMeanSTDObjs(objects []interface{}) (map[string][]float64, error) {
+func CalculateMeanSTDObjs(objects []interface{}) (map[string][]interface{}, error) {
 	if len(objects) == 0 {
 		return nil, fmt.Errorf("no objects provided")
 	}
 
-	fieldStats := make(map[string][]float64) // Map to store field stats
+	fieldStats := make(map[string][]interface{}) // Map to store field stats with interface{} to allow nil
 
 	for _, obj := range objects {
 		val := reflect.ValueOf(obj)
@@ -36,21 +36,26 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]float64, error) {
 
 	// Compute mean and standard deviation for each field
 	for key, stats := range fieldStats {
-		count := stats[2]
+		count := stats[2].(float64)
 		if count == 0 {
 			continue
 		}
-		mean := stats[0] / count
-		variance := (stats[1] - (stats[0]*stats[0])/count) / count
-		stdDev := math.Sqrt(variance)
+		mean := stats[0].(float64) / count
 
-		fieldStats[key] = []float64{mean, stdDev}
+		var stdDev *float64 // Pointer to float64
+		if count > 1 {
+			variance := (stats[1].(float64) - (stats[0].(float64)*stats[0].(float64))/count) / (count - 1)
+			std := math.Sqrt(variance)
+			stdDev = &std // Calculate standard deviation if more than one item
+		}
+
+		fieldStats[key] = []interface{}{mean, stdDev}
 	}
 
 	return fieldStats, nil
 }
 
-func processElement(val reflect.Value, fieldStats map[string][]float64) error {
+func processElement(val reflect.Value, fieldStats map[string][]interface{}) error {
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
@@ -76,14 +81,14 @@ func processElement(val reflect.Value, fieldStats map[string][]float64) error {
 	return nil
 }
 
-func updateFieldStats(fieldStats map[string][]float64, key string, value float64) {
+func updateFieldStats(fieldStats map[string][]interface{}, key string, value float64) {
 	stats, exists := fieldStats[key]
 	if !exists {
-		stats = []float64{0, 0, 0} // sum, sum of squares, count
+		stats = []interface{}{0.0, 0.0, 0.0} // sum, sum of squares, count
 	}
-	stats[0] += value         // sum
-	stats[1] += value * value // sum of squares
-	stats[2]++                // count
+	stats[0] = stats[0].(float64) + value       // sum
+	stats[1] = stats[1].(float64) + value*value // sum of squares
+	stats[2] = stats[2].(float64) + 1           // count
 	fieldStats[key] = stats
 }
 

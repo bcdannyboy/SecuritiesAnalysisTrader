@@ -282,6 +282,23 @@ func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period s
 	CalculationResults.CustomCalculations = CustomCalculationResults
 	CalculationResults.CustomCalculationsAsReported = CustomCalculationAsReportedResults
 
+	CalculationResults.CustomCalculationsGrowth = calculateGrowth(CustomCalculationResults)
+	CalculationResults.CustomCalculationsAsReportedGrowth = calculateGrowth(CustomCalculationAsReportedResults)
+
+	MeanSTDCustomCalculations, err := Calculations.CalculateMeanSTDObjs([]interface{}{CustomCalculationResults})
+	if err != nil {
+		print("Failed to calculate mean and standard deviation for custom calculations: %s\n", err.Error())
+	} else {
+		CalculationResults.MeanSTDCustomCalculations = MeanSTDCustomCalculations
+	}
+
+	MeanSTDCustomCalculationsGrowth, err := Calculations.CalculateMeanSTDObjs([]interface{}{CalculationResults.CustomCalculationsGrowth})
+	if err != nil {
+		print("Failed to calculate mean and standard deviation for custom calculations growth: %s\n", err.Error())
+	} else {
+		CalculationResults.MeanSTDCustomCalculationsGrowth = MeanSTDCustomCalculationsGrowth
+	}
+
 	return CalculationResults
 }
 
@@ -1802,4 +1819,42 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 	}
 
 	return FinalCalcResults, FinalCalcResultsAsReported
+}
+
+func calculateGrowth(data []map[string]*float64) map[string][]float64 {
+	growthMap := make(map[string][]float64)
+
+	// Previous values for each key to calculate growth
+	prevValues := make(map[string]float64)
+
+	for _, entry := range data {
+		for key, valuePtr := range entry {
+			if valuePtr != nil {
+				value := *valuePtr
+
+				// Check if we have a previous value
+				if prevValue, exists := prevValues[key]; exists && prevValue != 0 {
+					// Calculate growth
+					growth := (value - prevValue) / prevValue
+					growthMap[key] = append(growthMap[key], growth)
+				} else {
+					// For the first non-nil value, growth is 0
+					growthMap[key] = append(growthMap[key], 0)
+				}
+
+				// Update previous value
+				prevValues[key] = value
+			}
+			// If value is nil, do nothing for this iteration
+		}
+	}
+
+	// Remove keys that only had nil values
+	for key, growths := range growthMap {
+		if len(growths) == 0 {
+			delete(growthMap, key)
+		}
+	}
+
+	return growthMap
 }

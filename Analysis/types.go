@@ -55,13 +55,13 @@ type FundamentalsCalculationsResults struct {
 		TotalConsecutivePeriodsWithNoGapsInBalanceSheetStatementAsReported int
 		TotalConsecutiveMissingPeriodsInBalanceSheetStatementAsReported    int
 
-		MeanSTDBalanceSheetStatement                          map[string][]float64
-		MeanSTDBalanceSheetStatementAsReported                map[string][]float64
-		MeanSTDBalanceSheetStatementGrowth                    map[string][]float64
-		MeanSTDBalanceSheetStatementAsReportedGrowth          map[string][]float64
-		MeanSTDBalanceSheetDiscrepancies                      map[string][]float64
-		MeanZippedSTDBalanceSheetStatementAndAsReported       map[string][]float64
-		MeanZippedSTDBalanceSheetStatementAndAsReportedGrowth map[string][]float64
+		MeanSTDBalanceSheetStatement                          map[string][]interface{}
+		MeanSTDBalanceSheetStatementAsReported                map[string][]interface{}
+		MeanSTDBalanceSheetStatementGrowth                    map[string][]interface{}
+		MeanSTDBalanceSheetStatementAsReportedGrowth          map[string][]interface{}
+		MeanSTDBalanceSheetDiscrepancies                      map[string][]interface{}
+		MeanZippedSTDBalanceSheetStatementAndAsReported       map[string][]interface{}
+		MeanZippedSTDBalanceSheetStatementAndAsReportedGrowth map[string][]interface{}
 	}
 
 	IncomeStatement struct {
@@ -76,13 +76,13 @@ type FundamentalsCalculationsResults struct {
 		TotalConsecutivePeriodsWithNoGapsInIncomeStatementAsReported int
 		TotalConsecutiveMissingPeriodsInIncomeStatementAsReported    int
 
-		MeanSTDIncomeStatement                          map[string][]float64
-		MeanSTDIncomeStatementAsReported                map[string][]float64
-		MeanSTDIncomeStatementGrowth                    map[string][]float64
-		MeanSTDIncomeStatementAsReportedGrowth          map[string][]float64
-		MeanSTDIncomeStatementDiscrepancies             map[string][]float64
-		MeanZippedSTDIncomeStatementAndAsReported       map[string][]float64
-		MeanZippedSTDIncomeStatementAndAsReportedGrowth map[string][]float64
+		MeanSTDIncomeStatement                          map[string][]interface{}
+		MeanSTDIncomeStatementAsReported                map[string][]interface{}
+		MeanSTDIncomeStatementGrowth                    map[string][]interface{}
+		MeanSTDIncomeStatementAsReportedGrowth          map[string][]interface{}
+		MeanSTDIncomeStatementDiscrepancies             map[string][]interface{}
+		MeanZippedSTDIncomeStatementAndAsReported       map[string][]interface{}
+		MeanZippedSTDIncomeStatementAndAsReportedGrowth map[string][]interface{}
 	}
 
 	CashFlowStatement struct {
@@ -97,13 +97,13 @@ type FundamentalsCalculationsResults struct {
 		TotalConsecutivePeriodsWithNoGapsInCashFlowStatementAsReported int
 		TotalConsecutiveMissingPeriodsInCashFlowStatementAsReported    int
 
-		MeanSTDCashFlowStatement                          map[string][]float64
-		MeanSTDCashFlowStatementAsReported                map[string][]float64
-		MeanSTDCashFlowStatementGrowth                    map[string][]float64
-		MeanSTDCashFlowStatementAsReportedGrowth          map[string][]float64
-		MeanSTDCashFlowStatementDiscrepancies             map[string][]float64
-		MeanZippedSTDCashFlowStatementAndAsReported       map[string][]float64
-		MeanZippedSTDCashFlowStatementAndAsReportedGrowth map[string][]float64
+		MeanSTDCashFlowStatement                          map[string][]interface{}
+		MeanSTDCashFlowStatementAsReported                map[string][]interface{}
+		MeanSTDCashFlowStatementGrowth                    map[string][]interface{}
+		MeanSTDCashFlowStatementAsReportedGrowth          map[string][]interface{}
+		MeanSTDCashFlowStatementDiscrepancies             map[string][]interface{}
+		MeanZippedSTDCashFlowStatementAndAsReported       map[string][]interface{}
+		MeanZippedSTDCashFlowStatementAndAsReportedGrowth map[string][]interface{}
 	}
 
 	FinancialRatios struct {
@@ -112,23 +112,23 @@ type FundamentalsCalculationsResults struct {
 		FPMRatiosGrowth    []*fundamentals.FinancialRatiosGrowth
 		FPMRatiosTTMGrowth []*fundamentals.FinancialRatiosTTMGrowth
 
-		AverageSTDFPMRatios                     map[string][]float64
-		AverageSTDFPMRatiosTTM                  map[string][]float64
-		AverageSTDFPMRatiosGrowth               map[string][]float64
-		AverageSTDFPMRatiosTTMGrowth            map[string][]float64
-		AverageSTDFZippedFPMRationsAndTTMRatios map[string][]float64
+		AverageSTDFPMRatios                     map[string][]interface{}
+		AverageSTDFPMRatiosTTM                  map[string][]interface{}
+		AverageSTDFPMRatiosGrowth               map[string][]interface{}
+		AverageSTDFPMRatiosTTMGrowth            map[string][]interface{}
+		AverageSTDFZippedFPMRationsAndTTMRatios map[string][]interface{}
 	}
 
 	CustomCalculations              []map[string]*float64
-	CustomCalculationsGrowth        []map[string]float64
-	MeanSTDCustomCalculations       map[string][]float64
-	MeanSTDCustomCalculationsGrowth map[string][]float64
+	CustomCalculationsGrowth        map[string][]float64
+	MeanSTDCustomCalculations       map[string][]interface{}
+	MeanSTDCustomCalculationsGrowth map[string][]interface{}
 
 	CustomCalculationsAsReported              []map[string]*float64
-	CustomCalculationsAsReportedGrowth        []map[string]float64
-	MeanSTDCustomCalculationsAsReported       []map[string][]float64
-	MeanSTDCustomCalculationsAsReportedGrowth []map[string][]float64
+	CustomCalculationsAsReportedGrowth        map[string][]float64
+	MeanSTDCustomCalculationsAsReported       map[string][]interface{}
+	MeanSTDCustomCalculationsAsReportedGrowth map[string][]interface{}
 
-	MeanZippedSTDCustomCalculationsAndAsReported       []map[string][]float64
-	MeanZippedSTDCustomCalculationsAndAsReportedGrowth map[string][]float64
+	MeanZippedSTDCustomCalculationsAndAsReported       map[string][]interface{}
+	MeanZippedSTDCustomCalculationsAndAsReportedGrowth map[string][]interface{}
 }
