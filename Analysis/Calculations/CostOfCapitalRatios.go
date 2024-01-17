@@ -9,18 +9,6 @@ func WeightedAverageCostOfCapital(MarketValueOfEquity, MarketValueOfDebt, CostOf
 	return ((E / V) * CostOfEquity) + ((D / V) * CostOfDebt * (1 - CorporateTaxRate))
 }
 
-func CostOfEquity(RiskFreeRate, MarketReturn, Beta float64) float64 {
-	// The cost of equity is the return a company requires to decide if an investment meets capital return requirements. Firms often use it as a capital budgeting threshold for the required rate of return.
-
-	return RiskFreeRate + (Beta * (MarketReturn - RiskFreeRate))
-}
-
-func CostOfDebt(InterestExpense, MarketValueOfDebt float64) float64 {
-	// The cost of debt is the effective interest rate a company pays on its debt obligations, including bonds, mortgages, and any other forms of debt the company may have.
-
-	return InterestExpense / MarketValueOfDebt
-}
-
 func PriceElasticityOfDemand(PercentageChangeInQuantityDemanded, PercentageChangeInCostOfGoodsSold float64) float64 {
 	// Price elasticity of demand is a measure of the relationship between a change in the quantity demanded of a particular good and a change in its price.
 
