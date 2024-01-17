@@ -56,29 +56,61 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]interface{}, erro
 }
 
 func processElement(val reflect.Value, fieldStats map[string][]interface{}) error {
+	// Check if the value is a pointer and dereference it
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 
-	if val.Kind() != reflect.Struct {
-		return fmt.Errorf("expected struct or pointer to struct, got %s", val.Kind())
+	// Handle the case for struct, map, and slice of maps
+	switch val.Kind() {
+	case reflect.Struct:
+		processStruct(val, fieldStats)
+	case reflect.Map:
+		processMap(val, fieldStats)
+	case reflect.Slice:
+		for i := 0; i < val.Len(); i++ {
+			sliceElem := val.Index(i)
+			if sliceElem.Kind() == reflect.Map {
+				processMap(sliceElem, fieldStats)
+			}
+		}
+	default:
+		return fmt.Errorf("expected struct, map, or slice of maps, got %s", val.Kind())
 	}
 
+	return nil
+}
+
+func processStruct(val reflect.Value, fieldStats map[string][]interface{}) {
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Field(i)
 		key := val.Type().Field(i).Name
 
-		if field.Kind() == reflect.Float64 {
-			fieldValue := field.Float()
-			updateFieldStats(fieldStats, key, fieldValue)
-		} else if field.Kind() == reflect.Interface && !field.IsNil() {
-			if convertedValue, ok := field.Interface().(float64); ok {
-				updateFieldStats(fieldStats, key, convertedValue)
-			}
+		processField(field, key, fieldStats)
+	}
+}
+
+func processMap(val reflect.Value, fieldStats map[string][]interface{}) {
+	for _, key := range val.MapKeys() {
+		mapValue := val.MapIndex(key)
+		if mapValue.Kind() == reflect.Ptr && !mapValue.IsNil() {
+			mapValue = mapValue.Elem()
+		}
+		if mapValue.Kind() == reflect.Float64 {
+			processField(mapValue, key.String(), fieldStats)
 		}
 	}
+}
 
-	return nil
+func processField(field reflect.Value, key string, fieldStats map[string][]interface{}) {
+	if field.Kind() == reflect.Float64 {
+		fieldValue := field.Float()
+		updateFieldStats(fieldStats, key, fieldValue)
+	} else if field.Kind() == reflect.Interface && !field.IsNil() {
+		if convertedValue, ok := field.Interface().(float64); ok {
+			updateFieldStats(fieldStats, key, convertedValue)
+		}
+	}
 }
 
 func updateFieldStats(fieldStats map[string][]interface{}, key string, value float64) {
