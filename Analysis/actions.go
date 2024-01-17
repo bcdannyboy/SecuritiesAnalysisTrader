@@ -7,11 +7,17 @@ import (
 	"github.com/spacecodewor/fmpcloud-go/objects"
 )
 
-func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period string, PricePerShare float64, EffectiveTaxRate float64, NumEmployees float64, RiskFreeRate float64, MarketReturn float64, Beta float64) *FundamentalsCalculationsResults {
+func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period string, RiskFreeRate float64, MarketReturn float64, Outlook *CompanyOutlook, NumEmployees float64) *FundamentalsCalculationsResults {
 	CalculationResults := &FundamentalsCalculationsResults{
 		Symbol:       Fundamentals.Symbol,
 		Fundamentals: Fundamentals,
+		Outlook:      Outlook,
+		NumEmployees: NumEmployees,
 	}
+
+	Beta := Outlook.Beta
+	EffectiveTaxRate := Fundamentals.FinancialRatiosTTM[len(Fundamentals.FinancialRatiosTTM)-1].EffectiveTaxRateTTM
+	PricePerShare := Outlook.StockPrice
 
 	CalculationResults.BalanceSheet.DifferenceInLengthBetweenBalanceSheetStatementAndBalanceSheetStatementAsReported = len(Fundamentals.BalanceSheetStatements) - len(Fundamentals.BalanceSheetStatementAsReported)
 	CalculationResults.IncomeStatement.DifferenceInLengthBetweenIncomeStatementAndIncomeStatementAsReported = len(Fundamentals.IncomeStatement) - len(Fundamentals.IncomeStatementAsReported)
@@ -282,8 +288,8 @@ func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period s
 	CalculationResults.CustomCalculations = CustomCalculationResults
 	CalculationResults.CustomCalculationsAsReported = CustomCalculationAsReportedResults
 
-	CalculationResults.CustomCalculationsGrowth = calculateGrowth(CustomCalculationResults)
-	CalculationResults.CustomCalculationsAsReportedGrowth = calculateGrowth(CustomCalculationAsReportedResults)
+	CalculationResults.CustomCalculationsGrowth = Calculations.CalculateGrowthF64P(CustomCalculationResults)
+	CalculationResults.CustomCalculationsAsReportedGrowth = Calculations.CalculateGrowthF64P(CustomCalculationAsReportedResults)
 
 	MeanSTDCustomCalculations, err := Calculations.CalculateMeanSTDObjs([]interface{}{CustomCalculationResults})
 	if err != nil {
@@ -297,6 +303,20 @@ func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period s
 		print("Failed to calculate mean and standard deviation for custom calculations growth: %s\n", err.Error())
 	} else {
 		CalculationResults.MeanSTDCustomCalculationsGrowth = MeanSTDCustomCalculationsGrowth
+	}
+
+	MeanZippedSTDCustomCalculationsAndAsReported, err := Calculations.CalculateMeanSTDObjs([]interface{}{CustomCalculationResults, CustomCalculationAsReportedResults})
+	if err != nil {
+		print("Failed to calculate mean and standard deviation for zipped custom calculations and as reported: %s\n", err.Error())
+	} else {
+		CalculationResults.MeanZippedSTDCustomCalculationsAndAsReported = MeanZippedSTDCustomCalculationsAndAsReported
+	}
+
+	MeanZippedSTDCustomCalculationsAndAsReportedGrowth, err := Calculations.CalculateMeanSTDObjs([]interface{}{CalculationResults.CustomCalculationsGrowth, CalculationResults.CustomCalculationsAsReportedGrowth})
+	if err != nil {
+		print("Failed to calculate mean and standard deviation for zipped custom calculations growth and as reported growth: %s\n", err.Error())
+	} else {
+		CalculationResults.MeanZippedSTDCustomCalculationsAndAsReportedGrowth = MeanZippedSTDCustomCalculationsAndAsReportedGrowth
 	}
 
 	return CalculationResults
@@ -1819,42 +1839,4 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 	}
 
 	return FinalCalcResults, FinalCalcResultsAsReported
-}
-
-func calculateGrowth(data []map[string]*float64) map[string][]float64 {
-	growthMap := make(map[string][]float64)
-
-	// Previous values for each key to calculate growth
-	prevValues := make(map[string]float64)
-
-	for _, entry := range data {
-		for key, valuePtr := range entry {
-			if valuePtr != nil {
-				value := *valuePtr
-
-				// Check if we have a previous value
-				if prevValue, exists := prevValues[key]; exists && prevValue != 0 {
-					// Calculate growth
-					growth := (value - prevValue) / prevValue
-					growthMap[key] = append(growthMap[key], growth)
-				} else {
-					// For the first non-nil value, growth is 0
-					growthMap[key] = append(growthMap[key], 0)
-				}
-
-				// Update previous value
-				prevValues[key] = value
-			}
-			// If value is nil, do nothing for this iteration
-		}
-	}
-
-	// Remove keys that only had nil values
-	for key, growths := range growthMap {
-		if len(growths) == 0 {
-			delete(growthMap, key)
-		}
-	}
-
-	return growthMap
 }

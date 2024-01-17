@@ -146,3 +146,41 @@ func calculatePeriods(dates []time.Time, increment string) (int, int, int) {
 
 	return missingPeriods, maxConsecutive + 1, gapPeriods
 }
+
+func CalculateGrowthF64P(data []map[string]*float64) map[string][]float64 {
+	growthMap := make(map[string][]float64)
+
+	// Previous values for each key to calculate growth
+	prevValues := make(map[string]float64)
+
+	for _, entry := range data {
+		for key, valuePtr := range entry {
+			if valuePtr != nil {
+				value := *valuePtr
+
+				// Check if we have a previous value
+				if prevValue, exists := prevValues[key]; exists && prevValue != 0 {
+					// Calculate growth
+					growth := (value - prevValue) / prevValue
+					growthMap[key] = append(growthMap[key], growth)
+				} else {
+					// For the first non-nil value, growth is 0
+					growthMap[key] = append(growthMap[key], 0)
+				}
+
+				// Update previous value
+				prevValues[key] = value
+			}
+			// If value is nil, do nothing for this iteration
+		}
+	}
+
+	// Remove keys that only had nil values
+	for key, growths := range growthMap {
+		if len(growths) == 0 {
+			delete(growthMap, key)
+		}
+	}
+
+	return growthMap
+}

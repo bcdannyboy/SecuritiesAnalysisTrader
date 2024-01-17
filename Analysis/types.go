@@ -39,6 +39,8 @@ type FundamentalsCalculationsResults struct {
 	Symbol           string
 	Fundamentals     *CompanyFundamentals
 	PeriodLength     objects.CompanyValuationPeriod
+	Outlook          *CompanyOutlook
+	NumEmployees     float64
 	CostOfEquity     float64
 	Beta             float64
 	EffectiveTaxRate float64
@@ -131,4 +133,34 @@ type FundamentalsCalculationsResults struct {
 
 	MeanZippedSTDCustomCalculationsAndAsReported       map[string][]interface{}
 	MeanZippedSTDCustomCalculationsAndAsReportedGrowth map[string][]interface{}
+}
+
+type CompanyOutlook struct {
+	Beta                       float64
+	AvgVolume                  float64
+	MarketCap                  float64
+	LastDividend               float64
+	Changes                    float64
+	FMPDcfDiff                 float64
+	FMPDcf                     float64
+	StockPrice                 float64
+	TotalExecutivePay          float64
+	InsiderTrades              []map[string]*float64
+	InsiderTradesGrowth        map[string][]float64
+	InsiderTradesMeanSTD       map[string][]interface{}
+	InsiderTradesGrowthMeanSTD map[string][]interface{}
+	Splits                     []float64
+	SplitMeanSTD               map[string][]interface{}
+	DividendHist               []map[string]*float64
+	DividendHistGrowth         map[string][]float64
+	DividendHistMeanSTD        map[string][]interface{}
+	DividendHistGrowthMeanSTD  map[string][]interface{}
+	DividendYieldTTM           float64
+	CurrentVolume              float64
+	YearHigh                   float64
+	YearLow                    float64
+	Ratios                     []map[string]*float64
+	RatiosGrowth               map[string][]float64
+	RatiosMeanSTD              map[string][]interface{}
+	RatiosGrowthMeanSTD        map[string][]interface{}
 }

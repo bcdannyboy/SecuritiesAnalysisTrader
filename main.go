@@ -35,12 +35,41 @@ func main() {
 		panic(fmt.Sprintf("Failed to confirm initialization of API client: %s", err.Error()))
 	}
 
-	fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, "MSFT", "quarter")
+	RiskFreeRate := float64(5.0)
+	MarketReturn := float64(7.2)
+	Ticker := "MSFT"
+
+	fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, Ticker, "quarter")
 	if err != nil {
-		panic(fmt.Sprintf("Failed to pull company fundamentals: %s", err.Error()))
+		fmt.Printf("failed to pull fundamentals for %s: %s\n", Ticker, err.Error())
+		// TODO
 	}
 
-	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter")
+	FMPDCF, FMPMeanSTDDCF, err := Analysis.PullCompanyDCFs(APIClient, Ticker)
+	if err != nil {
+		fmt.Printf("failed to pull DCFs for %s: %s\n", Ticker, err.Error())
+		// TODO
+	}
+
+	Ratings, RatingsGrowth, RatingsMeanSTD, RatingsGrowthMeanSTD, err := Analysis.PullCompanyRatings(APIClient, Ticker)
+	if err != nil {
+		fmt.Printf("failed to pull ratings for %s: %s\n", Ticker, err.Error())
+		// TODO
+	}
+
+	CompanyOutlookObj, err := Analysis.PullCompanyOutlook(APIClient, Ticker)
+	if err != nil {
+		fmt.Printf("failed to pull outlook for %s: %s\n", Ticker, err.Error())
+		// TODO
+	}
+
+	EmployeeCount, err := Analysis.PullEmployeeCount(APIClient, Ticker)
+	if err != nil {
+		fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
+		// TODO
+	}
+
+	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, *EmployeeCount)
 
 	jCalculationResults, err := json.MarshalIndent(CalculationResults, "", "	")
 	if err != nil {
