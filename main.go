@@ -42,42 +42,48 @@ func main() {
 	fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, Ticker, "quarter")
 	if err != nil {
 		fmt.Printf("failed to pull fundamentals for %s: %s\n", Ticker, err.Error())
-		// TODO
 	}
 
 	FMPDCF, FMPMeanSTDDCF, err := Analysis.PullCompanyDCFs(APIClient, Ticker)
 	if err != nil {
 		fmt.Printf("failed to pull DCFs for %s: %s\n", Ticker, err.Error())
-		// TODO
 	}
 
 	Ratings, RatingsGrowth, RatingsMeanSTD, RatingsGrowthMeanSTD, err := Analysis.PullCompanyRatings(APIClient, Ticker)
 	if err != nil {
 		fmt.Printf("failed to pull ratings for %s: %s\n", Ticker, err.Error())
-		// TODO
 	}
 
 	CompanyOutlookObj, err := Analysis.PullCompanyOutlook(APIClient, Ticker)
 	if err != nil {
 		fmt.Printf("failed to pull outlook for %s: %s\n", Ticker, err.Error())
-		// TODO
 	}
 
 	EmployeeCount, err := Analysis.PullEmployeeCount(APIClient, Ticker)
 	if err != nil {
 		fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
-		// TODO
 	}
 
 	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, *EmployeeCount)
 
-	jCalculationResults, err := json.MarshalIndent(CalculationResults, "", "	")
+	FinalResults := &Analysis.FinalNumbers{
+		CalculationsOutlookFundamentls: CalculationResults,
+		FMPDCF:                         FMPDCF,
+		FMPMeanSTDDCF:                  FMPMeanSTDDCF,
+		EmployeeCount:                  *EmployeeCount,
+		FMPRatings:                     Ratings,
+		FMPRatingsGrowth:               RatingsGrowth,
+		FMPRatingsMeanSTD:              RatingsMeanSTD,
+		FMPRatingsGrowthMeanSTD:        RatingsGrowthMeanSTD,
+	}
+
+	jFinalResults, err := json.MarshalIndent(FinalResults, "", "	")
 	if err != nil {
 		panic(fmt.Sprintf("Failed to marshal calculation results: %s", err.Error()))
 	}
 
 	filename := fmt.Sprintf("calculation_results_%s.json", fundamentals.Symbol)
-	err = os.WriteFile(filename, jCalculationResults, 0644)
+	err = os.WriteFile(filename, jFinalResults, 0644)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to write calculation results to file: %s", err.Error()))
 	}
