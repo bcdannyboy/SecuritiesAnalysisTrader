@@ -526,21 +526,44 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		}
 
 		/* CASH FLOW STATEMENT ITEM SET UP */
+		var DepreciationAndAmortization = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "DepreciationAndAmortization")
+		var DepreciationAndAmortizationAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatementAsReported, "Depreciationdepletionandamortization")
 
-		// Depreciation & Amortization
-		// Total Interest Payments
-		// Total Taxes Paid
-		// Change in Working Capital
-		// Capital Expenditures
-		// Operating Cash Flow
-		// Funds From Operations
-		// Free Cashflow
-		// Operating Cashflow Per Share
-		// Free Cashflow Per Share
+		var TotalInterestPaymentsAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatementAsReported, "Interestpaidnet")
+
+		var TotalTaxesPaid = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "DeferredIncomeTax")
+		var TotalTaxesPaidAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatementAsReported, "Incometaxespaidnet")
+
+		var ChangeInWorkingCapital = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "ChangeInWorkingCapital")
+
+		var CapitalExpenditures = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "CapitalExpenditure")
+		var CapitalExpendituresAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatementAsReported, "Paymentstoacquirepropertyplantandequipment")
+
+		var NetCashOperatingActivitiesAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatementAsReported, "Netcashprovidedbyusedinoperatingactivities")
+		var NetCashInvestingActivitiesAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "Netcashprovidedbyusedininvestingactivities")
+		var NetCashFinancingActivitiesAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "Netcashprovidedbyusedinfinancingactivities")
+		var OperatingCashflow = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "OperatingCashFlow")
+		var OperatingCashFlowAsReported *float64 = nil
+		if NetCashOperatingActivitiesAsReported != nil && NetCashInvestingActivitiesAsReported != nil && NetCashFinancingActivitiesAsReported != nil {
+			OperatingCashFlowAsReported = utils.InterfaceToFloat64Ptr(*NetCashOperatingActivitiesAsReported + *NetCashInvestingActivitiesAsReported + *NetCashFinancingActivitiesAsReported)
+		}
+
+		var FreeCashFlow = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "FreeCashFlow")
+		var FreeCashFlowAsReported *float64 = nil
+		if NetCashOperatingActivitiesAsReported != nil CapitalExpendituresAsReported != nil {
+			FreeCashFlowAsReported = utils.InterfaceToFloat64Ptr(*NetCashOperatingActivitiesAsReported + *CapitalExpendituresAsReported)
+		}
 
 		var EBITDA = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "Ebitda")
 		var EBITDAAsReported *float64 = nil
-		// TODO: no direct relation for reported income statement, need D&A
+		if OperatingIncomeAsReported != nil && DepreciationAndAmortizationAsReported != nil && TotalInterestPaymentsAsReported != nil && TotalTaxesPaidAsReported != nil {
+			EBITDAAsReported = utils.InterfaceToFloat64Ptr(*OperatingIncomeAsReported + *DepreciationAndAmortizationAsReported + *TotalInterestPaymentsAsReported + *TotalTaxesPaidAsReported)
+		}
+
+		var TotalInterestPayments *float64 = nil
+		if EBITDA != nil && NetIncome != nil && TotalTaxesPaid != nil && DepreciationAndAmortization != nil {
+			TotalInterestPayments = utils.InterfaceToFloat64Ptr(*EBITDA - *NetIncome - *TotalTaxesPaid - *DepreciationAndAmortization)
+		}
 
 		/* Calculated or Derived */
 
