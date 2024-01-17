@@ -274,7 +274,7 @@ func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period s
 	return CalculationResults
 }
 
-func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects.CompanyValuationPeriod, PricePerShare float64, EffectiveTaxRate float64, NumEmployees int) (map[string]float64, map[string]float64) {
+func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects.CompanyValuationPeriod, PricePerShare float64, EffectiveTaxRate float64, NumEmployees float64, RiskFreeRate float64, MarketReturn float64) (map[string]float64, map[string]float64) {
 	FullCalcResults := map[string]float64{}
 	FullCalcResultsGrowth := map[string]float64{}
 	FullCalcResultsAsReported := map[string]float64{}
@@ -746,6 +746,67 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		if NetRevenueAsReported != nil && CostOfGoodsSoldAsReported != nil {
             NetMarginAsReported = utils.InterfaceToFloat64Ptr((*NetRevenueAsReported - *CostOfGoodsSoldAsReported) / *NetRevenueAsReported)
         }
+
+		// CALCULATIONS
+		var TangibleNetWorth *float64 = nil
+		var TangibleNetWorthAsReported *float64 = nil
+		if TotalAssets != nil && TotalLiabilities != nil && IntangibleAssets != nil {
+			TangibleNetWorth = utils.InterfaceToFloat64Ptr(Calculations.TangibleNetWorth(*TotalAssets, *TotalLiabilities, *IntangibleAssets))
+		}
+		if TotalAssetsAsReported != nil && TotalLiabilitiesAsReported != nil && IntangibleAssetsAsReported != nil {
+            TangibleNetWorthAsReported = utils.InterfaceToFloat64Ptr(Calculations.TangibleNetWorth(*TotalAssetsAsReported, *TotalLiabilitiesAsReported, *IntangibleAssetsAsReported))
+        }
+
+		var FreeCashFlowToEquity *float64 = nil
+		if EBITDA != nil && DepreciationAndAmortization != nil && TotalInterestPayments != nil && TotalTaxesPaid != nil && ChangeInWorkingCapital != nil && CapitalExpenditures != nil && NetDebt != nil {
+            FreeCashFlowToEquity = utils.InterfaceToFloat64Ptr(Calculations.FreeCashFlowToEquity(*EBITDA, *DepreciationAndAmortization, *TotalInterestPayments, *TotalTaxesPaid, *ChangeInWorkingCapital, *CapitalExpenditures, *NetDebt))
+        }
+
+		var CostOfDebt *float64 = nil
+		var CostOfDebtAsReported *float64 = nil
+		if TotalInterestPayments != nil && TotalDebt != nil {
+            CostOfDebt = utils.InterfaceToFloat64Ptr(Calculations.CostOfDebt(*TotalInterestPayments, *TotalDebt))
+        }
+		if TotalInterestPaymentsAsReported != nil && TotalDebtAsReported != nil {
+            CostOfDebtAsReported = utils.InterfaceToFloat64Ptr(Calculations.CostOfDebt(*TotalInterestPaymentsAsReported, *TotalDebtAsReported))
+        }
+
+		var AdjustedPresentValue *float64 = nil
+		var AdjustedPresentValueAsReported *float64 = nil
+		if UnleveredFirmValue != nil && NetEffectOfDebt != nil {
+            AdjustedPresentValue = utils.InterfaceToFloat64Ptr(Calculations.AdjustedPresentValue(*UnleveredFirmValue, *NetEffectOfDebt))
+        }
+		if UnleveredFirmValueAsReported != nil && NetEffectOfDebtAsReported != nil {
+            AdjustedPresentValueAsReported = utils.InterfaceToFloat64Ptr(Calculations.AdjustedPresentValue(*UnleveredFirmValueAsReported, *NetEffectOfDebtAsReported))
+        }
+
+		var InterestCoverageRatio *float64 = nil
+		var InterestCoverageRatioAsReported *float64 = nil
+		if EBIT != nil && TotalInterestPayments != nil {
+            InterestCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.InterestCoverageRatio(*EBIT, *TotalInterestPayments))
+        }
+		if EBITAsReported != nil && TotalInterestPaymentsAsReported != nil {
+            InterestCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.InterestCoverageRatio(*EBITAsReported, *TotalInterestPaymentsAsReported))
+        }
+
+		var FixedChargeCoverageRatio *float64 = nil
+		var FixedChargeCoverageRatioAsReported *float64 = nil
+		if EBIT != nil && NetFixedAssets != nil && TotalInterestPayments != nil {
+			FixedChargeCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.FixedChargeCoverageRatio(*EBIT, *NetFixedAssets, *TotalInterestPayments))
+		}
+		if EBITAsReported != nil && NetFixedAssetsAsReported != nil && TotalInterestPaymentsAsReported != nil {
+            FixedChargeCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.FixedChargeCoverageRatio(*EBITAsReported, *NetFixedAssetsAsReported, *TotalInterestPaymentsAsReported))
+        }
+
+		var DebtServiceCoverageRatio *float64 = nil
+		var DebtServiceCoverageRatioAsReported *float64 = nil
+		if OperatingIncome != nil && DebtService != nil {
+            DebtServiceCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.DebtServiceCoverageRatio(*OperatingIncome, *DebtService))
+        }
+		if OperatingIncomeAsReported != nil && DebtServiceAsReported != nil {
+            DebtServiceCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DebtServiceCoverageRatio(*OperatingIncomeAsReported, *DebtServiceAsReported))
+        }
+
 	}
 
 	return nil, nil
