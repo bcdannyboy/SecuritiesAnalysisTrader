@@ -45,12 +45,6 @@ func CostOfRetainedEarnings(MarketValueOfStock, UpcomingDividendYield, ExpectedG
 	return (UpcomingDividendYield / MarketValueOfStock) + ExpectedGrowthRate
 }
 
-func CapitalAssetPricingModel(RiskFreeRate, Beta, MarketReturn float64) float64 {
-	// The capital asset pricing model (CAPM) is a model that describes the relationship between systematic risk and expected return for assets, particularly stocks.
-
-	return RiskFreeRate + (Beta * (MarketReturn - RiskFreeRate))
-}
-
 func AdjustedPresentValue(UnleveredFirmValue, NetEffectOfDebt float64) float64 {
 	// Adjusted present value (APV) is the net present value of a project if financed solely by ownership equity plus the present value of all the benefits of financing.
 

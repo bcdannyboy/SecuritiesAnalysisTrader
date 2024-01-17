@@ -72,10 +72,10 @@ func CashFlowReturnOnEquity(OperatingCashFlow, ShareHolderEquity float64) float6
 	return OperatingCashFlow / ShareHolderEquity
 }
 
-func GrossOperatingMargin(GrossRevenue, COGS float64) float64 {
-	// Gross operating margin is a profitability ratio that measures how much of every dollar of revenue is left over after paying the cost of goods sold (COGS).
+func OperatingMargin(Revenue, COGS float64) float64 {
+	// operating margin is a profitability ratio that measures how much of every dollar of revenue is left over after paying the cost of goods sold (COGS).
 
-	return GrossRevenue / COGS
+	return Revenue / COGS
 }
 
 func AssetTurnoverRatio(NetSales float64, TotalAssets float64) float64 {

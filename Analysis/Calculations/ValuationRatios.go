@@ -110,12 +110,6 @@ func PriceToEarningsValuation(MarketCapitalization, NetIncome float64) float64 {
 	return MarketCapitalization / NetIncome
 }
 
-func EquityMarketValue(SharePrice, SharesOutstanding float64) float64 {
-	// Equity market value is the total dollar value of a company's equity calculated by multiplying the current stock price by total outstanding shares.
-
-	return SharePrice * SharesOutstanding
-}
-
 func LiabilitiesMarketValue(SharePrice, SharesOutstanding, BookValueOfDebt float64) float64 {
 	// Liabilities market value is the total dollar value of a company's debt, calculated by multiplying the current market price of a company's debt by its total outstanding debt.
 

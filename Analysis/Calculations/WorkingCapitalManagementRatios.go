@@ -18,12 +18,6 @@ func AverageAccountsPayablePaymentPeriod(AccountsPayableTurnoverRatio float64) f
 	return 365 / AccountsPayableTurnoverRatio
 }
 
-func InventoryToWorkingCapitalRatio(Inventory float64, WorkingCapital float64) float64 {
-	// The inventory to working capital ratio is a liquidity ratio that measures a company's ability to pay off its current liabilities with inventory.
-
-	return Inventory / WorkingCapital
-}
-
 func CashConversionCycle(DaysInventoryOutstanding float64, DaysSalesOutstanding float64, DaysPayablesOutstanding float64) float64 {
 	// The cash conversion cycle (CCC) is a metric that expresses the length of time, in days, that it takes for a company to convert resource inputs into cash flows. The cash conversion cycle attempts to measure the amount of time each net input dollar is tied up in the production and sales process before it is converted into cash through sales to customers.
 
