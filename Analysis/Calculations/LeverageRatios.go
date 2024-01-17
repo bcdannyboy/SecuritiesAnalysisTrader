@@ -53,9 +53,3 @@ func DegreeOfFinancialLeverage(PercentageChangeInEPS, PercentageChangeInEBIT flo
 
 	return PercentageChangeInEPS / PercentageChangeInEBIT
 }
-
-func DebtToEBITDAX(TotalDebt float64, EBITDA float64, Depreciation float64, Amortization float64, Exploration float64) float64 {
-	// EBITDAX is an indicator of a company's financial performance calculated as earnings before interest, taxes, depreciation, amortization, and exploration expenses. This measure is commonly used in the oil and gas industry
-
-	return TotalDebt / (EBITDA + Depreciation + Amortization + Exploration)
-}

@@ -275,12 +275,8 @@ func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period s
 }
 
 func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects.CompanyValuationPeriod, PricePerShare float64, ETR float64, NumEmployees float64, RiskFreeRate float64, MarketReturn float64, CostOfEquity float64) (map[string]float64, map[string]float64) {
-	FullCalcResults := map[string]float64{}
-	FullCalcResultsGrowth := map[string]float64{}
-	FullCalcResultsAsReported := map[string]float64{}
-	FullCalcResultsAsReportedGrowth := map[string]float64{}
-	ZippedFullCaclResultsMeanSTD := map[string]float64{}
-	ZippedFullCaclResultsGrowthMeanSTD := map[string]float64{}
+	FinalCalcResults := []map[string]*float64{}
+	FinalCalcResultsAsReported := []map[string]*float64{}
 
 	LenBalanceSheetStatements := len(Fundamentals.BalanceSheetStatements)
 	LenBalanceSheetStatementAsReported := len(Fundamentals.BalanceSheetStatementAsReported)
@@ -288,7 +284,6 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 	LenIncomeStatementAsReported := len(Fundamentals.IncomeStatementAsReported)
 	LenCashFlowStatement := len(Fundamentals.CashFlowStatement)
 	LenCashFlowStatementAsReported := len(Fundamentals.CashFlowStatementAsReported)
-
 
 	var EffectiveTaxRate = &ETR
 	var DaysInPeriod *float64 = nil
@@ -320,6 +315,9 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 	}
 
 	for current_iteration := 0; current_iteration < LongestLength; current_iteration++ {
+		FullCalcResults := map[string]*float64{}
+		FullCalcResultsAsReported := map[string]*float64{}
+
 		curBalanceSheet := objects.BalanceSheetStatement{}
 		if current_iteration < LenBalanceSheetStatements {
 			curBalanceSheet = Fundamentals.BalanceSheetStatements[current_iteration]
@@ -488,7 +486,7 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		var LongTermInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "LongTermInvestments")
 		var LongTermInvestmentsAsReported *float64 = nil
 		if AssetsNonCurrentAsReported != nil && NetFixedAssetsAsReported != nil && NonCurrentMarketableSecuritiesAsReported != nil && OtherAssetsNonCurrentAsReported != nil {
-			LongTermInvestmentsAsReported = utils.GetFloat64PtrIfNotEmpty(AssetsNonCurrentAsReported - (NetFixedAssetsAsReported + NonCurrentMarketableSecuritiesAsReported + OtherAssetsNonCurrentAsReported))
+			LongTermInvestmentsAsReported = utils.InterfaceToFloat64Ptr(*AssetsNonCurrentAsReported - (*NetFixedAssetsAsReported + *NonCurrentMarketableSecuritiesAsReported + *OtherAssetsNonCurrentAsReported))
 		}
 
 		var TotalMarketableSecurities *float64 = nil
@@ -499,7 +497,7 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		var TotalInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalInvestments")
 		var TotalInvestmentsAsReported *float64 = nil
 		if TotalMarketableSecuritiesAsReported != nil {
-			var TotalInvestmentsAsReported = TotalMarketableSecuritiesAsReported
+			TotalInvestmentsAsReported = TotalMarketableSecuritiesAsReported
 		}
 
 		var NetIncome = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "NetIncome")
@@ -550,7 +548,7 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 
 		var FreeCashFlow = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "FreeCashFlow")
 		var FreeCashFlowAsReported *float64 = nil
-		if NetCashOperatingActivitiesAsReported != nil CapitalExpendituresAsReported != nil {
+		if NetCashOperatingActivitiesAsReported != nil && CapitalExpendituresAsReported != nil {
 			FreeCashFlowAsReported = utils.InterfaceToFloat64Ptr(*NetCashOperatingActivitiesAsReported + *CapitalExpendituresAsReported)
 		}
 
@@ -593,8 +591,6 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			TotalDebt = utils.InterfaceToFloat64Ptr(*ShortTermDebt + *LongTermDebt)
 		}
 		var ShortTermDebtAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Othershorttermborrowings")
-		var CurrentLongTermDebtAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Longtermdebtcurrent")
-		var NonCurrentLongTermDebtAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Longtermdebtnoncurrent")
 		var TotalDebtAsReported *float64 = nil
 		if ShortTermDebtAsReported != nil && CurrentLongTermDebtAsReported != nil && NonCurrentLongTermDebtAsReported != nil {
 			TotalDebtAsReported = utils.InterfaceToFloat64Ptr(*ShortTermDebtAsReported + *CurrentLongTermDebtAsReported + *NonCurrentLongTermDebtAsReported)
@@ -612,19 +608,19 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		var UnleveredFirmValue *float64 = nil
 		var UnleveredFirmValueAsReported *float64 = nil
 		if EBIT != nil && DepreciationAndAmortization != nil {
-			UnleveredFirmValue = utils.InterfaceToFloat64Ptr((*EBIT * (1 - EffectiveTaxRate)) + *DepreciationAndAmortization)
+			UnleveredFirmValue = utils.InterfaceToFloat64Ptr((*EBIT * (1 - *EffectiveTaxRate)) + *DepreciationAndAmortization)
 		}
 		if EBITAsReported != nil && DepreciationAndAmortizationAsReported != nil {
-			UnleveredFirmValueAsReported = utils.InterfaceToFloat64Ptr((*EBITAsReported * (1 - EffectiveTaxRate)) + *DepreciationAndAmortizationAsReported)&
+			UnleveredFirmValueAsReported = utils.InterfaceToFloat64Ptr((*EBITAsReported * (1 - *EffectiveTaxRate)) + *DepreciationAndAmortizationAsReported)
 		}
 
 		var TaxShieldBenefits *float64 = nil
 		var TaxShieldBenefitsAsReported *float64 = nil
 		if TotalInterestPayments != nil {
-			TaxShieldBenefits = utils.InterfaceToFloat64Ptr(*TotalInterestPayments * EffectiveTaxRate)
+			TaxShieldBenefits = utils.InterfaceToFloat64Ptr(*TotalInterestPayments * *EffectiveTaxRate)
 		}
 		if TotalInterestPaymentsAsReported != nil {
-			TaxShieldBenefitsAsReported = utils.InterfaceToFloat64Ptr(*TotalInterestPaymentsAsReported * EffectiveTaxRate)
+			TaxShieldBenefitsAsReported = utils.InterfaceToFloat64Ptr(*TotalInterestPaymentsAsReported * *EffectiveTaxRate)
 		}
 
 		var NetEffectOfDebt *float64 = nil
@@ -633,8 +629,8 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			NetEffectOfDebt = utils.InterfaceToFloat64Ptr(*TaxShieldBenefits - *TotalInterestPayments)
 		}
 		if TaxShieldBenefitsAsReported != nil && TotalInterestPaymentsAsReported != nil {
-            NetEffectOfDebtAsReported = utils.InterfaceToFloat64Ptr(*TaxShieldBenefitsAsReported - *TotalInterestPaymentsAsReported)
-        }
+			NetEffectOfDebtAsReported = utils.InterfaceToFloat64Ptr(*TaxShieldBenefitsAsReported - *TotalInterestPaymentsAsReported)
+		}
 
 		var DebtService = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "DebtService")
 		var DebtServiceAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatementAsReported, "Debtservice")
@@ -642,47 +638,47 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		var NonInterestExpenses *float64 = nil
 		var NonInterestExpensesAsReported *float64 = nil
 		if OperatingExpenses != nil && TotalInterestPayments != nil {
-            NonInterestExpenses = utils.InterfaceToFloat64Ptr(*OperatingExpenses - *TotalInterestPayments)
-        }
+			NonInterestExpenses = utils.InterfaceToFloat64Ptr(*OperatingExpenses - *TotalInterestPayments)
+		}
 		if OperatingExpensesAsReported != nil && TotalInterestPaymentsAsReported != nil {
-            NonInterestExpensesAsReported = utils.InterfaceToFloat64Ptr(*OperatingExpensesAsReported - *TotalInterestPaymentsAsReported)
-        }
+			NonInterestExpensesAsReported = utils.InterfaceToFloat64Ptr(*OperatingExpensesAsReported - *TotalInterestPaymentsAsReported)
+		}
 
 		var MarketCapitalization *float64 = nil
 		var MarketCapitalizationAsReported *float64 = nil
 		if SharesOutstanding != nil && PricePerShare != 0 {
-            MarketCapitalization = utils.InterfaceToFloat64Ptr(*SharesOutstanding * PricePerShare)
-        }
+			MarketCapitalization = utils.InterfaceToFloat64Ptr(*SharesOutstanding * PricePerShare)
+		}
 		if SharesOutstandingAsReported != nil && PricePerShare != 0 {
-            MarketCapitalizationAsReported = utils.InterfaceToFloat64Ptr(*SharesOutstandingAsReported * PricePerShare)
-        }
+			MarketCapitalizationAsReported = utils.InterfaceToFloat64Ptr(*SharesOutstandingAsReported * PricePerShare)
+		}
 
 		var EnterpriseValue *float64 = nil
 		var EnterpriseValueAsReported *float64 = nil
 		if MarketCapitalization != nil && TotalDebt != nil && CashAndCashEquivalents != nil {
-            EnterpriseValue = utils.InterfaceToFloat64Ptr(*MarketCapitalization + *TotalDebt - *CashAndCashEquivalents)
-        }
+			EnterpriseValue = utils.InterfaceToFloat64Ptr(*MarketCapitalization + *TotalDebt - *CashAndCashEquivalents)
+		}
 		if MarketCapitalizationAsReported != nil && TotalDebtAsReported != nil && CashAndCashEquivalentsAsReported != nil {
-            EnterpriseValueAsReported = utils.InterfaceToFloat64Ptr(*MarketCapitalizationAsReported + *TotalDebtAsReported - *CashAndCashEquivalentsAsReported)
-        }
+			EnterpriseValueAsReported = utils.InterfaceToFloat64Ptr(*MarketCapitalizationAsReported + *TotalDebtAsReported - *CashAndCashEquivalentsAsReported)
+		}
 
 		var DebtOutstanding *float64 = nil
 		var DebtOutstandingAsReported *float64 = nil
 		if TotalDebt != nil && TotalInterestPayments != nil {
-            DebtOutstanding = utils.InterfaceToFloat64Ptr(*TotalDebt - *TotalInterestPayments)
-        }
+			DebtOutstanding = utils.InterfaceToFloat64Ptr(*TotalDebt - *TotalInterestPayments)
+		}
 		if TotalDebtAsReported != nil && TotalInterestPaymentsAsReported != nil {
-            DebtOutstandingAsReported = utils.InterfaceToFloat64Ptr(*TotalDebtAsReported - *TotalInterestPaymentsAsReported)
-        }
+			DebtOutstandingAsReported = utils.InterfaceToFloat64Ptr(*TotalDebtAsReported - *TotalInterestPaymentsAsReported)
+		}
 
 		var AssetTurnoverRatio *float64 = nil
 		var AssetTurnoverRatioAsReported *float64 = nil
 		if NetRevenue != nil && TotalAssets != nil {
-            AssetTurnoverRatio = utils.InterfaceToFloat64Ptr(*NetRevenue / *TotalAssets)
-        }
+			AssetTurnoverRatio = utils.InterfaceToFloat64Ptr(*NetRevenue / *TotalAssets)
+		}
 		if NetRevenueAsReported != nil && TotalAssetsAsReported != nil {
-            AssetTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(*NetRevenueAsReported / *TotalAssetsAsReported)
-        }
+			AssetTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(*NetRevenueAsReported / *TotalAssetsAsReported)
+		}
 
 		var DividendsPaid = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatement, "DividendsPaid")
 		var DividendsPaidAsReported = utils.GetFloat64PtrIfNotEmpty(curCashFlowStatementAsReported, "Paymentsofdividends")
@@ -690,20 +686,20 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		var RetentionRatio *float64 = nil
 		var RetentionRatioAsReported *float64 = nil
 		if NetIncome != nil && DividendsPaid != nil {
-            RetentionRatio = utils.InterfaceToFloat64Ptr((*NetIncome - *DividendsPaid) / *NetIncome)
-        }
+			RetentionRatio = utils.InterfaceToFloat64Ptr((*NetIncome - *DividendsPaid) / *NetIncome)
+		}
 		if NetIncomeAsReported != nil && DividendsPaidAsReported != nil {
-            RetentionRatioAsReported = utils.InterfaceToFloat64Ptr((*NetIncomeAsReported - *DividendsPaidAsReported) / *NetIncomeAsReported)
-        }
+			RetentionRatioAsReported = utils.InterfaceToFloat64Ptr((*NetIncomeAsReported - *DividendsPaidAsReported) / *NetIncomeAsReported)
+		}
 
 		var ReturnOnEquity *float64 = nil
 		var ReturnOnEquityAsReported *float64 = nil
 		if NetIncome != nil && ShareholderEquity != nil {
-            ReturnOnEquity = utils.InterfaceToFloat64Ptr(*NetIncome / *ShareholderEquity)
-        }
+			ReturnOnEquity = utils.InterfaceToFloat64Ptr(*NetIncome / *ShareholderEquity)
+		}
 		if NetIncomeAsReported != nil && ShareholderEquityAsReported != nil {
-            ReturnOnEquityAsReported = utils.InterfaceToFloat64Ptr(*NetIncomeAsReported / *ShareholderEquityAsReported)
-        }
+			ReturnOnEquityAsReported = utils.InterfaceToFloat64Ptr(*NetIncomeAsReported / *ShareholderEquityAsReported)
+		}
 
 		var CostAndExpenses = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "CostAndExpenses")
 		var CostOfRevenue = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "CostOfRevenue")
@@ -715,20 +711,20 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		var ExplicitCosts *float64 = nil
 		var ExplicitCostsAsReported *float64 = nil
 		if CostAndExpenses != nil && CostOfRevenue != nil && OperatingExpenses != nil && SellingGeneralAndAdministrativeExpenses != nil {
-            ExplicitCosts = utils.InterfaceToFloat64Ptr(*CostAndExpenses + *CostOfRevenue + *OperatingExpenses + *SellingGeneralAndAdministrativeExpenses)
-        }
-		if CostOfGoodsSoldAsReported != nil && OperatingExpensesAsReported != nil  && SellingGeneralAndAdministrativeExpensesAsReported != nil {
-            ExplicitCostsAsReported = utils.InterfaceToFloat64Ptr(*CostOfGoodsSoldAsReported + *OperatingExpensesAsReported + *SellingGeneralAndAdministrativeExpensesAsReported)
-        }
+			ExplicitCosts = utils.InterfaceToFloat64Ptr(*CostAndExpenses + *CostOfRevenue + *OperatingExpenses + *SellingGeneralAndAdministrativeExpenses)
+		}
+		if CostOfGoodsSoldAsReported != nil && OperatingExpensesAsReported != nil && SellingGeneralAndAdministrativeExpensesAsReported != nil {
+			ExplicitCostsAsReported = utils.InterfaceToFloat64Ptr(*CostOfGoodsSoldAsReported + *OperatingExpensesAsReported + *SellingGeneralAndAdministrativeExpensesAsReported)
+		}
 
 		var DaysInventoryOutstanding *float64 = nil
 		var DaysInventoryOutstandingAsReported *float64 = nil
 		if Inventory != nil && CostOfRevenue != nil && DaysInPeriod != nil {
-            DaysInventoryOutstanding = utils.InterfaceToFloat64Ptr((*Inventory / *CostOfRevenue) * DaysInPeriod)
-        }
+			DaysInventoryOutstanding = utils.InterfaceToFloat64Ptr((*Inventory / *CostOfRevenue) * *DaysInPeriod)
+		}
 		if InventoryAsReported != nil && CostOfGoodsSoldAsReported != nil && DaysInPeriod != nil {
-            DaysInventoryOutstandingAsReported = utils.InterfaceToFloat64Ptr((*InventoryAsReported / *CostOfGoodsSoldAsReported) * DaysInPeriod)
-        }
+			DaysInventoryOutstandingAsReported = utils.InterfaceToFloat64Ptr((*InventoryAsReported / *CostOfGoodsSoldAsReported) * *DaysInPeriod)
+		}
 
 		var TotalCapital *float64 = nil
 		var TotalCapitalAsReported *float64 = nil
@@ -736,59 +732,40 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			TotalCapital = utils.InterfaceToFloat64Ptr(*LongTermDebt + *ShortTermDebt + *ShareholderEquity)
 		}
 		if TotalDebtAsReported != nil && ShareholderEquityAsReported != nil {
-            TotalCapitalAsReported = utils.InterfaceToFloat64Ptr(*TotalDebtAsReported + *ShareholderEquityAsReported)
-        }
+			TotalCapitalAsReported = utils.InterfaceToFloat64Ptr(*TotalDebtAsReported + *ShareholderEquityAsReported)
+		}
 
 		var NetMargin *float64 = nil
 		var NetMarginAsReported *float64 = nil
 		if NetRevenue != nil && CostOfRevenue != nil {
-            NetMargin = utils.InterfaceToFloat64Ptr((*NetRevenue - *CostOfRevenue) / *NetRevenue)
-        }
-		if NetRevenueAsReported != nil && CostOfGoodsSoldAsReported != nil {
-            NetMarginAsReported = utils.InterfaceToFloat64Ptr((*NetRevenueAsReported - *CostOfGoodsSoldAsReported) / *NetRevenueAsReported)
-        }
-
-		// CALCULATIONS
-		var TangibleNetWorth *float64 = nil
-		var TangibleNetWorthAsReported *float64 = nil
-		if TotalAssets != nil && TotalLiabilities != nil && IntangibleAssets != nil {
-			TangibleNetWorth = utils.InterfaceToFloat64Ptr(Calculations.TangibleNetWorth(*TotalAssets, *TotalLiabilities, *IntangibleAssets))
+			NetMargin = utils.InterfaceToFloat64Ptr((*NetRevenue - *CostOfRevenue) / *NetRevenue)
 		}
-		if TotalAssetsAsReported != nil && TotalLiabilitiesAsReported != nil && IntangibleAssetsAsReported != nil {
-            TangibleNetWorthAsReported = utils.InterfaceToFloat64Ptr(Calculations.TangibleNetWorth(*TotalAssetsAsReported, *TotalLiabilitiesAsReported, *IntangibleAssetsAsReported))
-        }
+		if NetRevenueAsReported != nil && CostOfGoodsSoldAsReported != nil {
+			NetMarginAsReported = utils.InterfaceToFloat64Ptr((*NetRevenueAsReported - *CostOfGoodsSoldAsReported) / *NetRevenueAsReported)
+		}
 
 		var FreeCashFlowToEquity *float64 = nil
 		if EBITDA != nil && DepreciationAndAmortization != nil && TotalInterestPayments != nil && TotalTaxesPaid != nil && ChangeInWorkingCapital != nil && CapitalExpenditures != nil && NetDebt != nil {
-            FreeCashFlowToEquity = utils.InterfaceToFloat64Ptr(Calculations.FreeCashFlowToEquity(*EBITDA, *DepreciationAndAmortization, *TotalInterestPayments, *TotalTaxesPaid, *ChangeInWorkingCapital, *CapitalExpenditures, *NetDebt))
-        }
-
-		var CostOfDebt *float64 = nil
-		var CostOfDebtAsReported *float64 = nil
-		if TotalInterestPayments != nil && TotalDebt != nil {
-            CostOfDebt = utils.InterfaceToFloat64Ptr(Calculations.CostOfDebt(*TotalInterestPayments, *TotalDebt))
-        }
-		if TotalInterestPaymentsAsReported != nil && TotalDebtAsReported != nil {
-            CostOfDebtAsReported = utils.InterfaceToFloat64Ptr(Calculations.CostOfDebt(*TotalInterestPaymentsAsReported, *TotalDebtAsReported))
-        }
+			FreeCashFlowToEquity = utils.InterfaceToFloat64Ptr(Calculations.FreeCashFlowToEquity(*EBITDA, *DepreciationAndAmortization, *TotalInterestPayments, *TotalTaxesPaid, *ChangeInWorkingCapital, *CapitalExpenditures, *NetDebt))
+		}
 
 		var AdjustedPresentValue *float64 = nil
 		var AdjustedPresentValueAsReported *float64 = nil
 		if UnleveredFirmValue != nil && NetEffectOfDebt != nil {
-            AdjustedPresentValue = utils.InterfaceToFloat64Ptr(Calculations.AdjustedPresentValue(*UnleveredFirmValue, *NetEffectOfDebt))
-        }
+			AdjustedPresentValue = utils.InterfaceToFloat64Ptr(Calculations.AdjustedPresentValue(*UnleveredFirmValue, *NetEffectOfDebt))
+		}
 		if UnleveredFirmValueAsReported != nil && NetEffectOfDebtAsReported != nil {
-            AdjustedPresentValueAsReported = utils.InterfaceToFloat64Ptr(Calculations.AdjustedPresentValue(*UnleveredFirmValueAsReported, *NetEffectOfDebtAsReported))
-        }
+			AdjustedPresentValueAsReported = utils.InterfaceToFloat64Ptr(Calculations.AdjustedPresentValue(*UnleveredFirmValueAsReported, *NetEffectOfDebtAsReported))
+		}
 
 		var InterestCoverageRatio *float64 = nil
 		var InterestCoverageRatioAsReported *float64 = nil
 		if EBIT != nil && TotalInterestPayments != nil {
-            InterestCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.InterestCoverageRatio(*EBIT, *TotalInterestPayments))
-        }
+			InterestCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.InterestCoverageRatio(*EBIT, *TotalInterestPayments))
+		}
 		if EBITAsReported != nil && TotalInterestPaymentsAsReported != nil {
-            InterestCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.InterestCoverageRatio(*EBITAsReported, *TotalInterestPaymentsAsReported))
-        }
+			InterestCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.InterestCoverageRatio(*EBITAsReported, *TotalInterestPaymentsAsReported))
+		}
 
 		var FixedChargeCoverageRatio *float64 = nil
 		var FixedChargeCoverageRatioAsReported *float64 = nil
@@ -796,44 +773,44 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			FixedChargeCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.FixedChargeCoverageRatio(*EBIT, *NetFixedAssets, *TotalInterestPayments))
 		}
 		if EBITAsReported != nil && NetFixedAssetsAsReported != nil && TotalInterestPaymentsAsReported != nil {
-            FixedChargeCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.FixedChargeCoverageRatio(*EBITAsReported, *NetFixedAssetsAsReported, *TotalInterestPaymentsAsReported))
-        }
+			FixedChargeCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.FixedChargeCoverageRatio(*EBITAsReported, *NetFixedAssetsAsReported, *TotalInterestPaymentsAsReported))
+		}
 
 		var DebtServiceCoverageRatio *float64 = nil
 		var DebtServiceCoverageRatioAsReported *float64 = nil
 		if OperatingIncome != nil && DebtService != nil {
-            DebtServiceCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.DebtServiceCoverageRatio(*OperatingIncome, *DebtService))
-        }
+			DebtServiceCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.DebtServiceCoverageRatio(*OperatingIncome, *DebtService))
+		}
 		if OperatingIncomeAsReported != nil && DebtServiceAsReported != nil {
-            DebtServiceCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DebtServiceCoverageRatio(*OperatingIncomeAsReported, *DebtServiceAsReported))
-        }
+			DebtServiceCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DebtServiceCoverageRatio(*OperatingIncomeAsReported, *DebtServiceAsReported))
+		}
 
 		var AssetCoverageRatio *float64 = nil
 		var AssetCoverageRatioAsReported *float64 = nil
 		if TotalAssets != nil && ShortTermDebt != nil && TotalDebt != nil {
 			AssetCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.AssetCoverageRatio(*TotalAssets, *ShortTermDebt, *TotalDebt))
-        }
+		}
 		if TotalAssetsAsReported != nil && ShortTermDebtAsReported != nil && TotalDebtAsReported != nil {
-            AssetCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.AssetCoverageRatio(*TotalAssetsAsReported, *ShortTermDebtAsReported, *TotalDebtAsReported))
-        }
+			AssetCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.AssetCoverageRatio(*TotalAssetsAsReported, *ShortTermDebtAsReported, *TotalDebtAsReported))
+		}
 
 		var EBITDAToInterestCoverageRatio *float64 = nil
 		var EBITDAToInterestCoverageRatioAsReported *float64 = nil
 		if EBITDA == nil && TotalInterestPayments != nil {
-            EBITDAToInterestCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.EBITDAToInterestCoverageRatio(*EBITDA, *TotalInterestPayments))
-        }
+			EBITDAToInterestCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.EBITDAToInterestCoverageRatio(*EBITDA, *TotalInterestPayments))
+		}
 		if EBITDAAsReported != nil && TotalInterestPaymentsAsReported != nil {
-            EBITDAToInterestCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EBITDAToInterestCoverageRatio(*EBITDAAsReported, *TotalInterestPaymentsAsReported))
-        }
+			EBITDAToInterestCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EBITDAToInterestCoverageRatio(*EBITDAAsReported, *TotalInterestPaymentsAsReported))
+		}
 
 		var PreferredDividendCoverageRatio *float64 = nil
 		var PreferredDividendCoverageRatioAsReported *float64 = nil
 		if NetIncome != nil && DividendsPaid != nil {
-            PreferredDividendCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.PreferredDividendCoverageRatio(*NetIncome, *DividendsPaid))
-        }
+			PreferredDividendCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.PreferredDividendCoverageRatio(*NetIncome, *DividendsPaid))
+		}
 		if NetIncomeAsReported != nil && DividendsPaidAsReported != nil {
-            PreferredDividendCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PreferredDividendCoverageRatio(*NetIncomeAsReported, *DividendsPaidAsReported))
-        }
+			PreferredDividendCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PreferredDividendCoverageRatio(*NetIncomeAsReported, *DividendsPaidAsReported))
+		}
 
 		var LiquidityCoverageRatio *float64 = nil
 		var LiquidityCoverageRatioAsReported *float64 = nil
@@ -841,17 +818,17 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			LiquidityCoverageRatio = utils.InterfaceToFloat64Ptr(Calculations.LiquidityCoverageRatio(*HighQualityLiquidAssets, *OperatingCashflow))
 		}
 		if HighQualityLiquidAssetsAsReported != nil && OperatingCashFlowAsReported != nil {
-            LiquidityCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.LiquidityCoverageRatio(*HighQualityLiquidAssetsAsReported, *OperatingCashFlowAsReported))
-        }
+			LiquidityCoverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.LiquidityCoverageRatio(*HighQualityLiquidAssetsAsReported, *OperatingCashFlowAsReported))
+		}
 
 		var InventoryTurnoverRatio *float64 = nil
 		var InventoryTurnoverRatioAsReported *float64 = nil
 		if CostOfRevenue != nil && Inventory != nil {
-            InventoryTurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.InventoryTurnoverRatio(*CostOfRevenue, *Inventory))
-        }
+			InventoryTurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.InventoryTurnoverRatio(*CostOfRevenue, *Inventory))
+		}
 		if CostOfGoodsSoldAsReported != nil && InventoryAsReported != nil {
-            InventoryTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.InventoryTurnoverRatio(*CostOfGoodsSoldAsReported, *InventoryAsReported))
-        }
+			InventoryTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.InventoryTurnoverRatio(*CostOfGoodsSoldAsReported, *InventoryAsReported))
+		}
 
 		var ReturnOnCapitalEmployed *float64 = nil
 		var ReturnOnCapitalEmployedAsReported *float64 = nil
@@ -859,107 +836,107 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			ReturnOnCapitalEmployed = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnCapitalEmployed(*EBIT, *TotalAssets, *TotalLiabilities))
 		}
 		if EBITAsReported != nil && TotalAssetsAsReported != nil && TotalLiabilitiesAsReported != nil {
-            ReturnOnCapitalEmployedAsReported = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnCapitalEmployed(*EBITAsReported, *TotalAssetsAsReported, *TotalLiabilitiesAsReported))
-        }
+			ReturnOnCapitalEmployedAsReported = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnCapitalEmployed(*EBITAsReported, *TotalAssetsAsReported, *TotalLiabilitiesAsReported))
+		}
 
 		var EfficiencyRatio *float64 = nil
 		var EfficiencyRatioAsReported *float64 = nil
 		if NonInterestExpenses != nil && NetRevenue != nil {
-            EfficiencyRatio = utils.InterfaceToFloat64Ptr(Calculations.EfficiencyRatio(*NonInterestExpenses, *NetRevenue))
-        }
+			EfficiencyRatio = utils.InterfaceToFloat64Ptr(Calculations.EfficiencyRatio(*NonInterestExpenses, *NetRevenue))
+		}
 		if NonInterestExpensesAsReported != nil && NetRevenueAsReported != nil {
-            EfficiencyRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EfficiencyRatio(*NonInterestExpensesAsReported, *NetRevenueAsReported))
-        }
+			EfficiencyRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EfficiencyRatio(*NonInterestExpensesAsReported, *NetRevenueAsReported))
+		}
 
 		var RevenuePerEmployee *float64 = nil
 		var RevenuePerEmployeeAsReported *float64 = nil
 		if NetRevenue != nil && NumEmployees != 0 {
-            RevenuePerEmployee = utils.InterfaceToFloat64Ptr(Calculations.RevenuePerEmployee(*NetRevenue, NumEmployees))
-        }
+			RevenuePerEmployee = utils.InterfaceToFloat64Ptr(Calculations.RevenuePerEmployee(*NetRevenue, NumEmployees))
+		}
 		if NetRevenueAsReported != nil && NumEmployees != 0 {
-            RevenuePerEmployeeAsReported = utils.InterfaceToFloat64Ptr(Calculations.RevenuePerEmployee(*NetRevenueAsReported, NumEmployees))
-        }
+			RevenuePerEmployeeAsReported = utils.InterfaceToFloat64Ptr(Calculations.RevenuePerEmployee(*NetRevenueAsReported, NumEmployees))
+		}
 
 		var CapitalExpenditureRatio *float64 = nil
 		var CapitalExpenditureRatioAsReported *float64 = nil
 		if CapitalExpenditures != nil && OperatingCashflow != nil {
-            CapitalExpenditureRatio = utils.InterfaceToFloat64Ptr(Calculations.CapitalExpenditureRatio(*CapitalExpenditures, *OperatingCashflow))
-        }
+			CapitalExpenditureRatio = utils.InterfaceToFloat64Ptr(Calculations.CapitalExpenditureRatio(*CapitalExpenditures, *OperatingCashflow))
+		}
 		if CapitalExpendituresAsReported != nil && OperatingCashFlowAsReported != nil {
-            CapitalExpenditureRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.CapitalExpenditureRatio(*CapitalExpendituresAsReported, *OperatingCashFlowAsReported))
-        }
+			CapitalExpenditureRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.CapitalExpenditureRatio(*CapitalExpendituresAsReported, *OperatingCashFlowAsReported))
+		}
 
 		var OperatingCashFlowRatio *float64 = nil
 		var OperatingCashFlowRatioAsReported *float64 = nil
 		if OperatingCashflow != nil && NetRevenue != nil {
-            OperatingCashFlowRatio = utils.InterfaceToFloat64Ptr(Calculations.OperatingCashFlowRatio(*OperatingCashflow, *NetRevenue))
-        }
+			OperatingCashFlowRatio = utils.InterfaceToFloat64Ptr(Calculations.OperatingCashFlowRatio(*OperatingCashflow, *NetRevenue))
+		}
 		if OperatingCashFlowAsReported != nil && NetRevenueAsReported != nil {
-            OperatingCashFlowRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.OperatingCashFlowRatio(*OperatingCashFlowAsReported, *NetRevenueAsReported))
-        }
+			OperatingCashFlowRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.OperatingCashFlowRatio(*OperatingCashFlowAsReported, *NetRevenueAsReported))
+		}
 
 		var EBITDAToEVRatio *float64 = nil
 		var EBITDAToEVRatioAsReported *float64 = nil
 		if EBITDA != nil && EnterpriseValue != nil {
-            EBITDAToEVRatio = utils.InterfaceToFloat64Ptr(Calculations.EBITDAToEVRatio(*EBITDA, *EnterpriseValue))
-        }
+			EBITDAToEVRatio = utils.InterfaceToFloat64Ptr(Calculations.EBITDAToEVRatio(*EBITDA, *EnterpriseValue))
+		}
 		if EBITDAAsReported != nil && EnterpriseValueAsReported != nil {
-            EBITDAToEVRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EBITDAToEVRatio(*EBITDAAsReported, *EnterpriseValueAsReported))
-        }
+			EBITDAToEVRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EBITDAToEVRatio(*EBITDAAsReported, *EnterpriseValueAsReported))
+		}
 
 		var TangibleNetWorthRatio *float64 = nil
 		var TangibleNetWorthRatioAsReported *float64 = nil
 		if TangibleNetWorth != nil && TotalAssets != nil {
-            TangibleNetWorthRatio = utils.InterfaceToFloat64Ptr(Calculations.TangibleNetWorthRatio(*TangibleNetWorth, *TotalAssets))
-        }
+			TangibleNetWorthRatio = utils.InterfaceToFloat64Ptr(Calculations.TangibleNetWorthRatio(*TangibleNetWorth, *TotalAssets))
+		}
 		if TangibleNetWorthAsReported != nil && TotalAssetsAsReported != nil {
-            TangibleNetWorthRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.TangibleNetWorthRatio(*TangibleNetWorthAsReported, *TotalAssetsAsReported))
-        }
+			TangibleNetWorthRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.TangibleNetWorthRatio(*TangibleNetWorthAsReported, *TotalAssetsAsReported))
+		}
 
 		var DeferredTaxLiabilityToEquityRatio *float64 = nil
 		var DeferredTaxLiabilityToEquityRatioAsReported *float64 = nil
 		if DeferredTaxLiabilityToEquityRatio != nil && ShareholderEquity != nil {
-            DeferredTaxLiabilityToEquityRatio = utils.InterfaceToFloat64Ptr(Calculations.DeferredTaxLiabilityToEquityRatio(*DeferredTaxLiabilityToEquityRatio, *ShareholderEquity))
-        }
+			DeferredTaxLiabilityToEquityRatio = utils.InterfaceToFloat64Ptr(Calculations.DeferredTaxLiabilityToEquityRatio(*DeferredTaxLiabilityToEquityRatio, *ShareholderEquity))
+		}
 		if DeferredTaxLiabilityToEquityRatioAsReported != nil && ShareholderEquityAsReported != nil {
-            DeferredTaxLiabilityToEquityRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DeferredTaxLiabilityToEquityRatio(*DeferredTaxLiabilityToEquityRatioAsReported, *ShareholderEquityAsReported))
-        }
+			DeferredTaxLiabilityToEquityRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DeferredTaxLiabilityToEquityRatio(*DeferredTaxLiabilityToEquityRatioAsReported, *ShareholderEquityAsReported))
+		}
 
 		var TangibleEquityRatio *float64 = nil
 		var TangibleEquityRatioAsReported *float64 = nil
 		if ShareholderEquity != nil && IntangibleAssets != nil && TotalAssets != nil {
-            TangibleEquityRatio = utils.InterfaceToFloat64Ptr(Calculations.TangibleEquityRatio(*ShareholderEquity, *IntangibleAssets, *TotalAssets))
-        }
+			TangibleEquityRatio = utils.InterfaceToFloat64Ptr(Calculations.TangibleEquityRatio(*ShareholderEquity, *IntangibleAssets, *TotalAssets))
+		}
 		if ShareholderEquityAsReported != nil && IntangibleAssetsAsReported != nil && TotalAssetsAsReported != nil {
-            TangibleEquityRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.TangibleEquityRatio(*ShareholderEquityAsReported, *IntangibleAssetsAsReported, *TotalAssetsAsReported))
-        }
+			TangibleEquityRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.TangibleEquityRatio(*ShareholderEquityAsReported, *IntangibleAssetsAsReported, *TotalAssetsAsReported))
+		}
 
 		var WACC *float64 = nil
 		var WACCAsReported *float64 = nil
-		if MarketValueOfEquity != nil && TotalDebt!= nil && CostOfDebt != nil{
-			WACC = utils.InterfaceToFloat64Ptr(Calculations.WeightedAverageCostOfCapital(*MarketValueOfEquity, *TotalDebt, CostOfEquity, *CostOfDebt, EffectiveTaxRate))
+		if MarketValueOfEquity != nil && TotalDebt != nil && CostOfDebt != nil {
+			WACC = utils.InterfaceToFloat64Ptr(Calculations.WeightedAverageCostOfCapital(*MarketValueOfEquity, *TotalDebt, CostOfEquity, *CostOfDebt, *EffectiveTaxRate))
 		}
-		if MarketValueOfEquityAsReported != nil && TotalDebtAsReported != nil && CostOfDebtAsReported != nil{
-            WACCAsReported = utils.InterfaceToFloat64Ptr(Calculations.WeightedAverageCostOfCapital(*MarketValueOfEquityAsReported, *TotalDebtAsReported, CostOfEquityAsReported, *CostOfDebtAsReported, EffectiveTaxRate))
-        }
+		if MarketValueOfEquityAsReported != nil && TotalDebtAsReported != nil && CostOfDebtAsReported != nil {
+			WACCAsReported = utils.InterfaceToFloat64Ptr(Calculations.WeightedAverageCostOfCapital(*MarketValueOfEquityAsReported, *TotalDebtAsReported, CostOfEquity, *CostOfDebtAsReported, *EffectiveTaxRate))
+		}
 
 		var FixedAssetTurnoverRatio *float64 = nil
 		var FixedAssetTurnoverRatioAsReported *float64 = nil
 		if NetRevenue != nil && NetFixedAssets != nil {
-            FixedAssetTurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.FixedAssetTurnoverRatio(*NetRevenue, *NetFixedAssets))
-        }
+			FixedAssetTurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.FixedAssetTurnoverRatio(*NetRevenue, *NetFixedAssets))
+		}
 		if NetRevenueAsReported != nil && NetFixedAssetsAsReported != nil {
-            FixedAssetTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.FixedAssetTurnoverRatio(*NetRevenueAsReported, *NetFixedAssetsAsReported))
-        }
+			FixedAssetTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.FixedAssetTurnoverRatio(*NetRevenueAsReported, *NetFixedAssetsAsReported))
+		}
 
 		var PPETurnoverRatio *float64 = nil
 		var PPETurnoverRatioAsReported *float64 = nil
-		if NetRevenue != nil && NetFixedAssets != nil && DepreciationAndAmortization != nil{
-            PPETurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.PPETurnoverRatio(*NetRevenue, *NetFixedAssets, *DepreciationAndAmortization))
-        }
-		if NetRevenueAsReported != nil && NetFixedAssetsAsReported != nil && DepreciationAndAmortizationAsReported != nil{
-            PPETurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PPETurnoverRatio(*NetRevenueAsReported, *NetFixedAssetsAsReported, *DepreciationAndAmortizationAsReported))
-        }
+		if NetRevenue != nil && NetFixedAssets != nil && DepreciationAndAmortization != nil {
+			PPETurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.PPETurnoverRatio(*NetRevenue, *NetFixedAssets, *DepreciationAndAmortization))
+		}
+		if NetRevenueAsReported != nil && NetFixedAssetsAsReported != nil && DepreciationAndAmortizationAsReported != nil {
+			PPETurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PPETurnoverRatio(*NetRevenueAsReported, *NetFixedAssetsAsReported, *DepreciationAndAmortizationAsReported))
+		}
 
 		var InvestmentTurnoverRatio *float64 = nil
 		var InvestmentTurnoverRatioAsReported *float64 = nil
@@ -967,35 +944,26 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			InvestmentTurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.InvestmentTurnoverRatio(*NetRevenue, *TotalInvestments))
 		}
 		if NetRevenueAsReported != nil && TotalInvestmentsAsReported != nil {
-            InvestmentTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.InvestmentTurnoverRatio(*NetRevenueAsReported, *TotalInvestmentsAsReported))
-        }
+			InvestmentTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.InvestmentTurnoverRatio(*NetRevenueAsReported, *TotalInvestmentsAsReported))
+		}
 
 		var WorkingCapitalTurnoverRatio *float64 = nil
 		var WorkingCapitalTurnoverRatioAsReported *float64 = nil
-		if NetRevenue != nil && WorkingCapital != nil{
+		if NetRevenue != nil && WorkingCapital != nil {
 			WorkingCapitalTurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.WorkingCapitalTurnoverRatio(*NetRevenue, *WorkingCapital))
 		}
-		if NetRevenueAsReported != nil && WorkingCapitalAsReported != nil{
-            WorkingCapitalTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.WorkingCapitalTurnoverRatio(*NetRevenueAsReported, *WorkingCapitalAsReported))
-        }
-
-		var ReturnOnEquity *float64 = nil
-		var ReturnOnEquityAsReported *float64 = nil
-		if NetIncome != nil && ShareholderEquity != nil {
-            ReturnOnEquity = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnEquity(*NetIncome, *ShareholderEquity))
-        }
-		if NetIncomeAsReported != nil && ShareholderEquityAsReported != nil {
-            ReturnOnEquityAsReported = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnEquity(*NetIncomeAsReported, *ShareholderEquityAsReported))
-        }
+		if NetRevenueAsReported != nil && WorkingCapitalAsReported != nil {
+			WorkingCapitalTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.WorkingCapitalTurnoverRatio(*NetRevenueAsReported, *WorkingCapitalAsReported))
+		}
 
 		var ReturnOnAssetRatio *float64 = nil
 		var ReturnOnAssetRatioAsReported *float64 = nil
 		if NetIncome != nil && TotalAssets != nil {
-            ReturnOnAssetRatio = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnAssetRatio(*NetIncome, *TotalAssets))
-        }
+			ReturnOnAssetRatio = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnAssetRatio(*NetIncome, *TotalAssets))
+		}
 		if NetIncomeAsReported != nil && TotalAssetsAsReported != nil {
-            ReturnOnAssetRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnAssetRatio(*NetIncomeAsReported, *TotalAssetsAsReported))
-        }
+			ReturnOnAssetRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnAssetRatio(*NetIncomeAsReported, *TotalAssetsAsReported))
+		}
 
 		var GrossProfitMargin *float64 = nil
 		var GrossProfitMarginAsReported *float64 = nil
@@ -1003,53 +971,44 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			GrossProfitMargin = utils.InterfaceToFloat64Ptr(Calculations.GrossProfitMargin(*GrossProfit, *NetRevenue))
 		}
 		if GrossProfitAsReported != nil && NetRevenueAsReported != nil {
-            GrossProfitMarginAsReported = utils.InterfaceToFloat64Ptr(Calculations.GrossProfitMargin(*GrossProfitAsReported, *NetRevenueAsReported))
-        }
+			GrossProfitMarginAsReported = utils.InterfaceToFloat64Ptr(Calculations.GrossProfitMargin(*GrossProfitAsReported, *NetRevenueAsReported))
+		}
 
 		var OperatingProfitMargin *float64 = nil
 		var OperatingProfitMarginAsReported *float64 = nil
 		if OperatingIncome != nil && NetRevenue != nil {
-            OperatingProfitMargin = utils.InterfaceToFloat64Ptr(Calculations.OperatingProfitMargin(*OperatingIncome, *NetRevenue))
-        }
+			OperatingProfitMargin = utils.InterfaceToFloat64Ptr(Calculations.OperatingProfitMargin(*OperatingIncome, *NetRevenue))
+		}
 		if OperatingIncomeAsReported != nil && NetRevenueAsReported != nil {
-            OperatingProfitMarginAsReported = utils.InterfaceToFloat64Ptr(Calculations.OperatingProfitMargin(*OperatingIncomeAsReported, *NetRevenueAsReported))
-        }
-
-		var NetProfitMargin *float64 = nil
-		var NetProfitMarginAsReported *float64 = nil
-		if NetIncome != nil && NetRevenue != nil {
-            NetProfitMargin = utils.InterfaceToFloat64Ptr(Calculations.NetProfitMargin(*NetIncome, *NetRevenue))
-        }
-		if NetIncomeAsReported != nil && NetRevenueAsReported != nil {
-            NetProfitMarginAsReported = utils.InterfaceToFloat64Ptr(Calculations.NetProfitMargin(*NetIncomeAsReported, *NetRevenueAsReported))
-        }
+			OperatingProfitMarginAsReported = utils.InterfaceToFloat64Ptr(Calculations.OperatingProfitMargin(*OperatingIncomeAsReported, *NetRevenueAsReported))
+		}
 
 		var EBITDAMarginRatio *float64 = nil
 		var EBITDAMarginRatioAsReported *float64 = nil
 		if EBITDA != nil && NetRevenue != nil {
-            EBITDAMarginRatio = utils.InterfaceToFloat64Ptr(Calculations.EBITDAMarginRatio(*EBITDA, *NetRevenue))
-        }
+			EBITDAMarginRatio = utils.InterfaceToFloat64Ptr(Calculations.EBITDAMarginRatio(*EBITDA, *NetRevenue))
+		}
 		if EBITDAAsReported != nil && NetRevenueAsReported != nil {
-            EBITDAMarginRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EBITDAMarginRatio(*EBITDAAsReported, *NetRevenueAsReported))
-        }
+			EBITDAMarginRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EBITDAMarginRatio(*EBITDAAsReported, *NetRevenueAsReported))
+		}
 
 		var DividendPayoutRatio *float64 = nil
 		var DividendPayoutRatioAsReported *float64 = nil
 		if DividendsPaid != nil && NetIncome != nil {
-            DividendPayoutRatio = utils.InterfaceToFloat64Ptr(Calculations.DividendPayoutRatio(*DividendsPaid, *NetIncome))
-        }
+			DividendPayoutRatio = utils.InterfaceToFloat64Ptr(Calculations.DividendPayoutRatio(*DividendsPaid, *NetIncome))
+		}
 		if DividendsPaidAsReported != nil && NetIncomeAsReported != nil {
-            DividendPayoutRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DividendPayoutRatio(*DividendsPaidAsReported, *NetIncomeAsReported))
-        }
+			DividendPayoutRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DividendPayoutRatio(*DividendsPaidAsReported, *NetIncomeAsReported))
+		}
 
 		var RetentionRate *float64 = nil
 		var RetentionRateAsReported *float64 = nil
 		if DividendsPaid != nil && NetIncome != nil {
-            RetentionRate = utils.InterfaceToFloat64Ptr(Calculations.RetentionRate(*DividendsPaid, *NetIncome))
-        }
+			RetentionRate = utils.InterfaceToFloat64Ptr(Calculations.RetentionRate(*DividendsPaid, *NetIncome))
+		}
 		if DividendsPaidAsReported != nil && NetIncomeAsReported != nil {
-            RetentionRateAsReported = utils.InterfaceToFloat64Ptr(Calculations.RetentionRate(*DividendsPaidAsReported, *NetIncomeAsReported))
-        }
+			RetentionRateAsReported = utils.InterfaceToFloat64Ptr(Calculations.RetentionRate(*DividendsPaidAsReported, *NetIncomeAsReported))
+		}
 
 		var SustainableGrowthRate *float64 = nil
 		var SustainableGrowthRateAsReported *float64 = nil
@@ -1057,44 +1016,35 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			SustainableGrowthRate = utils.InterfaceToFloat64Ptr(Calculations.SustainableGrowthRate(*RetentionRate, *ReturnOnEquity))
 		}
 		if RetentionRateAsReported != nil && ReturnOnEquityAsReported != nil {
-            SustainableGrowthRateAsReported = utils.InterfaceToFloat64Ptr(Calculations.SustainableGrowthRate(*RetentionRateAsReported, *ReturnOnEquityAsReported))
-        }
+			SustainableGrowthRateAsReported = utils.InterfaceToFloat64Ptr(Calculations.SustainableGrowthRate(*RetentionRateAsReported, *ReturnOnEquityAsReported))
+		}
 
 		var GrossMarginOnInventory *float64 = nil
 		var GrossMarginOnInventoryAsReported *float64 = nil
 		if GrossProfit != nil && Inventory != nil {
-            GrossMarginOnInventory = utils.InterfaceToFloat64Ptr(Calculations.GrossMarginOnInventory(*GrossProfit, *Inventory))
-        }
+			GrossMarginOnInventory = utils.InterfaceToFloat64Ptr(Calculations.GrossMarginOnInventory(*GrossProfit, *Inventory))
+		}
 		if GrossProfitAsReported != nil && InventoryAsReported != nil {
-            GrossMarginOnInventoryAsReported = utils.InterfaceToFloat64Ptr(Calculations.GrossMarginOnInventory(*GrossProfitAsReported, *InventoryAsReported))
-        }
+			GrossMarginOnInventoryAsReported = utils.InterfaceToFloat64Ptr(Calculations.GrossMarginOnInventory(*GrossProfitAsReported, *InventoryAsReported))
+		}
 
 		var CashFlowReturnOnEquity *float64 = nil
 		var CashFlowReturnOnEquityAsReported *float64 = nil
 		if OperatingCashflow != nil && ShareholderEquity != nil {
-            CashFlowReturnOnEquity = utils.InterfaceToFloat64Ptr(Calculations.CashFlowReturnOnEquity(*OperatingCashflow, *ShareholderEquity))
-        }
+			CashFlowReturnOnEquity = utils.InterfaceToFloat64Ptr(Calculations.CashFlowReturnOnEquity(*OperatingCashflow, *ShareholderEquity))
+		}
 		if OperatingCashFlowAsReported != nil && ShareholderEquityAsReported != nil {
-            CashFlowReturnOnEquityAsReported = utils.InterfaceToFloat64Ptr(Calculations.CashFlowReturnOnEquity(*OperatingCashFlowAsReported, *ShareholderEquityAsReported))
-        }
+			CashFlowReturnOnEquityAsReported = utils.InterfaceToFloat64Ptr(Calculations.CashFlowReturnOnEquity(*OperatingCashFlowAsReported, *ShareholderEquityAsReported))
+		}
 
 		var OperatingMargin *float64 = nil
 		var OperatingMarginAsReported *float64 = nil
-		if NetRevenue != nil && CostOfRevenue != nil{
+		if NetRevenue != nil && CostOfRevenue != nil {
 			OperatingMargin = utils.InterfaceToFloat64Ptr(Calculations.OperatingMargin(*NetRevenue, *CostOfRevenue))
 		}
-		if NetRevenueAsReported != nil && CostOfGoodsSoldAsReported != nil{
-            OperatingMarginAsReported = utils.InterfaceToFloat64Ptr(Calculations.OperatingMargin(*NetRevenueAsReported, *CostOfGoodsSoldAsReported))
-        }
-
-		var AssetTurnoverRatio *float64 = nil
-		var AssetTurnoverRatioAsReported *float64 = nil
-		if NetRevenue != nil && TotalAssets != nil{
-            AssetTurnoverRatio = utils.InterfaceToFloat64Ptr(Calculations.AssetTurnoverRatio(*NetRevenue, *TotalAssets))
-        }
-		if NetRevenueAsReported != nil && TotalAssetsAsReported != nil{
-            AssetTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.AssetTurnoverRatio(*NetRevenueAsReported, *TotalAssetsAsReported))
-        }
+		if NetRevenueAsReported != nil && CostOfGoodsSoldAsReported != nil {
+			OperatingMarginAsReported = utils.InterfaceToFloat64Ptr(Calculations.OperatingMargin(*NetRevenueAsReported, *CostOfGoodsSoldAsReported))
+		}
 
 		var OperatingExpenseRatio *float64 = nil
 		var OperatingExpenseRatioAsReported *float64 = nil
@@ -1102,53 +1052,53 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			OperatingExpenseRatio = utils.InterfaceToFloat64Ptr(Calculations.OperatingExpenseRatio(*OperatingExpenses, *DepreciationAndAmortization, *OperatingIncome))
 		}
 		if OperatingExpensesAsReported != nil && DepreciationAndAmortizationAsReported != nil && OperatingIncomeAsReported != nil {
-            OperatingExpenseRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.OperatingExpenseRatio(*OperatingExpensesAsReported, *DepreciationAndAmortizationAsReported, *OperatingIncomeAsReported))
-        }
+			OperatingExpenseRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.OperatingExpenseRatio(*OperatingExpensesAsReported, *DepreciationAndAmortizationAsReported, *OperatingIncomeAsReported))
+		}
 
 		var CurrentRatio *float64 = nil
 		var CurrentRatioAsReported *float64 = nil
 		if TotalAssets != nil && TotalLiabilities != nil {
-            CurrentRatio = utils.InterfaceToFloat64Ptr(Calculations.CurrentRatio(*TotalAssets, *TotalLiabilities))
-        }
+			CurrentRatio = utils.InterfaceToFloat64Ptr(Calculations.CurrentRatio(*TotalAssets, *TotalLiabilities))
+		}
 		if TotalAssetsAsReported != nil && TotalLiabilitiesAsReported != nil {
-            CurrentRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.CurrentRatio(*TotalAssetsAsReported, *TotalLiabilitiesAsReported))
-        }
+			CurrentRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.CurrentRatio(*TotalAssetsAsReported, *TotalLiabilitiesAsReported))
+		}
 
 		var AcidTestRatio *float64 = nil
 		var AcidTestRatioAsReported *float64 = nil
 		if TotalAssets != nil && TotalLiabilities != nil && Inventory != nil {
-            AcidTestRatio = utils.InterfaceToFloat64Ptr(Calculations.AcidTestRatio(*TotalAssets, *Inventory, *TotalLiabilities))
-        }
+			AcidTestRatio = utils.InterfaceToFloat64Ptr(Calculations.AcidTestRatio(*TotalAssets, *Inventory, *TotalLiabilities))
+		}
 		if TotalAssetsAsReported != nil && TotalLiabilitiesAsReported != nil && InventoryAsReported != nil {
-            AcidTestRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.AcidTestRatio(*TotalAssetsAsReported, *InventoryAsReported, *TotalLiabilitiesAsReported))
-        }
+			AcidTestRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.AcidTestRatio(*TotalAssetsAsReported, *InventoryAsReported, *TotalLiabilitiesAsReported))
+		}
 
 		var CashRatio *float64 = nil
 		var CashRatioAsReported *float64 = nil
 		if CashAndCashEquivalents != nil && TotalLiabilities != nil {
-            CashRatio = utils.InterfaceToFloat64Ptr(Calculations.CashRatio(*CashAndCashEquivalents, *TotalLiabilities))
-        }
+			CashRatio = utils.InterfaceToFloat64Ptr(Calculations.CashRatio(*CashAndCashEquivalents, *TotalLiabilities))
+		}
 		if CashAndCashEquivalentsAsReported != nil && TotalLiabilitiesAsReported != nil {
-            CashRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.CashRatio(*CashAndCashEquivalentsAsReported, *TotalLiabilitiesAsReported))
-        }
+			CashRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.CashRatio(*CashAndCashEquivalentsAsReported, *TotalLiabilitiesAsReported))
+		}
 
 		var DefensiveIntervalRatio *float64 = nil
 		var DefensiveIntervalRatioAsReported *float64 = nil
 		if CashAndCashEquivalents != nil && NetReceivables != nil && TotalMarketableSecurities != nil && OperatingExpenses != nil && NonCashCharges != nil && DaysInPeriod != nil {
-			DefensiveIntervalRatio = utils.InterfaceToFloat64Ptr(Calculations.DefensiveIntervalRatio(*CashAndCashEquivalents, *NetReceivables, *TotalMarketableSecurities, *OperatingExpenses, *NonCashCharges, DaysInPeriod))
+			DefensiveIntervalRatio = utils.InterfaceToFloat64Ptr(Calculations.DefensiveIntervalRatio(*CashAndCashEquivalents, *NetReceivables, *TotalMarketableSecurities, *OperatingExpenses, *NonCashCharges, *DaysInPeriod))
 		}
 		if CashAndCashEquivalentsAsReported != nil && NetReceivablesAsReported != nil && TotalMarketableSecuritiesAsReported != nil && OperatingExpensesAsReported != nil && NonCashChargesAsReported != nil && DaysInPeriod != nil {
-            DefensiveIntervalRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DefensiveIntervalRatio(*CashAndCashEquivalentsAsReported, *NetReceivablesAsReported, *TotalMarketableSecuritiesAsReported, *OperatingExpensesAsReported, *NonCashChargesAsReported, DaysInPeriod))
-        }
+			DefensiveIntervalRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DefensiveIntervalRatio(*CashAndCashEquivalentsAsReported, *NetReceivablesAsReported, *TotalMarketableSecuritiesAsReported, *OperatingExpensesAsReported, *NonCashChargesAsReported, *DaysInPeriod))
+		}
 
 		var DrySalesRatio *float64 = nil
 		var DrySalesRatioAsReported *float64 = nil
 		if NetReceivables != nil && NetRevenue != nil {
-            DrySalesRatio = utils.InterfaceToFloat64Ptr(Calculations.DrySalesRatio(*NetReceivables, *NetRevenue))
-        }
+			DrySalesRatio = utils.InterfaceToFloat64Ptr(Calculations.DrySalesRatio(*NetReceivables, *NetRevenue))
+		}
 		if NetReceivablesAsReported != nil && NetRevenueAsReported != nil {
-            DrySalesRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DrySalesRatio(*NetReceivablesAsReported, *NetRevenueAsReported))
-        }
+			DrySalesRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DrySalesRatio(*NetReceivablesAsReported, *NetRevenueAsReported))
+		}
 
 		var PriceToBookValueRatio *float64 = nil
 		var PriceToBookValueRatioAsReported *float64 = nil
@@ -1156,26 +1106,26 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			PriceToBookValueRatio = utils.InterfaceToFloat64Ptr(Calculations.PriceToBookValueRatio(*MarketCapitalization, *BookValueOfEquity))
 		}
 		if MarketCapitalizationAsReported != nil && BookValueOfEquityAsReported != nil {
-            PriceToBookValueRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToBookValueRatio(*MarketCapitalizationAsReported, *BookValueOfEquityAsReported))
-        }
+			PriceToBookValueRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToBookValueRatio(*MarketCapitalizationAsReported, *BookValueOfEquityAsReported))
+		}
 
 		var EarningsPerShare *float64 = nil
 		var EarningsPerShareAsReported *float64 = nil
-		if NetIncome!= nil && DividendsPaid != nil && SharesOutstanding != nil {
+		if NetIncome != nil && DividendsPaid != nil && SharesOutstanding != nil {
 			EarningsPerShare = utils.InterfaceToFloat64Ptr(Calculations.EarningsPerShare(*NetIncome, *DividendsPaid, *SharesOutstanding))
 		}
 		if NetIncomeAsReported != nil && DividendsPaidAsReported != nil && SharesOutstandingAsReported != nil {
-            EarningsPerShareAsReported = utils.InterfaceToFloat64Ptr(Calculations.EarningsPerShare(*NetIncomeAsReported, *DividendsPaidAsReported, *SharesOutstandingAsReported))
-        }
+			EarningsPerShareAsReported = utils.InterfaceToFloat64Ptr(Calculations.EarningsPerShare(*NetIncomeAsReported, *DividendsPaidAsReported, *SharesOutstandingAsReported))
+		}
 
 		var EBITDAPerShare *float64 = nil
 		var EBITDAPerShareAsReported *float64 = nil
 		if EBITDA != nil && SharesOutstanding != nil {
-            EBITDAPerShare = utils.InterfaceToFloat64Ptr(Calculations.EBITDAPerShare(*EBITDA, *SharesOutstanding))
-        }
+			EBITDAPerShare = utils.InterfaceToFloat64Ptr(Calculations.EBITDAPerShare(*EBITDA, *SharesOutstanding))
+		}
 		if EBITDAAsReported != nil && SharesOutstandingAsReported != nil {
-            EBITDAPerShareAsReported = utils.InterfaceToFloat64Ptr(Calculations.EBITDAPerShare(*EBITDAAsReported, *SharesOutstandingAsReported))
-        }
+			EBITDAPerShareAsReported = utils.InterfaceToFloat64Ptr(Calculations.EBITDAPerShare(*EBITDAAsReported, *SharesOutstandingAsReported))
+		}
 
 		var BookValuePerShare *float64 = nil
 		var BookValuePerShareAsReported *float64 = nil
@@ -1183,53 +1133,44 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			BookValuePerShare = utils.InterfaceToFloat64Ptr(Calculations.BookValuePerShare(*ShareholderEquity, *SharesOutstanding))
 		}
 		if ShareholderEquityAsReported != nil && SharesOutstandingAsReported != nil {
-            BookValuePerShareAsReported = utils.InterfaceToFloat64Ptr(Calculations.BookValuePerShare(*ShareholderEquityAsReported, *SharesOutstandingAsReported))
-        }
+			BookValuePerShareAsReported = utils.InterfaceToFloat64Ptr(Calculations.BookValuePerShare(*ShareholderEquityAsReported, *SharesOutstandingAsReported))
+		}
 
 		var NetTangibleAssetsPerShare *float64 = nil
 		var NetTangibleAssetsPerShareAsReported *float64 = nil
 		if TangibleNetWorth != nil && SharesOutstanding != nil {
-            NetTangibleAssetsPerShare = utils.InterfaceToFloat64Ptr(Calculations.NetTangibleAssetsPerShare(*TangibleNetWorth, *SharesOutstanding))
-        }
+			NetTangibleAssetsPerShare = utils.InterfaceToFloat64Ptr(Calculations.NetTangibleAssetsPerShare(*TangibleNetWorth, *SharesOutstanding))
+		}
 		if TangibleNetWorthAsReported != nil && SharesOutstandingAsReported != nil {
-            NetTangibleAssetsPerShareAsReported = utils.InterfaceToFloat64Ptr(Calculations.NetTangibleAssetsPerShare(*TangibleNetWorthAsReported, *SharesOutstandingAsReported))
-        }
-
-		var MarketValueOfEquity *float64 = nil
-		var MarketValueOfEquityAsReported *float64 = nil
-		if PricePerShare != 0 && SharesOutstanding != nil {
-            MarketValueOfEquity = utils.InterfaceToFloat64Ptr(Calculations.MarketValueOfEquity(PricePerShare, *SharesOutstanding))
-        }
-		if PricePerShare != 0 && SharesOutstandingAsReported != nil {
-            MarketValueOfEquityAsReported = utils.InterfaceToFloat64Ptr(Calculations.MarketValueOfEquity(PricePerShare, *SharesOutstandingAsReported))
-        }
+			NetTangibleAssetsPerShareAsReported = utils.InterfaceToFloat64Ptr(Calculations.NetTangibleAssetsPerShare(*TangibleNetWorthAsReported, *SharesOutstandingAsReported))
+		}
 
 		var MarketValueOfDebt *float64 = nil
 		var MarketValueOfDebtAsReported *float64 = nil
 		if PricePerShare != 0 && SharesOutstanding != nil && BookValueOfDebt != nil {
-            MarketValueOfDebt = utils.InterfaceToFloat64Ptr(Calculations.MarketValueOfDebt(PricePerShare, *SharesOutstanding, *BookValueOfDebt))
-        }
+			MarketValueOfDebt = utils.InterfaceToFloat64Ptr(Calculations.MarketValueOfDebt(PricePerShare, *SharesOutstanding, *BookValueOfDebt))
+		}
 		if PricePerShare != 0 && SharesOutstandingAsReported != nil && BookValueOfDebtAsReported != nil {
-            MarketValueOfDebtAsReported = utils.InterfaceToFloat64Ptr(Calculations.MarketValueOfDebt(PricePerShare, *SharesOutstandingAsReported, *BookValueOfDebtAsReported))
-        }
+			MarketValueOfDebtAsReported = utils.InterfaceToFloat64Ptr(Calculations.MarketValueOfDebt(PricePerShare, *SharesOutstandingAsReported, *BookValueOfDebtAsReported))
+		}
 
 		var MarketToBookRatio *float64 = nil
 		var MarketToBookRatioAsReported *float64 = nil
 		if MarketCapitalization != nil && BookValueOfEquity != nil {
-            MarketToBookRatio = utils.InterfaceToFloat64Ptr(Calculations.MarketToBookRatio(*MarketCapitalization, *BookValueOfEquity))
-        }
+			MarketToBookRatio = utils.InterfaceToFloat64Ptr(Calculations.MarketToBookRatio(*MarketCapitalization, *BookValueOfEquity))
+		}
 		if MarketCapitalizationAsReported != nil && BookValueOfEquityAsReported != nil {
-            MarketToBookRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.MarketToBookRatio(*MarketCapitalizationAsReported, *BookValueOfEquityAsReported))
-        }
+			MarketToBookRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.MarketToBookRatio(*MarketCapitalizationAsReported, *BookValueOfEquityAsReported))
+		}
 
 		var IntangiblesRatio *float64 = nil
 		var IntangiblesRatioAsReported *float64 = nil
 		if IntangibleAssets != nil && TotalAssets != nil {
-            IntangiblesRatio = utils.InterfaceToFloat64Ptr(Calculations.IntangiblesRatio(*IntangibleAssets, *TotalAssets))
-        }
+			IntangiblesRatio = utils.InterfaceToFloat64Ptr(Calculations.IntangiblesRatio(*IntangibleAssets, *TotalAssets))
+		}
 		if IntangibleAssetsAsReported != nil && TotalAssetsAsReported != nil {
-            IntangiblesRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.IntangiblesRatio(*IntangibleAssetsAsReported, *TotalAssetsAsReported))
-        }
+			IntangiblesRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.IntangiblesRatio(*IntangibleAssetsAsReported, *TotalAssetsAsReported))
+		}
 
 		var PriceToSalesRatio *float64 = nil
 		var PriceToSalesRatioAsReported *float64 = nil
@@ -1237,17 +1178,17 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			PriceToSalesRatio = utils.InterfaceToFloat64Ptr(Calculations.PriceToSalesRatio(PricePerShare, *NetRevenue))
 		}
 		if PricePerShare != 0 && NetRevenueAsReported != nil {
-            PriceToSalesRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToSalesRatio(PricePerShare, *NetRevenueAsReported))
-        }
+			PriceToSalesRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToSalesRatio(PricePerShare, *NetRevenueAsReported))
+		}
 
 		var PriceToBookRatio *float64 = nil
 		var PriceToBookRatioAsReported *float64 = nil
 		if PricePerShare != 0 && BookValueOfEquity != nil {
-            PriceToBookRatio = utils.InterfaceToFloat64Ptr(Calculations.PriceToBookRatio(PricePerShare, *BookValueOfEquity))
-        }
+			PriceToBookRatio = utils.InterfaceToFloat64Ptr(Calculations.PriceToBookRatio(PricePerShare, *BookValueOfEquity))
+		}
 		if PricePerShare != 0 && BookValueOfEquityAsReported != nil {
-            PriceToBookRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToBookRatio(PricePerShare, *BookValueOfEquityAsReported))
-        }
+			PriceToBookRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToBookRatio(PricePerShare, *BookValueOfEquityAsReported))
+		}
 
 		var PricetoSalesValue *float64 = nil
 		var PricetoSalesValueAsReported *float64 = nil
@@ -1255,80 +1196,80 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			PricetoSalesValue = utils.InterfaceToFloat64Ptr(Calculations.PricetoSalesValue(*MarketCapitalization, *NetRevenue))
 		}
 		if MarketCapitalizationAsReported != nil && NetRevenueAsReported != nil {
-            PricetoSalesValueAsReported = utils.InterfaceToFloat64Ptr(Calculations.PricetoSalesValue(*MarketCapitalizationAsReported, *NetRevenueAsReported))
-        }
+			PricetoSalesValueAsReported = utils.InterfaceToFloat64Ptr(Calculations.PricetoSalesValue(*MarketCapitalizationAsReported, *NetRevenueAsReported))
+		}
 
 		var OperatingCashFlowPerShare *float64 = nil
 		var OperatingCashFlowPerShareAsReported *float64 = nil
 		if OperatingCashflow != nil && SharesOutstanding != nil {
-            OperatingCashFlowPerShare = utils.InterfaceToFloat64Ptr(*OperatingCashflow / *SharesOutstanding))
-        }
+			OperatingCashFlowPerShare = utils.InterfaceToFloat64Ptr(*OperatingCashflow / *SharesOutstanding)
+		}
 		if OperatingCashFlowAsReported != nil && SharesOutstandingAsReported != nil {
-            OperatingCashFlowPerShareAsReported = utils.InterfaceToFloat64Ptr(*OperatingCashFlowAsReported / *SharesOutstandingAsReported))
-        }
+			OperatingCashFlowPerShareAsReported = utils.InterfaceToFloat64Ptr(*OperatingCashFlowAsReported / *SharesOutstandingAsReported)
+		}
 
 		var PriceToCashFlowRatio *float64 = nil
 		var PriceToCashFlowRatioAsReported *float64 = nil
-		if PricePerShare != 0 && OperatingCashflow != nil && SharesOutstanding != nil {
-            PriceToCashFlowRatio = utils.InterfaceToFloat64Ptr(Calculations.PriceToCashFlowRatio(PricePerShare, *OperatingCashflow, *SharesOutstanding))
-        }
-		if PricePerShare != 0 && OperatingCashFlowAsReported != nil && SharesOutstandingAsReported != nil {
-            PriceToCashFlowRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToCashFlowRatio(PricePerShare, *OperatingCashFlowAsReported, *SharesOutstandingAsReported))
-        }
+		if PricePerShare != 0 && OperatingCashflow != nil {
+			PriceToCashFlowRatio = utils.InterfaceToFloat64Ptr(Calculations.PriceToCashFlowRatio(PricePerShare, *OperatingCashflow))
+		}
+		if PricePerShare != 0 && OperatingCashFlowAsReported != nil {
+			PriceToCashFlowRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToCashFlowRatio(PricePerShare, *OperatingCashFlowAsReported))
+		}
 
 		var FreeCashFlowPerShare *float64 = nil
 		var FreeCashFlowPerShareAsReported *float64 = nil
 		if FreeCashFlow != nil && SharesOutstanding != nil {
-            FreeCashFlowPerShare = utils.InterfaceToFloat64Ptr(*FreeCashFlow / *SharesOutstanding))
-        }
+			FreeCashFlowPerShare = utils.InterfaceToFloat64Ptr(*FreeCashFlow / *SharesOutstanding)
+		}
 		if FreeCashFlowAsReported != nil && SharesOutstandingAsReported != nil {
-            FreeCashFlowPerShareAsReported = utils.InterfaceToFloat64Ptr(*FreeCashFlowAsReported / *SharesOutstandingAsReported))
-        }
+			FreeCashFlowPerShareAsReported = utils.InterfaceToFloat64Ptr(*FreeCashFlowAsReported / *SharesOutstandingAsReported)
+		}
 
 		var PriceToFreeCashFlowRatio *float64 = nil
 		var PriceToFreeCashFlowRatioAsReported *float64 = nil
 		if PricePerShare != 0 && FreeCashFlowPerShare != nil {
-            PriceToFreeCashFlowRatio = utils.InterfaceToFloat64Ptr(Calculations.PriceToFreeCashFlowRatio(PricePerShare, *FreeCashFlowPerShare))
-        }
+			PriceToFreeCashFlowRatio = utils.InterfaceToFloat64Ptr(Calculations.PriceToFreeCashFlowRatio(PricePerShare, *FreeCashFlowPerShare))
+		}
 		if PricePerShare != 0 && FreeCashFlowPerShareAsReported != nil {
-            PriceToFreeCashFlowRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToFreeCashFlowRatio(PricePerShare, *FreeCashFlowPerShareAsReported))
-        }
+			PriceToFreeCashFlowRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToFreeCashFlowRatio(PricePerShare, *FreeCashFlowPerShareAsReported))
+		}
 
 		var PriceToCashFlowValuation *float64 = nil
 		var PriceToCashFlowValuationAsReported *float64 = nil
 		if MarketCapitalization != nil && OperatingCashflow != nil {
-            PriceToCashFlowValuation = utils.InterfaceToFloat64Ptr(Calculations.PriceToCashFlowValuation(*MarketCapitalization, *OperatingCashflow))
-        }
+			PriceToCashFlowValuation = utils.InterfaceToFloat64Ptr(Calculations.PriceToCashFlowValuation(*MarketCapitalization, *OperatingCashflow))
+		}
 		if MarketCapitalizationAsReported != nil && OperatingCashFlowAsReported != nil {
-            PriceToCashFlowValuationAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToCashFlowValuation(*MarketCapitalizationAsReported, *OperatingCashFlowAsReported))
-        }
+			PriceToCashFlowValuationAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToCashFlowValuation(*MarketCapitalizationAsReported, *OperatingCashFlowAsReported))
+		}
 
 		var PriceToFreeCashFlowValuation *float64 = nil
 		var PriceToFreeCashFlowValuationAsReported *float64 = nil
 		if MarketCapitalization != nil && FreeCashFlow != nil {
-            PriceToFreeCashFlowValuation = utils.InterfaceToFloat64Ptr(Calculations.PriceToFreeCashFlowValuation(*MarketCapitalization, *FreeCashFlow))
-        }
+			PriceToFreeCashFlowValuation = utils.InterfaceToFloat64Ptr(Calculations.PriceToFreeCashFlowValuation(*MarketCapitalization, *FreeCashFlow))
+		}
 		if MarketCapitalizationAsReported != nil && FreeCashFlowAsReported != nil {
-            PriceToFreeCashFlowValuationAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToFreeCashFlowValuation(*MarketCapitalizationAsReported, *FreeCashFlowAsReported))
-        }
+			PriceToFreeCashFlowValuationAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToFreeCashFlowValuation(*MarketCapitalizationAsReported, *FreeCashFlowAsReported))
+		}
 
 		var PriceToEarningsValuation *float64 = nil
 		var PriceToEarningsValuationAsReported *float64 = nil
 		if MarketCapitalization != nil && NetIncome != nil {
-            PriceToEarningsValuation = utils.InterfaceToFloat64Ptr(Calculations.PriceToEarningsValuation(*MarketCapitalization, *NetIncome))
-        }
+			PriceToEarningsValuation = utils.InterfaceToFloat64Ptr(Calculations.PriceToEarningsValuation(*MarketCapitalization, *NetIncome))
+		}
 		if MarketCapitalizationAsReported != nil && NetIncomeAsReported != nil {
-            PriceToEarningsValuationAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToEarningsValuation(*MarketCapitalizationAsReported, *NetIncomeAsReported))
-        }
+			PriceToEarningsValuationAsReported = utils.InterfaceToFloat64Ptr(Calculations.PriceToEarningsValuation(*MarketCapitalizationAsReported, *NetIncomeAsReported))
+		}
 
 		var LiabilitiesMarketValue *float64 = nil
 		var LiabilitiesMarketValueAsReported *float64 = nil
 		if PricePerShare != 0 && SharesOutstanding != nil && BookValueOfDebt != nil {
-            LiabilitiesMarketValue = utils.InterfaceToFloat64Ptr(Calculations.LiabilitiesMarketValue(PricePerShare, *SharesOutstanding, *BookValueOfDebt))
-        }
+			LiabilitiesMarketValue = utils.InterfaceToFloat64Ptr(Calculations.LiabilitiesMarketValue(PricePerShare, *SharesOutstanding, *BookValueOfDebt))
+		}
 		if PricePerShare != 0 && SharesOutstandingAsReported != nil && BookValueOfDebtAsReported != nil {
-            LiabilitiesMarketValueAsReported = utils.InterfaceToFloat64Ptr(Calculations.LiabilitiesMarketValue(PricePerShare, *SharesOutstandingAsReported, *BookValueOfDebtAsReported))
-        }
+			LiabilitiesMarketValueAsReported = utils.InterfaceToFloat64Ptr(Calculations.LiabilitiesMarketValue(PricePerShare, *SharesOutstandingAsReported, *BookValueOfDebtAsReported))
+		}
 
 		var TobinsQ *float64 = nil
 		var TobinsQAsReported *float64 = nil
@@ -1336,50 +1277,50 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			TobinsQ = utils.InterfaceToFloat64Ptr(Calculations.TobinsQ(*MarketValueOfEquity, *MarketValueOfDebt, *BookValueOfEquity, *BookValueOfDebt))
 		}
 		if MarketValueOfEquityAsReported != nil && MarketValueOfDebtAsReported != nil && BookValueOfEquityAsReported != nil && BookValueOfDebtAsReported != nil {
-            TobinsQAsReported = utils.InterfaceToFloat64Ptr(Calculations.TobinsQ(*MarketValueOfEquityAsReported, *MarketValueOfDebtAsReported, *BookValueOfEquityAsReported, *BookValueOfDebtAsReported))
-        }
+			TobinsQAsReported = utils.InterfaceToFloat64Ptr(Calculations.TobinsQ(*MarketValueOfEquityAsReported, *MarketValueOfDebtAsReported, *BookValueOfEquityAsReported, *BookValueOfDebtAsReported))
+		}
 
 		var ReceivablesTurnoverRatio *float64 = nil
 		var ReceivablesTurnoverRatioAsReported *float64 = nil
 		if NetRevenue != nil && NetReceivables != nil {
-            ReceivablesTurnoverRatio = utils.InterfaceToFloat64Ptr(*NetRevenue / *NetReceivables)
-        }
+			ReceivablesTurnoverRatio = utils.InterfaceToFloat64Ptr(*NetRevenue / *NetReceivables)
+		}
 		if NetRevenueAsReported != nil && NetReceivablesAsReported != nil {
-            ReceivablesTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(*NetRevenueAsReported / *NetReceivablesAsReported)
-        }
+			ReceivablesTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(*NetRevenueAsReported / *NetReceivablesAsReported)
+		}
 
 		var AverageCollectionPeriod *float64 = nil
 		var AverageCollectionPeriodAsReported *float64 = nil
 		if ReceivablesTurnoverRatio != nil {
-            AverageCollectionPeriod = utils.InterfaceToFloat64Ptr(Calculations.AverageCollectionPeriod(*ReceivablesTurnoverRatio))
-        }
+			AverageCollectionPeriod = utils.InterfaceToFloat64Ptr(Calculations.AverageCollectionPeriod(*ReceivablesTurnoverRatio))
+		}
 
 		var AccountsPayableTurnoverRatio *float64 = nil
 		var AccountsPayableTurnoverRatioAsReported *float64 = nil
 		if AccountsPayable != nil && NetRevenue != nil {
-            AccountsPayableTurnoverRatio = utils.InterfaceToFloat64Ptr(*NetRevenue / *AccountsPayable)
-        }
+			AccountsPayableTurnoverRatio = utils.InterfaceToFloat64Ptr(*NetRevenue / *AccountsPayable)
+		}
 		if AccountsPayableAsReported != nil && NetRevenueAsReported != nil {
-            AccountsPayableTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(*NetRevenueAsReported / *AccountsPayableAsReported)
-        }
+			AccountsPayableTurnoverRatioAsReported = utils.InterfaceToFloat64Ptr(*NetRevenueAsReported / *AccountsPayableAsReported)
+		}
 
 		var AverageAccountsPayablePaymentPeriod *float64 = nil
 		var AverageAccountsPayablePaymentPeriodAsReported *float64 = nil
 		if AccountsPayableTurnoverRatio != nil {
-            AverageAccountsPayablePaymentPeriod = utils.InterfaceToFloat64Ptr(Calculations.AverageAccountsPayablePaymentPeriod(*AccountsPayableTurnoverRatio))
-        }
+			AverageAccountsPayablePaymentPeriod = utils.InterfaceToFloat64Ptr(Calculations.AverageAccountsPayablePaymentPeriod(*AccountsPayableTurnoverRatio))
+		}
 		if AccountsPayableTurnoverRatioAsReported != nil {
-            AverageAccountsPayablePaymentPeriodAsReported = utils.InterfaceToFloat64Ptr(Calculations.AverageAccountsPayablePaymentPeriod(*AccountsPayableTurnoverRatioAsReported))
-        }
+			AverageAccountsPayablePaymentPeriodAsReported = utils.InterfaceToFloat64Ptr(Calculations.AverageAccountsPayablePaymentPeriod(*AccountsPayableTurnoverRatioAsReported))
+		}
 
 		var InventoryToWorkingCapitalRatio *float64 = nil
 		var InventoryToWorkingCapitalRatioAsReported *float64 = nil
 		if Inventory != nil && WorkingCapital != nil {
-            InventoryToWorkingCapitalRatio = utils.InterfaceToFloat64Ptr(*Inventory / *WorkingCapital)
-        }
+			InventoryToWorkingCapitalRatio = utils.InterfaceToFloat64Ptr(*Inventory / *WorkingCapital)
+		}
 		if InventoryAsReported != nil && WorkingCapitalAsReported != nil {
-            InventoryToWorkingCapitalRatioAsReported = utils.InterfaceToFloat64Ptr(*InventoryAsReported / *WorkingCapitalAsReported)
-        }
+			InventoryToWorkingCapitalRatioAsReported = utils.InterfaceToFloat64Ptr(*InventoryAsReported / *WorkingCapitalAsReported)
+		}
 
 		var DaysSalesOutstanding *float64 = nil
 		var DaysSalesOutstandingAsReported *float64 = nil
@@ -1387,26 +1328,17 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			DaysSalesOutstanding = utils.InterfaceToFloat64Ptr((*NetRevenue / *CostOfRevenue) * *DaysInPeriod)
 		}
 		if NetRevenueAsReported != nil && CostOfGoodsSoldAsReported != nil && DaysInPeriod != nil {
-            DaysSalesOutstandingAsReported = utils.InterfaceToFloat64Ptr((*NetRevenueAsReported / *CostOfGoodsSoldAsReported) * *DaysInPeriod)
-        }
-
-		var InventoryToWorkingCapitalRatio *float64 = nil
-		var InventoryToWorkingCapitalRatioAsReported *float64 = nil
-		if Inventory != nil && WorkingCapital != nil {
-            InventoryToWorkingCapitalRatio = utils.InterfaceToFloat64Ptr(*Inventory / *WorkingCapital)
-        }
-		if InventoryAsReported != nil && WorkingCapitalAsReported != nil {
-            InventoryToWorkingCapitalRatioAsReported = utils.InterfaceToFloat64Ptr(*InventoryAsReported / *WorkingCapitalAsReported)
-        }
+			DaysSalesOutstandingAsReported = utils.InterfaceToFloat64Ptr((*NetRevenueAsReported / *CostOfGoodsSoldAsReported) * *DaysInPeriod)
+		}
 
 		var DaysPayablesOutstanding *float64 = nil
 		var DaysPayablesOutstandingAsReported *float64 = nil
 		if AccountsPayable != nil && CostOfRevenue != nil && DaysInPeriod != nil {
-            DaysPayablesOutstanding = utils.InterfaceToFloat64Ptr((*AccountsPayable / *CostOfRevenue) * *DaysInPeriod)
-        }
+			DaysPayablesOutstanding = utils.InterfaceToFloat64Ptr((*AccountsPayable / *CostOfRevenue) * *DaysInPeriod)
+		}
 		if AccountsPayableAsReported != nil && CostOfGoodsSoldAsReported != nil && DaysInPeriod != nil {
-            DaysPayablesOutstandingAsReported = utils.InterfaceToFloat64Ptr((*AccountsPayableAsReported / *CostOfGoodsSoldAsReported) * *DaysInPeriod)
-        }
+			DaysPayablesOutstandingAsReported = utils.InterfaceToFloat64Ptr((*AccountsPayableAsReported / *CostOfGoodsSoldAsReported) * *DaysInPeriod)
+		}
 
 		var CashConversionCycle *float64 = nil
 		var CashConversionCycleAsReported *float64 = nil
@@ -1417,20 +1349,20 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		var NetWorkingCapital *float64 = nil
 		var NetWorkingCapitalAsReported *float64 = nil
 		if NetReceivables != nil && Inventory != nil && AccountsPayable != nil {
-            NetWorkingCapital = utils.InterfaceToFloat64Ptr(Calculations.NetWorkingCapital(*NetReceivables, *Inventory, *AccountsPayable))
-        }
+			NetWorkingCapital = utils.InterfaceToFloat64Ptr(Calculations.NetWorkingCapital(*NetReceivables, *Inventory, *AccountsPayable))
+		}
 		if NetReceivablesAsReported != nil && InventoryAsReported != nil && AccountsPayableAsReported != nil {
-            NetWorkingCapitalAsReported = utils.InterfaceToFloat64Ptr(Calculations.NetWorkingCapital(*NetReceivablesAsReported, *InventoryAsReported, *AccountsPayableAsReported))
-        }
+			NetWorkingCapitalAsReported = utils.InterfaceToFloat64Ptr(Calculations.NetWorkingCapital(*NetReceivablesAsReported, *InventoryAsReported, *AccountsPayableAsReported))
+		}
 
 		var NOPAT *float64 = nil
 		var NOPATAsReported *float64 = nil
 		if OperatingIncome != nil && EffectiveTaxRate != nil {
-			NOPAT = utils.InterfaceToFloat64Ptr(*OperatingIncome*(1-*EffectiveTaxRate))
+			NOPAT = utils.InterfaceToFloat64Ptr(*OperatingIncome * (1 - *EffectiveTaxRate))
 		}
 		if OperatingIncomeAsReported != nil && EffectiveTaxRate != nil {
-            NOPATAsReported = utils.InterfaceToFloat64Ptr(*OperatingIncomeAsReported*(1-*EffectiveTaxRate))
-        }
+			NOPATAsReported = utils.InterfaceToFloat64Ptr(*OperatingIncomeAsReported * (1 - *EffectiveTaxRate))
+		}
 
 		var EconomicValueAdded *float64 = nil
 		var EconomicValueAddedAsReported *float64 = nil
@@ -1438,8 +1370,8 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			EconomicValueAdded = utils.InterfaceToFloat64Ptr(Calculations.EconomicValueAdded(*NOPAT, *WACC, *TotalCapital))
 		}
 		if NOPATAsReported != nil && WACCAsReported != nil && TotalCapitalAsReported != nil {
-            EconomicValueAddedAsReported = utils.InterfaceToFloat64Ptr(Calculations.EconomicValueAdded(*NOPATAsReported, *WACCAsReported, *TotalCapitalAsReported))
-        }
+			EconomicValueAddedAsReported = utils.InterfaceToFloat64Ptr(Calculations.EconomicValueAdded(*NOPATAsReported, *WACCAsReported, *TotalCapitalAsReported))
+		}
 
 		var ReturnOnInvestedCapital *float64 = nil
 		var ReturnOnInvestedCapitalAsReported *float64 = nil
@@ -1447,8 +1379,8 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			ReturnOnInvestedCapital = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnInvestedCapital(*NOPAT, *TotalInvestments))
 		}
 		if NOPATAsReported != nil && TotalInvestmentsAsReported != nil {
-            ReturnOnInvestedCapitalAsReported = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnInvestedCapital(*NOPATAsReported, *TotalInvestmentsAsReported))
-        }
+			ReturnOnInvestedCapitalAsReported = utils.InterfaceToFloat64Ptr(Calculations.ReturnOnInvestedCapital(*NOPATAsReported, *TotalInvestmentsAsReported))
+		}
 
 		var FreeCashFlowToFirm *float64 = nil
 		var FreeCashFlowToFirmAsReported *float64 = nil
@@ -1456,17 +1388,17 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			FreeCashFlowToFirm = utils.InterfaceToFloat64Ptr(Calculations.FreeCashFlowToFirm(*NetIncome, *NonCashCharges, *TotalInterestPayments, *EffectiveTaxRate, *LongTermInvestments, *NetWorkingCapital))
 		}
 		if NetIncomeAsReported != nil && NonCashChargesAsReported != nil && TotalInterestPaymentsAsReported != nil && EffectiveTaxRate != nil && LongTermInvestmentsAsReported != nil && NetWorkingCapitalAsReported != nil {
-            FreeCashFlowToFirmAsReported = utils.InterfaceToFloat64Ptr(Calculations.FreeCashFlowToFirm(*NetIncomeAsReported, *NonCashChargesAsReported, *TotalInterestPaymentsAsReported, *EffectiveTaxRate, *LongTermInvestmentsAsReported, *NetWorkingCapitalAsReported))
-        }
+			FreeCashFlowToFirmAsReported = utils.InterfaceToFloat64Ptr(Calculations.FreeCashFlowToFirm(*NetIncomeAsReported, *NonCashChargesAsReported, *TotalInterestPaymentsAsReported, *EffectiveTaxRate, *LongTermInvestmentsAsReported, *NetWorkingCapitalAsReported))
+		}
 
 		var StockDividendPerShare *float64 = nil
 		var StockDividendPerShareAsReported *float64 = nil
 		if DividendsPaid != nil && SharesOutstanding != nil {
-            StockDividendPerShare = utils.InterfaceToFloat64Ptr(*DividendsPaid / *SharesOutstanding)
-        }
+			StockDividendPerShare = utils.InterfaceToFloat64Ptr(*DividendsPaid / *SharesOutstanding)
+		}
 		if DividendsPaidAsReported != nil && SharesOutstandingAsReported != nil {
-            StockDividendPerShareAsReported = utils.InterfaceToFloat64Ptr(*DividendsPaidAsReported / *SharesOutstandingAsReported)
-        }
+			StockDividendPerShareAsReported = utils.InterfaceToFloat64Ptr(*DividendsPaidAsReported / *SharesOutstandingAsReported)
+		}
 
 		var LeverageRatio *float64 = nil
 		var LeverageRatioAsReported *float64 = nil
@@ -1474,8 +1406,8 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			LeverageRatio = utils.InterfaceToFloat64Ptr(Calculations.LeverageRatio(*TotalDebt, *EBITDA))
 		}
 		if TotalDebtAsReported != nil && EBITDAAsReported != nil {
-            LeverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.LeverageRatio(*TotalDebtAsReported, *EBITDAAsReported))
-        }
+			LeverageRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.LeverageRatio(*TotalDebtAsReported, *EBITDAAsReported))
+		}
 
 		var CapitalizationRatio *float64 = nil
 		var CapitalizationRatioAsReported *float64 = nil
@@ -1483,8 +1415,17 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			CapitalizationRatio = utils.InterfaceToFloat64Ptr(Calculations.CapitalizationRatio(*TotalDebt, *ShareholderEquity))
 		}
 		if TotalDebtAsReported != nil && ShareholderEquityAsReported != nil {
-            CapitalizationRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.CapitalizationRatio(*TotalDebtAsReported, *ShareholderEquityAsReported))
-        }
+			CapitalizationRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.CapitalizationRatio(*TotalDebtAsReported, *ShareholderEquityAsReported))
+		}
+
+		var LongTermDebtAsReported *float64 = nil
+		if CurrentLongTermDebtAsReported != nil && NonCurrentLongTermDebtAsReported != nil {
+			LongTermDebtAsReported = utils.InterfaceToFloat64Ptr(*CurrentLongTermDebtAsReported + *NonCurrentLongTermDebtAsReported)
+		} else if CurrentLongTermDebtAsReported != nil {
+			LongTermDebtAsReported = utils.InterfaceToFloat64Ptr(*CurrentLongTermDebtAsReported)
+		} else if NonCurrentLongTermDebtAsReported != nil {
+			LongTermDebtAsReported = utils.InterfaceToFloat64Ptr(*NonCurrentLongTermDebtAsReported)
+		}
 
 		var DebtToCapitalRatio *float64 = nil
 		var DebtToCapitalRatioAsReported *float64 = nil
@@ -1492,9 +1433,361 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			DebtToCapitalRatio = utils.InterfaceToFloat64Ptr(Calculations.DebtToCapitalRatio(*ShortTermDebt, *LongTermDebt, *ShareholderEquity))
 		}
 		if ShortTermDebtAsReported != nil && LongTermDebtAsReported != nil && ShareholderEquityAsReported != nil {
-            DebtToCapitalRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DebtToCapitalRatio(*ShortTermDebtAsReported, *LongTermDebtAsReported, *ShareholderEquityAsReported))
-        }
+			DebtToCapitalRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DebtToCapitalRatio(*ShortTermDebtAsReported, *LongTermDebtAsReported, *ShareholderEquityAsReported))
+		}
 
+		var NetGearingRatio *float64 = nil
+		var NetGearingRatioAsReported *float64 = nil
+		if LongTermDebt != nil && ShortTermDebt != nil && TotalLiabilities != nil && ShareholderEquity != nil {
+			NetGearingRatio = utils.InterfaceToFloat64Ptr(Calculations.NetGearingRatio(*LongTermDebt, *ShortTermDebt, *TotalLiabilities, *ShareholderEquity))
+		}
+		if LongTermDebtAsReported != nil && ShortTermDebtAsReported != nil && TotalLiabilitiesAsReported != nil && ShareholderEquityAsReported != nil {
+			NetGearingRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.NetGearingRatio(*LongTermDebtAsReported, *ShortTermDebtAsReported, *TotalLiabilitiesAsReported, *ShareholderEquityAsReported))
+		}
+
+		var TotalDebtToEBITDA *float64 = nil
+		var TotalDebtToEBITDAAsReported *float64 = nil
+		if TotalDebt != nil && EBITDA != nil {
+			TotalDebtToEBITDA = utils.InterfaceToFloat64Ptr(Calculations.TotalDebtToEBITDA(*TotalDebt, *EBITDA))
+		}
+		if TotalDebtAsReported != nil && EBITDAAsReported != nil {
+			TotalDebtToEBITDAAsReported = utils.InterfaceToFloat64Ptr(Calculations.TotalDebtToEBITDA(*TotalDebtAsReported, *EBITDAAsReported))
+		}
+
+		var DebtToEquityRatio *float64 = nil
+		var DebtToEquityRatioAsReported *float64 = nil
+		if TotalLiabilities != nil && ShareholderEquity != nil {
+			DebtToEquityRatio = utils.InterfaceToFloat64Ptr(Calculations.DebtToEquityRatio(*TotalLiabilities, *ShareholderEquity))
+		}
+		if TotalLiabilitiesAsReported != nil && ShareholderEquityAsReported != nil {
+			DebtToEquityRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.DebtToEquityRatio(*TotalLiabilitiesAsReported, *ShareholderEquityAsReported))
+		}
+
+		var EquityMultiplierRatio *float64 = nil
+		var EquityMultiplierRatioAsReported *float64 = nil
+		if TotalAssets != nil && ShareholderEquity != nil {
+			EquityMultiplierRatio = utils.InterfaceToFloat64Ptr(Calculations.EquityMultiplierRatio(*TotalAssets, *ShareholderEquity))
+		}
+		if TotalAssetsAsReported != nil && ShareholderEquityAsReported != nil {
+			EquityMultiplierRatioAsReported = utils.InterfaceToFloat64Ptr(Calculations.EquityMultiplierRatio(*TotalAssetsAsReported, *ShareholderEquityAsReported))
+		}
+
+		var DuPontAnalysis *float64 = nil
+		var DuPontAnalysisAsReported *float64 = nil
+		if NetProfitMargin != nil && AssetTurnoverRatio != nil && EquityMultiplierRatio != nil {
+			DuPontAnalysis = utils.InterfaceToFloat64Ptr(Calculations.DuPontAnalysis(*NetProfitMargin, *AssetTurnoverRatio, *EquityMultiplierRatio))
+		}
+		if NetProfitMarginAsReported != nil && AssetTurnoverRatioAsReported != nil && EquityMultiplierRatioAsReported != nil {
+			DuPontAnalysisAsReported = utils.InterfaceToFloat64Ptr(Calculations.DuPontAnalysis(*NetProfitMarginAsReported, *AssetTurnoverRatioAsReported, *EquityMultiplierRatioAsReported))
+		}
+		FullCalcResults["EffectiveTaxRate"] = EffectiveTaxRate
+		FullCalcResults["DaysInPeriod"] = DaysInPeriod
+		FullCalcResults["TotalAssets"] = TotalAssets
+		FullCalcResults["TotalLiabilities"] = TotalLiabilities
+		FullCalcResults["Inventory"] = Inventory
+		FullCalcResults["IntangibleAssets"] = IntangibleAssets
+		FullCalcResults["NetDebt"] = NetDebt
+		FullCalcResults["CashAndCashEquivalents"] = CashAndCashEquivalents
+		FullCalcResults["NetReceivables"] = NetReceivables
+		FullCalcResults["NetFixedAssets"] = NetFixedAssets
+		FullCalcResults["DeferredTaxLiabilities"] = DeferredTaxLiabilities
+		FullCalcResults["ShareholderEquity"] = ShareholderEquity
+		FullCalcResults["AccountsPayable"] = AccountsPayable
+		FullCalcResults["CommonStock"] = CommonStock
+		FullCalcResults["SharesOutstanding"] = SharesOutstanding
+		FullCalcResults["HighQualityLiquidAssets"] = HighQualityLiquidAssets
+		FullCalcResults["WorkingCapital"] = WorkingCapital
+		FullCalcResults["TangibleNetWorth"] = TangibleNetWorth
+		FullCalcResults["BookValueOfEquity"] = BookValueOfEquity
+		FullCalcResults["BookValueOfDebt"] = BookValueOfDebt
+		FullCalcResults["EquityBookValue"] = EquityBookValue
+		FullCalcResults["LiabilitiesBookValue"] = LiabilitiesBookValue
+		FullCalcResults["TotalAccrualsToTotalAssets"] = TotalAccrualsToTotalAssets
+		FullCalcResults["ShortTermInvestments"] = ShortTermInvestments
+		FullCalcResults["LongTermInvestments"] = LongTermInvestments
+		FullCalcResults["TotalMarketableSecurities"] = TotalMarketableSecurities
+		FullCalcResults["TotalInvestments"] = TotalInvestments
+		FullCalcResults["NetIncome"] = NetIncome
+		FullCalcResults["GrossProfit"] = GrossProfit
+		FullCalcResults["NetRevenue"] = NetRevenue
+		FullCalcResults["NetProfitMargin"] = NetProfitMargin
+		FullCalcResults["OperatingExpenses"] = OperatingExpenses
+		FullCalcResults["OperatingIncome"] = OperatingIncome
+		FullCalcResults["DepreciationAndAmortization"] = DepreciationAndAmortization
+		FullCalcResults["TotalTaxesPaid"] = TotalTaxesPaid
+		FullCalcResults["ChangeInWorkingCapital"] = ChangeInWorkingCapital
+		FullCalcResults["CapitalExpenditures"] = CapitalExpenditures
+		FullCalcResults["OperatingCashflow"] = OperatingCashflow
+		FullCalcResults["FreeCashFlow"] = FreeCashFlow
+		FullCalcResults["EBITDA"] = EBITDA
+		FullCalcResults["TotalInterestPayments"] = TotalInterestPayments
+		FullCalcResults["EBIT"] = EBIT
+		FullCalcResults["NonCashCharges"] = NonCashCharges
+		FullCalcResults["MarketValueOfEquity"] = MarketValueOfEquity
+		FullCalcResults["ShortTermDebt"] = ShortTermDebt
+		FullCalcResults["LongTermDebt"] = LongTermDebt
+		FullCalcResults["TotalDebt"] = TotalDebt
+		FullCalcResults["CostOfDebt"] = CostOfDebt
+		FullCalcResults["UnleveredFirmValue"] = UnleveredFirmValue
+		FullCalcResults["TaxShieldBenefits"] = TaxShieldBenefits
+		FullCalcResults["NetEffectOfDebt"] = NetEffectOfDebt
+		FullCalcResults["DebtService"] = DebtService
+		FullCalcResults["NonInterestExpenses"] = NonInterestExpenses
+		FullCalcResults["MarketCapitalization"] = MarketCapitalization
+		FullCalcResults["EnterpriseValue"] = EnterpriseValue
+		FullCalcResults["DebtOutstanding"] = DebtOutstanding
+		FullCalcResults["AssetTurnoverRatio"] = AssetTurnoverRatio
+		FullCalcResults["DividendsPaid"] = DividendsPaid
+		FullCalcResults["RetentionRatio"] = RetentionRatio
+		FullCalcResults["ReturnOnEquity"] = ReturnOnEquity
+		FullCalcResults["CostAndExpenses"] = CostAndExpenses
+		FullCalcResults["CostOfRevenue"] = CostOfRevenue
+		FullCalcResults["SellingGeneralAndAdministrativeExpenses"] = SellingGeneralAndAdministrativeExpenses
+		FullCalcResults["ExplicitCosts"] = ExplicitCosts
+		FullCalcResults["DaysInventoryOutstanding"] = DaysInventoryOutstanding
+		FullCalcResults["TotalCapital"] = TotalCapital
+		FullCalcResults["NetMargin"] = NetMargin
+		FullCalcResults["FreeCashFlowToEquity"] = FreeCashFlowToEquity
+		FullCalcResults["AdjustedPresentValue"] = AdjustedPresentValue
+		FullCalcResults["InterestCoverageRatio"] = InterestCoverageRatio
+		FullCalcResults["FixedChargeCoverageRatio"] = FixedChargeCoverageRatio
+		FullCalcResults["DebtServiceCoverageRatio"] = DebtServiceCoverageRatio
+		FullCalcResults["AssetCoverageRatio"] = AssetCoverageRatio
+		FullCalcResults["EBITDAToInterestCoverageRatio"] = EBITDAToInterestCoverageRatio
+		FullCalcResults["PreferredDividendCoverageRatio"] = PreferredDividendCoverageRatio
+		FullCalcResults["LiquidityCoverageRatio"] = LiquidityCoverageRatio
+		FullCalcResults["InventoryTurnoverRatio"] = InventoryTurnoverRatio
+		FullCalcResults["ReturnOnCapitalEmployed"] = ReturnOnCapitalEmployed
+		FullCalcResults["EfficiencyRatio"] = EfficiencyRatio
+		FullCalcResults["RevenuePerEmployee"] = RevenuePerEmployee
+		FullCalcResults["CapitalExpenditureRatio"] = CapitalExpenditureRatio
+		FullCalcResults["OperatingCashFlowRatio"] = OperatingCashFlowRatio
+		FullCalcResults["EBITDAToEVRatio"] = EBITDAToEVRatio
+		FullCalcResults["TangibleNetWorthRatio"] = TangibleNetWorthRatio
+		FullCalcResults["DeferredTaxLiabilityToEquityRatio"] = DeferredTaxLiabilityToEquityRatio
+		FullCalcResults["TangibleEquityRatio"] = TangibleEquityRatio
+		FullCalcResults["WACC"] = WACC
+		FullCalcResults["FixedAssetTurnoverRatio"] = FixedAssetTurnoverRatio
+		FullCalcResults["PPETurnoverRatio"] = PPETurnoverRatio
+		FullCalcResults["InvestmentTurnoverRatio"] = InvestmentTurnoverRatio
+		FullCalcResults["WorkingCapitalTurnoverRatio"] = WorkingCapitalTurnoverRatio
+		FullCalcResults["ReturnOnAssetRatio"] = ReturnOnAssetRatio
+		FullCalcResults["GrossProfitMargin"] = GrossProfitMargin
+		FullCalcResults["OperatingProfitMargin"] = OperatingProfitMargin
+		FullCalcResults["EBITDAMarginRatio"] = EBITDAMarginRatio
+		FullCalcResults["DividendPayoutRatio"] = DividendPayoutRatio
+		FullCalcResults["RetentionRate"] = RetentionRate
+		FullCalcResults["SustainableGrowthRate"] = SustainableGrowthRate
+		FullCalcResults["GrossMarginOnInventory"] = GrossMarginOnInventory
+		FullCalcResults["CashFlowReturnOnEquity"] = CashFlowReturnOnEquity
+		FullCalcResults["OperatingMargin"] = OperatingMargin
+		FullCalcResults["OperatingExpenseRatio"] = OperatingExpenseRatio
+		FullCalcResults["CurrentRatio"] = CurrentRatio
+		FullCalcResults["AcidTestRatio"] = AcidTestRatio
+		FullCalcResults["CashRatio"] = CashRatio
+		FullCalcResults["DefensiveIntervalRatio"] = DefensiveIntervalRatio
+		FullCalcResults["DrySalesRatio"] = DrySalesRatio
+		FullCalcResults["PriceToBookValueRatio"] = PriceToBookValueRatio
+		FullCalcResults["EarningsPerShare"] = EarningsPerShare
+		FullCalcResults["EBITDAPerShare"] = EBITDAPerShare
+		FullCalcResults["BookValuePerShare"] = BookValuePerShare
+		FullCalcResults["NetTangibleAssetsPerShare"] = NetTangibleAssetsPerShare
+		FullCalcResults["MarketValueOfDebt"] = MarketValueOfDebt
+		FullCalcResults["MarketToBookRatio"] = MarketToBookRatio
+		FullCalcResults["IntangiblesRatio"] = IntangiblesRatio
+		FullCalcResults["PriceToSalesRatio"] = PriceToSalesRatio
+		FullCalcResults["PriceToBookRatio"] = PriceToBookRatio
+		FullCalcResults["PricetoSalesValue"] = PricetoSalesValue
+		FullCalcResults["OperatingCashFlowPerShare"] = OperatingCashFlowPerShare
+		FullCalcResults["PriceToCashFlowRatio"] = PriceToCashFlowRatio
+		FullCalcResults["FreeCashFlowPerShare"] = FreeCashFlowPerShare
+		FullCalcResults["PriceToFreeCashFlowRatio"] = PriceToFreeCashFlowRatio
+		FullCalcResults["PriceToCashFlowValuation"] = PriceToCashFlowValuation
+		FullCalcResults["PriceToFreeCashFlowValuation"] = PriceToFreeCashFlowValuation
+		FullCalcResults["PriceToEarningsValuation"] = PriceToEarningsValuation
+		FullCalcResults["LiabilitiesMarketValue"] = LiabilitiesMarketValue
+		FullCalcResults["TobinsQ"] = TobinsQ
+		FullCalcResults["ReceivablesTurnoverRatio"] = ReceivablesTurnoverRatio
+		FullCalcResults["AverageCollectionPeriod"] = AverageCollectionPeriod
+		FullCalcResults["AccountsPayableTurnoverRatio"] = AccountsPayableTurnoverRatio
+		FullCalcResults["AverageAccountsPayablePaymentPeriod"] = AverageAccountsPayablePaymentPeriod
+		FullCalcResults["InventoryToWorkingCapitalRatio"] = InventoryToWorkingCapitalRatio
+		FullCalcResults["DaysSalesOutstanding"] = DaysSalesOutstanding
+		FullCalcResults["DaysPayablesOutstanding"] = DaysPayablesOutstanding
+		FullCalcResults["CashConversionCycle"] = CashConversionCycle
+		FullCalcResults["NetWorkingCapital"] = NetWorkingCapital
+		FullCalcResults["NOPAT"] = NOPAT
+		FullCalcResults["EconomicValueAdded"] = EconomicValueAdded
+		FullCalcResults["ReturnOnInvestedCapital"] = ReturnOnInvestedCapital
+		FullCalcResults["FreeCashFlowToFirm"] = FreeCashFlowToFirm
+		FullCalcResults["StockDividendPerShare"] = StockDividendPerShare
+		FullCalcResults["LeverageRatio"] = LeverageRatio
+		FullCalcResults["CapitalizationRatio"] = CapitalizationRatio
+		FullCalcResults["DebtToCapitalRatio"] = DebtToCapitalRatio
+		FullCalcResults["NetGearingRatio"] = NetGearingRatio
+		FullCalcResults["TotalDebtToEBITDA"] = TotalDebtToEBITDA
+		FullCalcResults["DebtToEquityRatio"] = DebtToEquityRatio
+		FullCalcResults["EquityMultiplierRatio"] = EquityMultiplierRatio
+		FullCalcResults["DuPontAnalysis"] = DuPontAnalysis
+		FullCalcResultsAsReported["EffectiveTaxRate"] = EffectiveTaxRate
+		FullCalcResultsAsReported["DaysInPeriod"] = DaysInPeriod
+		FullCalcResultsAsReported["TotalAssetsAsReported"] = TotalAssetsAsReported
+		FullCalcResultsAsReported["AssetsNonCurrentAsReported"] = AssetsNonCurrentAsReported
+		FullCalcResultsAsReported["OtherAssetsNonCurrentAsReported"] = OtherAssetsNonCurrentAsReported
+		FullCalcResultsAsReported["TotalLiabilitiesAsReported"] = TotalLiabilitiesAsReported
+		FullCalcResultsAsReported["InventoryAsReported"] = InventoryAsReported
+		FullCalcResultsAsReported["IntangibleAssetsAsReported"] = IntangibleAssetsAsReported
+		FullCalcResultsAsReported["CurrentLongTermDebtAsReported"] = CurrentLongTermDebtAsReported
+		FullCalcResultsAsReported["NonCurrentLongTermDebtAsReported"] = NonCurrentLongTermDebtAsReported
+		FullCalcResultsAsReported["NetDebtAsReported"] = NetDebtAsReported
+		FullCalcResultsAsReported["CashAndCashEquivalentsAsReported"] = CashAndCashEquivalentsAsReported
+		FullCalcResultsAsReported["AccountsReceivableAsReported"] = AccountsReceivableAsReported
+		FullCalcResultsAsReported["NonTradeReceivablesAsReported"] = NonTradeReceivablesAsReported
+		FullCalcResultsAsReported["NetReceivablesAsReported"] = NetReceivablesAsReported
+		FullCalcResultsAsReported["NetFixedAssetsAsReported"] = NetFixedAssetsAsReported
+		FullCalcResultsAsReported["DeferredTaxLiabilitiesAsReported"] = DeferredTaxLiabilitiesAsReported
+		FullCalcResultsAsReported["ShareholderEquityAsReported"] = ShareholderEquityAsReported
+		FullCalcResultsAsReported["AccountsPayableAsReported"] = AccountsPayableAsReported
+		FullCalcResultsAsReported["SharesOutstandingAsReported"] = SharesOutstandingAsReported
+		FullCalcResultsAsReported["HighQualityLiquidAssetsAsReported"] = HighQualityLiquidAssetsAsReported
+		FullCalcResultsAsReported["WorkingCapitalAsReported"] = WorkingCapitalAsReported
+		FullCalcResultsAsReported["TangibleNetWorthAsReported"] = TangibleNetWorthAsReported
+		FullCalcResultsAsReported["BookValueOfEquityAsReported"] = BookValueOfEquityAsReported
+		FullCalcResultsAsReported["BookValueOfDebtAsReported"] = BookValueOfDebtAsReported
+		FullCalcResultsAsReported["EquityBookValueAsReported"] = EquityBookValueAsReported
+		FullCalcResultsAsReported["LiabilitiesBookValueAsReported"] = LiabilitiesBookValueAsReported
+		FullCalcResultsAsReported["TotalAccrualsToTotalAssetsAsReported"] = TotalAccrualsToTotalAssetsAsReported
+		FullCalcResultsAsReported["TotalMarketableSecuritiesAsReported"] = TotalMarketableSecuritiesAsReported
+		FullCalcResultsAsReported["CurrentMarketableSecuritiesAsReported"] = CurrentMarketableSecuritiesAsReported
+		FullCalcResultsAsReported["NonCurrentMarketableSecuritiesAsReported"] = NonCurrentMarketableSecuritiesAsReported
+		FullCalcResultsAsReported["LongTermInvestmentsAsReported"] = LongTermInvestmentsAsReported
+		FullCalcResultsAsReported["TotalInvestmentsAsReported"] = TotalInvestmentsAsReported
+		FullCalcResultsAsReported["NetIncomeAsReported"] = NetIncomeAsReported
+		FullCalcResultsAsReported["GrossProfitAsReported"] = GrossProfitAsReported
+		FullCalcResultsAsReported["NetRevenueAsReported"] = NetRevenueAsReported
+		FullCalcResultsAsReported["NetProfitMarginAsReported"] = NetProfitMarginAsReported
+		FullCalcResultsAsReported["OperatingExpensesAsReported"] = OperatingExpensesAsReported
+		FullCalcResultsAsReported["OperatingIncomeAsReported"] = OperatingIncomeAsReported
+		FullCalcResultsAsReported["DepreciationAndAmortizationAsReported"] = DepreciationAndAmortizationAsReported
+		FullCalcResultsAsReported["TotalInterestPaymentsAsReported"] = TotalInterestPaymentsAsReported
+		FullCalcResultsAsReported["TotalTaxesPaidAsReported"] = TotalTaxesPaidAsReported
+		FullCalcResultsAsReported["CapitalExpendituresAsReported"] = CapitalExpendituresAsReported
+		FullCalcResultsAsReported["NetCashOperatingActivitiesAsReported"] = NetCashOperatingActivitiesAsReported
+		FullCalcResultsAsReported["NetCashInvestingActivitiesAsReported"] = NetCashInvestingActivitiesAsReported
+		FullCalcResultsAsReported["NetCashFinancingActivitiesAsReported"] = NetCashFinancingActivitiesAsReported
+		FullCalcResultsAsReported["OperatingCashFlowAsReported"] = OperatingCashFlowAsReported
+		FullCalcResultsAsReported["FreeCashFlowAsReported"] = FreeCashFlowAsReported
+		FullCalcResultsAsReported["EBITDAAsReported"] = EBITDAAsReported
+		FullCalcResultsAsReported["EBITAsReported"] = EBITAsReported
+		FullCalcResultsAsReported["NonCashChargesAsReported"] = NonCashChargesAsReported
+		FullCalcResultsAsReported["MarketValueOfEquityAsReported"] = MarketValueOfEquityAsReported
+		FullCalcResultsAsReported["ShortTermDebtAsReported"] = ShortTermDebtAsReported
+		FullCalcResultsAsReported["TotalDebtAsReported"] = TotalDebtAsReported
+		FullCalcResultsAsReported["CostOfDebtAsReported"] = CostOfDebtAsReported
+		FullCalcResultsAsReported["UnleveredFirmValueAsReported"] = UnleveredFirmValueAsReported
+		FullCalcResultsAsReported["TaxShieldBenefitsAsReported"] = TaxShieldBenefitsAsReported
+		FullCalcResultsAsReported["NetEffectOfDebtAsReported"] = NetEffectOfDebtAsReported
+		FullCalcResultsAsReported["DebtServiceAsReported"] = DebtServiceAsReported
+		FullCalcResultsAsReported["NonInterestExpensesAsReported"] = NonInterestExpensesAsReported
+		FullCalcResultsAsReported["MarketCapitalizationAsReported"] = MarketCapitalizationAsReported
+		FullCalcResultsAsReported["EnterpriseValueAsReported"] = EnterpriseValueAsReported
+		FullCalcResultsAsReported["DebtOutstandingAsReported"] = DebtOutstandingAsReported
+		FullCalcResultsAsReported["AssetTurnoverRatioAsReported"] = AssetTurnoverRatioAsReported
+		FullCalcResultsAsReported["DividendsPaidAsReported"] = DividendsPaidAsReported
+		FullCalcResultsAsReported["RetentionRatioAsReported"] = RetentionRatioAsReported
+		FullCalcResultsAsReported["ReturnOnEquityAsReported"] = ReturnOnEquityAsReported
+		FullCalcResultsAsReported["CostOfGoodsSoldAsReported"] = CostOfGoodsSoldAsReported
+		FullCalcResultsAsReported["SellingGeneralAndAdministrativeExpensesAsReported"] = SellingGeneralAndAdministrativeExpensesAsReported
+		FullCalcResultsAsReported["ExplicitCostsAsReported"] = ExplicitCostsAsReported
+		FullCalcResultsAsReported["DaysInventoryOutstandingAsReported"] = DaysInventoryOutstandingAsReported
+		FullCalcResultsAsReported["TotalCapitalAsReported"] = TotalCapitalAsReported
+		FullCalcResultsAsReported["NetMarginAsReported"] = NetMarginAsReported
+		FullCalcResultsAsReported["AdjustedPresentValueAsReported"] = AdjustedPresentValueAsReported
+		FullCalcResultsAsReported["InterestCoverageRatioAsReported"] = InterestCoverageRatioAsReported
+		FullCalcResultsAsReported["FixedChargeCoverageRatioAsReported"] = FixedChargeCoverageRatioAsReported
+		FullCalcResultsAsReported["DebtServiceCoverageRatioAsReported"] = DebtServiceCoverageRatioAsReported
+		FullCalcResultsAsReported["AssetCoverageRatioAsReported"] = AssetCoverageRatioAsReported
+		FullCalcResultsAsReported["EBITDAToInterestCoverageRatioAsReported"] = EBITDAToInterestCoverageRatioAsReported
+		FullCalcResultsAsReported["PreferredDividendCoverageRatioAsReported"] = PreferredDividendCoverageRatioAsReported
+		FullCalcResultsAsReported["LiquidityCoverageRatioAsReported"] = LiquidityCoverageRatioAsReported
+		FullCalcResultsAsReported["InventoryTurnoverRatioAsReported"] = InventoryTurnoverRatioAsReported
+		FullCalcResultsAsReported["ReturnOnCapitalEmployedAsReported"] = ReturnOnCapitalEmployedAsReported
+		FullCalcResultsAsReported["EfficiencyRatioAsReported"] = EfficiencyRatioAsReported
+		FullCalcResultsAsReported["RevenuePerEmployeeAsReported"] = RevenuePerEmployeeAsReported
+		FullCalcResultsAsReported["CapitalExpenditureRatioAsReported"] = CapitalExpenditureRatioAsReported
+		FullCalcResultsAsReported["OperatingCashFlowRatioAsReported"] = OperatingCashFlowRatioAsReported
+		FullCalcResultsAsReported["EBITDAToEVRatioAsReported"] = EBITDAToEVRatioAsReported
+		FullCalcResultsAsReported["TangibleNetWorthRatioAsReported"] = TangibleNetWorthRatioAsReported
+		FullCalcResultsAsReported["DeferredTaxLiabilityToEquityRatioAsReported"] = DeferredTaxLiabilityToEquityRatioAsReported
+		FullCalcResultsAsReported["TangibleEquityRatioAsReported"] = TangibleEquityRatioAsReported
+		FullCalcResultsAsReported["WACCAsReported"] = WACCAsReported
+		FullCalcResultsAsReported["FixedAssetTurnoverRatioAsReported"] = FixedAssetTurnoverRatioAsReported
+		FullCalcResultsAsReported["PPETurnoverRatioAsReported"] = PPETurnoverRatioAsReported
+		FullCalcResultsAsReported["InvestmentTurnoverRatioAsReported"] = InvestmentTurnoverRatioAsReported
+		FullCalcResultsAsReported["WorkingCapitalTurnoverRatioAsReported"] = WorkingCapitalTurnoverRatioAsReported
+		FullCalcResultsAsReported["ReturnOnAssetRatioAsReported"] = ReturnOnAssetRatioAsReported
+		FullCalcResultsAsReported["GrossProfitMarginAsReported"] = GrossProfitMarginAsReported
+		FullCalcResultsAsReported["OperatingProfitMarginAsReported"] = OperatingProfitMarginAsReported
+		FullCalcResultsAsReported["EBITDAMarginRatioAsReported"] = EBITDAMarginRatioAsReported
+		FullCalcResultsAsReported["DividendPayoutRatioAsReported"] = DividendPayoutRatioAsReported
+		FullCalcResultsAsReported["RetentionRateAsReported"] = RetentionRateAsReported
+		FullCalcResultsAsReported["SustainableGrowthRateAsReported"] = SustainableGrowthRateAsReported
+		FullCalcResultsAsReported["GrossMarginOnInventoryAsReported"] = GrossMarginOnInventoryAsReported
+		FullCalcResultsAsReported["CashFlowReturnOnEquityAsReported"] = CashFlowReturnOnEquityAsReported
+		FullCalcResultsAsReported["OperatingMarginAsReported"] = OperatingMarginAsReported
+		FullCalcResultsAsReported["OperatingExpenseRatioAsReported"] = OperatingExpenseRatioAsReported
+		FullCalcResultsAsReported["CurrentRatioAsReported"] = CurrentRatioAsReported
+		FullCalcResultsAsReported["AcidTestRatioAsReported"] = AcidTestRatioAsReported
+		FullCalcResultsAsReported["CashRatioAsReported"] = CashRatioAsReported
+		FullCalcResultsAsReported["DefensiveIntervalRatioAsReported"] = DefensiveIntervalRatioAsReported
+		FullCalcResultsAsReported["DrySalesRatioAsReported"] = DrySalesRatioAsReported
+		FullCalcResultsAsReported["PriceToBookValueRatioAsReported"] = PriceToBookValueRatioAsReported
+		FullCalcResultsAsReported["EarningsPerShareAsReported"] = EarningsPerShareAsReported
+		FullCalcResultsAsReported["EBITDAPerShareAsReported"] = EBITDAPerShareAsReported
+		FullCalcResultsAsReported["BookValuePerShareAsReported"] = BookValuePerShareAsReported
+		FullCalcResultsAsReported["NetTangibleAssetsPerShareAsReported"] = NetTangibleAssetsPerShareAsReported
+		FullCalcResultsAsReported["MarketValueOfDebtAsReported"] = MarketValueOfDebtAsReported
+		FullCalcResultsAsReported["MarketToBookRatioAsReported"] = MarketToBookRatioAsReported
+		FullCalcResultsAsReported["IntangiblesRatioAsReported"] = IntangiblesRatioAsReported
+		FullCalcResultsAsReported["PriceToSalesRatioAsReported"] = PriceToSalesRatioAsReported
+		FullCalcResultsAsReported["PriceToBookRatioAsReported"] = PriceToBookRatioAsReported
+		FullCalcResultsAsReported["PricetoSalesValueAsReported"] = PricetoSalesValueAsReported
+		FullCalcResultsAsReported["OperatingCashFlowPerShareAsReported"] = OperatingCashFlowPerShareAsReported
+		FullCalcResultsAsReported["PriceToCashFlowRatioAsReported"] = PriceToCashFlowRatioAsReported
+		FullCalcResultsAsReported["FreeCashFlowPerShareAsReported"] = FreeCashFlowPerShareAsReported
+		FullCalcResultsAsReported["PriceToFreeCashFlowRatioAsReported"] = PriceToFreeCashFlowRatioAsReported
+		FullCalcResultsAsReported["PriceToCashFlowValuationAsReported"] = PriceToCashFlowValuationAsReported
+		FullCalcResultsAsReported["PriceToFreeCashFlowValuationAsReported"] = PriceToFreeCashFlowValuationAsReported
+		FullCalcResultsAsReported["PriceToEarningsValuationAsReported"] = PriceToEarningsValuationAsReported
+		FullCalcResultsAsReported["LiabilitiesMarketValueAsReported"] = LiabilitiesMarketValueAsReported
+		FullCalcResultsAsReported["TobinsQAsReported"] = TobinsQAsReported
+		FullCalcResultsAsReported["ReceivablesTurnoverRatioAsReported"] = ReceivablesTurnoverRatioAsReported
+		FullCalcResultsAsReported["AverageCollectionPeriodAsReported"] = AverageCollectionPeriodAsReported
+		FullCalcResultsAsReported["AccountsPayableTurnoverRatioAsReported"] = AccountsPayableTurnoverRatioAsReported
+		FullCalcResultsAsReported["AverageAccountsPayablePaymentPeriodAsReported"] = AverageAccountsPayablePaymentPeriodAsReported
+		FullCalcResultsAsReported["InventoryToWorkingCapitalRatioAsReported"] = InventoryToWorkingCapitalRatioAsReported
+		FullCalcResultsAsReported["DaysSalesOutstandingAsReported"] = DaysSalesOutstandingAsReported
+		FullCalcResultsAsReported["DaysPayablesOutstandingAsReported"] = DaysPayablesOutstandingAsReported
+		FullCalcResultsAsReported["CashConversionCycleAsReported"] = CashConversionCycleAsReported
+		FullCalcResultsAsReported["NetWorkingCapitalAsReported"] = NetWorkingCapitalAsReported
+		FullCalcResultsAsReported["NOPATAsReported"] = NOPATAsReported
+		FullCalcResultsAsReported["EconomicValueAddedAsReported"] = EconomicValueAddedAsReported
+		FullCalcResultsAsReported["ReturnOnInvestedCapitalAsReported"] = ReturnOnInvestedCapitalAsReported
+		FullCalcResultsAsReported["FreeCashFlowToFirmAsReported"] = FreeCashFlowToFirmAsReported
+		FullCalcResultsAsReported["StockDividendPerShareAsReported"] = StockDividendPerShareAsReported
+		FullCalcResultsAsReported["LeverageRatioAsReported"] = LeverageRatioAsReported
+		FullCalcResultsAsReported["CapitalizationRatioAsReported"] = CapitalizationRatioAsReported
+		FullCalcResultsAsReported["LongTermDebtAsReported"] = LongTermDebtAsReported
+		FullCalcResultsAsReported["DebtToCapitalRatioAsReported"] = DebtToCapitalRatioAsReported
+		FullCalcResultsAsReported["NetGearingRatioAsReported"] = NetGearingRatioAsReported
+		FullCalcResultsAsReported["TotalDebtToEBITDAAsReported"] = TotalDebtToEBITDAAsReported
+		FullCalcResultsAsReported["DebtToEquityRatioAsReported"] = DebtToEquityRatioAsReported
+		FullCalcResultsAsReported["EquityMultiplierRatioAsReported"] = EquityMultiplierRatioAsReported
+		FullCalcResultsAsReported["DuPontAnalysisAsReported"] = DuPontAnalysisAsReported
+
+		FinalCalcResults = append(FinalCalcResults, FullCalcResults)
+		FinalCalcResultsAsReported = append(FinalCalcResultsAsReported, FullCalcResultsAsReported)
 	}
+
 	return nil, nil
 }
