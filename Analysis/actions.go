@@ -274,7 +274,7 @@ func PerformFundamentalsCalculations(Fundamentals *CompanyFundamentals, Period s
 	return CalculationResults
 }
 
-func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects.CompanyValuationPeriod) (map[string]float64, map[string]float64) {
+func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects.CompanyValuationPeriod, PricePerShare float64) (map[string]float64, map[string]float64) {
 	FullCalcResults := map[string]float64{}
 	FullCalcResultsGrowth := map[string]float64{}
 	FullCalcResultsAsReported := map[string]float64{}
@@ -344,6 +344,8 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		/* BALANCE SHEET ITEM SETUP */
 		var TotalAssets = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalAssets")
 		var TotalAssetsAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Assets")
+		var AssetsNonCurrentAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Assetsnoncurrent")
+		var OtherAssetsNonCurrentAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Otherassetsnoncurrent")
 
 		var TotalLiabilities = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalLiabilities")
 		var TotalLiabilitiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Liabilities")
@@ -364,8 +366,6 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		if TotalLiabilitiesAsReported != nil && InventoryAsReported != nil {
 			NetDebtAsReported = utils.InterfaceToFloat64Ptr(*CurrentLongTermDebtAsReported + *NonCurrentLongTermDebtAsReported)
 		}
-		var LongTermInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "LongTermInvestments")
-		// TODO: no direct long term investments equivalent in balance sheet statement as reported object
 
 		var CashAndCashEquivalents = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "CashAndCashEquivalents")
 		var CashAndCashEquivalentsAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Cashandcashequivalentsatcarryingvalue")
@@ -377,18 +377,12 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		if AccountsReceivableAsReported != nil && NonTradeReceivablesAsReported != nil {
 			NetReceivablesAsReported = utils.InterfaceToFloat64Ptr(*AccountsReceivableAsReported + *NonTradeReceivablesAsReported)
 		}
-		// TODO no cogs in balance sheet statement object or balance sheet statement as reported object
 
 		var NetFixedAssets = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "PropertyPlantEquipmentNet")
 		var NetFixedAssetsAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Propertyplantandequipmentnet")
 
-		var TotalInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalInvestments")
-		// TODO: no direct relation for reported total investments
-
-		// TODO: no direct tangible assets equivalent in balance sheet statement as reported object
-
 		var DeferredTaxLiabilities = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "DeferredTaxLiabilitiesNonCurrent")
-		// TODO: no direct relation for reported deferred tax liabilities
+		var DeferredTaxLiabilitiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Deferredtaxliabilitiesnoncurrent")
 
 		var ShareholderEquity = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalStockholdersEquity")
 		var ShareholderEquityAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Stockholdersequity")
@@ -396,24 +390,17 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		var AccountsPayable = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "AccountsPayable")
 		var AccountsPayableAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Accountspayablecurrent")
 
-		// TODO: no direct reference to marketable securities in balance sheet statement object
-		var TotalMarketableSecuritiesAsReported *float64 = nil
-		var CurrentMarketableSecuritiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Marketablesecuritiescurrent")
-		var NonCurrentMarketableSecuritiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Marketablesecuritiesnoncurrent")
-		if CurrentMarketableSecuritiesAsReported != nil && NonCurrentMarketableSecuritiesAsReported != nil {
-			TotalMarketableSecuritiesAsReported = utils.InterfaceToFloat64Ptr(*CurrentMarketableSecuritiesAsReported + *NonCurrentMarketableSecuritiesAsReported)
+		var CommonStock = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "CommonStock")
+		var SharesOutstanding *float64 = nil
+		if CommonStock != nil && PricePerShare != 0 {
+			SharesOutstanding = utils.InterfaceToFloat64Ptr(*CommonStock / PricePerShare)
 		}
-
-		// TODO: no direct reference to shares outstanding in balance sheet statement object
 		var SharesOutstandingAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Commonstocksharesoutstanding")
 
 		var HighQualityLiquidAssets *float64 = nil
 		var HighQualityLiquidAssetsAsReported *float64 = nil
 		if CashAndCashEquivalents != nil && NetReceivables != nil {
 			HighQualityLiquidAssets = utils.InterfaceToFloat64Ptr(*CashAndCashEquivalents + *NetReceivables + curBalanceSheet.CashAndShortTermInvestments - curBalanceSheet.ShortTermInvestments)
-		}
-		if CashAndCashEquivalentsAsReported != nil && NetReceivablesAsReported != nil {
-			HighQualityLiquidAssetsAsReported = utils.InterfaceToFloat64Ptr(*CashAndCashEquivalentsAsReported + *NetReceivablesAsReported + curBalanceSheetAsReported.Cashandcashequivalentsatcarryingvalue - curBalanceSheetAsReported.Shortterminvestments)
 		}
 		if CashAndCashEquivalentsAsReported != nil && NetReceivablesAsReported != nil {
 			HighQualityLiquidAssetsAsReported = utils.InterfaceToFloat64Ptr(*CashAndCashEquivalentsAsReported + *NetReceivablesAsReported)
@@ -488,19 +475,57 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 			TotalAccrualsToTotalAssetsAsReported = utils.InterfaceToFloat64Ptr(*TotalAssetsAsReported - *TotalLiabilitiesAsReported)
 		}
 
-		/* Income Statement */
+		var TotalMarketableSecuritiesAsReported *float64 = nil
+		var CurrentMarketableSecuritiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Marketablesecuritiescurrent")
+		var NonCurrentMarketableSecuritiesAsReported = utils.GetFloat64PtrIfNotEmpty(curBalanceSheetAsReported, "Marketablesecuritiesnoncurrent")
+		if CurrentMarketableSecuritiesAsReported != nil && NonCurrentMarketableSecuritiesAsReported != nil {
+			TotalMarketableSecuritiesAsReported = utils.InterfaceToFloat64Ptr(*CurrentMarketableSecuritiesAsReported + *NonCurrentMarketableSecuritiesAsReported)
+		}
 
-		// EBITDA
-		// Net Income
-		// Gross Profit
-		// Operating Income
-		// Net Revenue
-		// Net Profit Margin
-		// Operating Expenses
-		// Return on Assets
-		// NOPAT
+		var ShortTermInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "ShortTermInvestments")
+		var LongTermInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "LongTermInvestments")
+		var LongTermInvestmentsAsReported *float64 = nil
+		if AssetsNonCurrentAsReported != nil && NetFixedAssetsAsReported != nil && NonCurrentMarketableSecuritiesAsReported != nil && OtherAssetsNonCurrentAsReported != nil {
+			LongTermInvestmentsAsReported = utils.GetFloat64PtrIfNotEmpty(AssetsNonCurrentAsReported - (NetFixedAssetsAsReported + NonCurrentMarketableSecuritiesAsReported + OtherAssetsNonCurrentAsReported))
+		}
 
-		/* Cash Flow Statement */
+		var TotalMarketableSecurities *float64 = nil
+		if ShortTermInvestments != nil && LongTermInvestments != nil {
+			TotalMarketableSecurities = utils.InterfaceToFloat64Ptr(*ShortTermInvestments + *LongTermInvestments)
+		}
+
+		var TotalInvestments = utils.GetFloat64PtrIfNotEmpty(curBalanceSheet, "TotalInvestments")
+		var TotalInvestmentsAsReported *float64 = nil
+		if TotalMarketableSecuritiesAsReported != nil {
+			var TotalInvestmentsAsReported = TotalMarketableSecuritiesAsReported
+		}
+
+		/* INCOME STATEMENT ITEM SET UP */
+		var NetIncome = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "NetIncome")
+		var NetIncomeAsReported = utils.GetFloat64PtrIfNotEmpty(curIncomeStatementAsReported, "Comprehensiveincomenetoftax")
+
+		var GrossProfit = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "GrossProfit")
+		var GrossProfitAsReported = utils.GetFloat64PtrIfNotEmpty(curIncomeStatementAsReported, "Grossprofit")
+
+		var NetRevenue = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "Revenue")
+		var NetRevenueAsReported = utils.GetFloat64PtrIfNotEmpty(curIncomeStatementAsReported, "Revenuefromcontractwithcustomerexcludingassessedtax")
+
+		var NetProfitMargin = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "GrossProfitRatio")
+		var NetProfitMarginAsReported *float64 = nil
+		if NetRevenueAsReported != nil && NetIncomeAsReported != nil {
+			NetProfitMarginAsReported = utils.InterfaceToFloat64Ptr(*NetIncomeAsReported / *NetRevenueAsReported)
+		}
+
+		var OperatingExpenses = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "OperatingExpenses")
+		var OperatingExpensesAsReported = utils.GetFloat64PtrIfNotEmpty(curIncomeStatementAsReported, "Operatingexpenses")
+
+		var OperatingIncome = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "OperatingIncome")
+		var OperatingIncomeAsReported *float64 = nil
+		if GrossProfitAsReported != nil && OperatingExpensesAsReported != nil {
+			OperatingIncomeAsReported = utils.InterfaceToFloat64Ptr(*GrossProfitAsReported - *OperatingExpensesAsReported)
+		}
+
+		/* CASH FLOW STATEMENT ITEM SET UP */
 
 		// Depreciation & Amortization
 		// Total Interest Payments
@@ -512,6 +537,10 @@ func PerformCustomCalculations(Fundamentals *CompanyFundamentals, Period objects
 		// Free Cashflow
 		// Operating Cashflow Per Share
 		// Free Cashflow Per Share
+
+		var EBITDA = utils.GetFloat64PtrIfNotEmpty(curIncomeStatement, "Ebitda")
+		var EBITDAAsReported *float64 = nil
+		// TODO: no direct relation for reported income statement, need D&A
 
 		/* Calculated or Derived */
 
