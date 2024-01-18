@@ -9,6 +9,7 @@ import (
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -47,9 +48,32 @@ func main() {
 	SecAnalysisWeights := Optimization.SecurityAnalysisWeights{}
 	utils.InitStructWithRandomFloats(&SecAnalysisWeights)
 
-	RiskFreeRate := float64(5.0)
-	MarketReturn := float64(7.2)
-	DefaultEffectiveTaxRate := float64(0.21)
+	RiskFreeRateStr := os.Getenv("RiskFreeRate")
+	if RiskFreeRateStr == "" {
+		panic("RiskFreeRate is empty")
+	}
+	RiskFreeRate, err := strconv.ParseFloat(RiskFreeRateStr, 64)
+	if err != nil {
+		panic(fmt.Sprintf("Error parsing RiskFreeRate: %s", err.Error()))
+	}
+
+	MarketReturnStr := os.Getenv("MarketReturn")
+	if MarketReturnStr == "" {
+		panic("MarketReturn is empty")
+	}
+	MarketReturn, err := strconv.ParseFloat(MarketReturnStr, 64)
+	if err != nil {
+		panic(fmt.Sprintf("Error parsing MarketReturn: %s", err.Error()))
+	}
+
+	DefaultEffectiveTaxRateStr := os.Getenv("DefaultEffectiveTaxRate")
+	if DefaultEffectiveTaxRateStr == "" {
+		panic("DefaultEffectiveTaxRate is empty")
+	}
+	DefaultEffectiveTaxRate, err := strconv.ParseFloat(DefaultEffectiveTaxRateStr, 64)
+	if err != nil {
+		panic(fmt.Sprintf("Error parsing DefaultEffectiveTaxRate: %s", err.Error()))
+	}
 
 	SymbolList, err := APIClient.Stock.AvalibleSymbols()
 	if err != nil {
