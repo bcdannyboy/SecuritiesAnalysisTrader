@@ -107,7 +107,7 @@ func main() {
 	// Collect results
 	for range SymbolList {
 		result := <-results
-		fmt.Printf("Got result for %s: %f\n", result.Ticker, result.Data)
+		fmt.Printf("Got data for %s\n", result.Ticker)
 		ResultsMap = append(ResultsMap, result)
 	}
 
