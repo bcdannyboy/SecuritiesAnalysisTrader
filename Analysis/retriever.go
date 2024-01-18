@@ -11,6 +11,7 @@ import (
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
+	"time"
 )
 
 func PullCompanyFundamentals(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) (CompanyFundamentals, error) {
@@ -379,4 +380,127 @@ func PullEmployeeCount(APIClient *fmpcloud.APIClient, Symbol string) (*float64, 
 	}
 
 	return utils.InterfaceToFloat64Ptr(EmployeeCountOBj.EmployeeCount), nil
+}
+
+func PullCompanyData(APIClient *fmpcloud.APIClient, Tickers []string, MaxRatePerMinute int, MaxWorkers int, Debug bool, RiskFreeRate float64, MarketReturn float64, DefaultEffectiveTaxRate float64) []CompanyData {
+	processSymbol := func(Ticker string, APIClient *fmpcloud.APIClient, Debug bool, RiskFreeRate float64, MarketReturn float64, DefaultEffectiveTaxRate float64) (CompanyData, error) {
+
+		fundamentals, err := PullCompanyFundamentals(APIClient, Ticker, "quarter")
+		if err != nil {
+			if Debug {
+				fmt.Printf("failed to pull fundamentals for %s: %s\n", Ticker, err.Error())
+			}
+			return CompanyData{}, err
+		}
+
+		FMPDCF, FMPMeanSTDDCF, err := PullCompanyDCFs(APIClient, Ticker)
+		if err != nil {
+			if Debug {
+				fmt.Printf("failed to pull DCFs for %s: %s\n", Ticker, err.Error())
+			}
+			return CompanyData{}, err
+		}
+
+		Ratings, RatingsGrowth, RatingsMeanSTD, RatingsGrowthMeanSTD, err := PullCompanyRatings(APIClient, Ticker)
+		if err != nil {
+			if Debug {
+				fmt.Printf("failed to pull ratings for %s: %s\n", Ticker, err.Error())
+			}
+			return CompanyData{}, err
+		}
+
+		CompanyOutlookObj, err := PullCompanyOutlook(APIClient, Ticker)
+		if err != nil {
+			if Debug {
+				fmt.Printf("failed to pull outlook for %s: %s\n", Ticker, err.Error())
+			}
+			return CompanyData{}, err
+		}
+
+		EmployeeCount, err := PullEmployeeCount(APIClient, Ticker)
+		if err != nil {
+			if Debug {
+				fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
+			}
+			return CompanyData{}, err
+		}
+
+		CalculationResults := PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, EmployeeCount, DefaultEffectiveTaxRate)
+
+		FromDate := time.Now().AddDate(-20, 0, 0)
+		Today := time.Now()
+
+		CandleSticks, err := APIClient.Stock.Candles(objects.RequestStockCandleList{
+			Period: "1min",
+			Symbol: Ticker,
+			From:   &FromDate,
+			To:     &Today,
+		})
+		if err != nil {
+			if Debug {
+				fmt.Printf("failed to pull candles for %s: %s\n", Ticker, err.Error())
+			}
+			return CompanyData{}, err
+		}
+
+		FinalResults := FinalNumbers{
+			CalculationsOutlookFundamentals: CalculationResults,
+			FMPDCF:                          FMPDCF,
+			FMPMeanSTDDCF:                   FMPMeanSTDDCF,
+			FMPRatings:                      Ratings,
+			FMPRatingsGrowth:                RatingsGrowth,
+			FMPRatingsMeanSTD:               RatingsMeanSTD,
+			FMPRatingsGrowthMeanSTD:         RatingsGrowthMeanSTD,
+		}
+
+		return CompanyData{
+			Ticker:       Ticker,
+			CandleSticks: CandleSticks,
+			Data:         FinalResults,
+		}, nil
+	}
+
+	worker := func(tasks <-chan string, results chan<- CompanyData, APIClient *fmpcloud.APIClient, Debug bool, RiskFreeRate float64, MarketReturn float64, DefaultEffectiveTaxRate float64) {
+		for SymbolObj := range tasks {
+			result, err := processSymbol(SymbolObj, APIClient, Debug, RiskFreeRate, MarketReturn, DefaultEffectiveTaxRate)
+			if err != nil {
+				if Debug {
+					fmt.Printf("Error processing symbol %s: %s\n", SymbolObj, err.Error())
+				}
+				// Even in case of error, send a result back to avoid blocking
+				results <- CompanyData{Ticker: SymbolObj}
+				continue
+			}
+
+			results <- result
+		}
+	}
+
+	// Create channels for tasks and results
+	tasks := make(chan string, len(Tickers))
+	results := make(chan CompanyData, len(Tickers))
+	ResultMap := []CompanyData{}
+	// Start worker goroutines
+	for i := 0; i < MaxWorkers; i++ {
+		go worker(tasks, results, APIClient, Debug, RiskFreeRate, MarketReturn, DefaultEffectiveTaxRate)
+	}
+
+	// Create a ticker for rate limiting
+	ticker := time.NewTicker(time.Minute / time.Duration(MaxRatePerMinute))
+
+	for _, StockTicker := range Tickers {
+		<-ticker.C
+		tasks <- StockTicker
+	}
+
+	close(tasks)
+
+	for range Tickers {
+		result := <-results
+		if result.Ticker != "" && len(result.CandleSticks) != 0 {
+			ResultMap = append(ResultMap, result)
+		}
+	}
+
+	return ResultMap
 }
