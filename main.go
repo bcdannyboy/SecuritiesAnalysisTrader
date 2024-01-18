@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Optimization"
@@ -8,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"os"
+	"sort"
 )
 
 func main() {
@@ -38,53 +40,74 @@ func main() {
 
 	RiskFreeRate := float64(5.0)
 	MarketReturn := float64(7.2)
-	Ticker := "MSFT"
 
-	fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, Ticker, "quarter")
-	if err != nil {
-		fmt.Printf("failed to pull fundamentals for %s: %s\n", Ticker, err.Error())
-	}
-
-	FMPDCF, FMPMeanSTDDCF, err := Analysis.PullCompanyDCFs(APIClient, Ticker)
-	if err != nil {
-		fmt.Printf("failed to pull DCFs for %s: %s\n", Ticker, err.Error())
-	}
-
-	Ratings, RatingsGrowth, RatingsMeanSTD, RatingsGrowthMeanSTD, err := Analysis.PullCompanyRatings(APIClient, Ticker)
-	if err != nil {
-		fmt.Printf("failed to pull ratings for %s: %s\n", Ticker, err.Error())
-	}
-
-	CompanyOutlookObj, err := Analysis.PullCompanyOutlook(APIClient, Ticker)
-	if err != nil {
-		fmt.Printf("failed to pull outlook for %s: %s\n", Ticker, err.Error())
-	}
-
-	EmployeeCount, err := Analysis.PullEmployeeCount(APIClient, Ticker)
-	if err != nil {
-		fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
-	}
-
-	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, EmployeeCount)
-
-	FinalResults := Analysis.FinalNumbers{
-		CalculationsOutlookFundamentals: CalculationResults,
-		FMPDCF:                          FMPDCF,
-		FMPMeanSTDDCF:                   FMPMeanSTDDCF,
-		FMPRatings:                      Ratings,
-		FMPRatingsGrowth:                RatingsGrowth,
-		FMPRatingsMeanSTD:               RatingsMeanSTD,
-		FMPRatingsGrowthMeanSTD:         RatingsGrowthMeanSTD,
-	}
-
+	TickerList := []string{"MSFT", "AAPL", "GOOGL", "GME", "AMC"}
 	SecAnalysisWeights := Optimization.SecurityAnalysisWeights{}
 	utils.InitStructWithRandomFloats(&SecAnalysisWeights)
 
-	FinalValue, err := Optimization.CalculateWeightedAverage(SecAnalysisWeights, FinalResults, "root")
+	type Result struct {
+		Ticker string
+		Value  float64
+	}
+
+	ResultsMap := []Result{}
+
+	for _, Ticker := range TickerList {
+
+		fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, Ticker, "quarter")
+		if err != nil {
+			fmt.Printf("failed to pull fundamentals for %s: %s\n", Ticker, err.Error())
+		}
+
+		FMPDCF, FMPMeanSTDDCF, err := Analysis.PullCompanyDCFs(APIClient, Ticker)
+		if err != nil {
+			fmt.Printf("failed to pull DCFs for %s: %s\n", Ticker, err.Error())
+		}
+
+		Ratings, RatingsGrowth, RatingsMeanSTD, RatingsGrowthMeanSTD, err := Analysis.PullCompanyRatings(APIClient, Ticker)
+		if err != nil {
+			fmt.Printf("failed to pull ratings for %s: %s\n", Ticker, err.Error())
+		}
+
+		CompanyOutlookObj, err := Analysis.PullCompanyOutlook(APIClient, Ticker)
+		if err != nil {
+			fmt.Printf("failed to pull outlook for %s: %s\n", Ticker, err.Error())
+		}
+
+		EmployeeCount, err := Analysis.PullEmployeeCount(APIClient, Ticker)
+		if err != nil {
+			fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
+		}
+
+		CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, EmployeeCount)
+
+		FinalResults := Analysis.FinalNumbers{
+			CalculationsOutlookFundamentals: CalculationResults,
+			FMPDCF:                          FMPDCF,
+			FMPMeanSTDDCF:                   FMPMeanSTDDCF,
+			FMPRatings:                      Ratings,
+			FMPRatingsGrowth:                RatingsGrowth,
+			FMPRatingsMeanSTD:               RatingsMeanSTD,
+			FMPRatingsGrowthMeanSTD:         RatingsGrowthMeanSTD,
+		}
+
+		FinalValue, err := Optimization.CalculateWeightedAverage(SecAnalysisWeights, FinalResults, "root")
+		if err != nil {
+			fmt.Printf("failed to calculate weighted average: %s\n", err.Error())
+		} else {
+			ResultsMap = append(ResultsMap, Result{Ticker: Ticker, Value: FinalValue})
+		}
+	}
+
+	sort.Slice(ResultsMap, func(i, j int) bool {
+		return ResultsMap[i].Value > ResultsMap[j].Value
+	})
+
+	jResultsMap, err := json.MarshalIndent(ResultsMap, "", "    ")
 	if err != nil {
-		fmt.Printf("failed to calculate weighted average: %s\n", err.Error())
+		fmt.Printf("failed to marshal results map: %s\n", err.Error())
 	} else {
-		fmt.Printf("Final Value: %f\n", FinalValue)
+		fmt.Printf("%s\n", string(jResultsMap))
 	}
 
 }

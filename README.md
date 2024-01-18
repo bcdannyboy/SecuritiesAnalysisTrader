@@ -1,3 +1,4 @@
+
 # Securities Analysis Based AutoTrading
 
 1. Gather up the fundamentals of a ton of companies (at least 1000)
