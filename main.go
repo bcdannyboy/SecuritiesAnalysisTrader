@@ -8,13 +8,14 @@ import (
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
+	"math/rand"
 	"os"
 	"strconv"
 	"time"
 )
 
 const (
-	MaxRatePerMinute = 15 // for each item we're doing ~10 API calls, so we need to limit the rate
+	MaxRatePerMinute = 20 // for each item we're doing ~10 API calls, so we need to limit the rate
 	WorkerCount      = 10 // Adjust the number of workers as needed
 )
 
@@ -79,6 +80,18 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Error getting avalible symbols: %s", err.Error()))
 	}
+	if Debug {
+		// Limit the number of symbols for debugging
+		newList := []objects.StockSymbolList{}
+		// pick 10 random symbols
+		for i := 0; i < 10; i++ {
+			Symbol := SymbolList[rand.Intn(len(SymbolList))]
+			fmt.Printf("Debug: Choosing symbol %s\n", Symbol.Symbol)
+			newList = append(newList, Symbol)
+		}
+
+		SymbolList = newList
+	}
 
 	ResultsMap := []CompanyData{}
 	fmt.Printf("Resolving %d symbols\n", len(SymbolList))
@@ -99,15 +112,12 @@ func main() {
 	for _, SymbolObj := range SymbolList {
 		<-ticker.C // Wait for the next tick
 		tasks <- SymbolObj
-		fmt.Printf("Submitted task for %s\n", SymbolObj.Symbol)
 	}
-
 	close(tasks) // Close the tasks channel as no more tasks will be sent
 
 	// Collect results
 	for range SymbolList {
 		result := <-results
-		fmt.Printf("Got data for %s\n", result.Ticker)
 		ResultsMap = append(ResultsMap, result)
 	}
 
@@ -120,8 +130,11 @@ func worker(tasks <-chan objects.StockSymbolList, results chan<- CompanyData, AP
 			if Debug {
 				fmt.Printf("Error processing symbol %s: %s\n", SymbolObj.Symbol, err.Error())
 			}
-			continue // Skip this symbol on error
+			// Even in case of error, send a result back to avoid blocking
+			results <- CompanyData{Ticker: SymbolObj.Symbol, Data: Analysis.FinalNumbers{}}
+			continue
 		}
+
 		results <- result
 	}
 }
