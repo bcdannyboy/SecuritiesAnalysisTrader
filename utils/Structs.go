@@ -1,6 +1,8 @@
 package utils
 
-import "reflect"
+import (
+	"reflect"
+)
 
 func IsStructEmpty(v interface{}) bool {
 	val := reflect.ValueOf(v)

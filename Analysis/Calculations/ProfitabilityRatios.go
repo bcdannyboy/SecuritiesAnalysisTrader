@@ -1,11 +1,5 @@
 package Calculations
 
-func ReturnOnEquity(NetIncome float64, TotalShareholderEquity float64) float64 {
-	// Return on equity (ROE) is a measure of financial performance calculated by dividing net income by shareholders' equity. Because shareholders' equity is equal to a company’s assets minus its debt, ROE is considered the return on net assets.
-
-	return NetIncome / TotalShareholderEquity
-}
-
 func ReturnOnAssetRatio(NetIncome float64, TotalAssets float64) float64 {
 	// The return on assets ratio, often called the return on total assets, is a profitability ratio that measures the net income produced by total assets during a period by comparing net income to the average total assets.
 
@@ -22,12 +16,6 @@ func OperatingProfitMargin(OperatingIncome float64, NetSales float64) float64 {
 	// Operating margin is a profitability ratio measuring revenue after covering operating and non-operating expenses of a business. It is calculated by dividing operating profit by revenue.
 
 	return OperatingIncome / NetSales
-}
-
-func NetProfitMargin(NetIncome float64, NetSales float64) float64 {
-	// Net profit margin is equal to how much net income or profit is generated as a percentage of revenue. Net profit margin is the ratio of net profits to revenues for a company or business segment.
-
-	return NetIncome / NetSales
 }
 
 func EBITDAMarginRatio(EBITDA, NetSales float64) float64 {
@@ -76,12 +64,6 @@ func OperatingMargin(Revenue, COGS float64) float64 {
 	// operating margin is a profitability ratio that measures how much of every dollar of revenue is left over after paying the cost of goods sold (COGS).
 
 	return Revenue / COGS
-}
-
-func AssetTurnoverRatio(NetSales float64, TotalAssets float64) float64 {
-	// Asset turnover ratio is the ratio between the value of a company’s sales or revenues and the value of its assets. The asset turnover ratio measures the ability of a company to use its assets to efficiently generate sales.
-
-	return NetSales / TotalAssets
 }
 
 func OperatingExpenseRatio(OperatingExpenses, DepreciationAmortization, OperatingIncome float64) float64 {

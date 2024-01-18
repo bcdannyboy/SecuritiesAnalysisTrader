@@ -64,13 +64,12 @@ func main() {
 		fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
 	}
 
-	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, *EmployeeCount)
+	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, EmployeeCount)
 
-	FinalResults := &Analysis.FinalNumbers{
+	FinalResults := Analysis.FinalNumbers{
 		CalculationsOutlookFundamentls: CalculationResults,
 		FMPDCF:                         FMPDCF,
 		FMPMeanSTDDCF:                  FMPMeanSTDDCF,
-		EmployeeCount:                  *EmployeeCount,
 		FMPRatings:                     Ratings,
 		FMPRatingsGrowth:               RatingsGrowth,
 		FMPRatingsMeanSTD:              RatingsMeanSTD,
@@ -79,13 +78,13 @@ func main() {
 
 	jFinalResults, err := json.MarshalIndent(FinalResults, "", "	")
 	if err != nil {
-		panic(fmt.Sprintf("Failed to marshal calculation results: %s", err.Error()))
+		panic(fmt.Errorf("failed to marshal final results for %s: %s\n", Ticker, err.Error()))
 	}
 
-	filename := fmt.Sprintf("calculation_results_%s.json", fundamentals.Symbol)
-	err = os.WriteFile(filename, jFinalResults, 0644)
+	f := fmt.Sprintf("results_%s.json", Ticker)
+	err = os.WriteFile(f, jFinalResults, 0644)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to write calculation results to file: %s", err.Error()))
+		panic(fmt.Errorf("failed to write final results for %s: %s\n", Ticker, err.Error()))
 	}
 
 }

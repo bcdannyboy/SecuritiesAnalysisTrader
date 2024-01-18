@@ -36,19 +36,27 @@ func CalculateMeanSTDObjs(objects []interface{}) (map[string][]interface{}, erro
 
 	// Compute mean and standard deviation for each field
 	for key, stats := range fieldStats {
-		count := stats[2].(float64)
-		if count == 0 {
+		if len(stats) < 3 {
+			continue // Skip if stats are incomplete
+		}
+
+		count, ok := stats[2].(float64)
+		if !ok || count == 0 {
+			// Skip or handle fields with no data points
 			continue
 		}
-		mean := stats[0].(float64) / count
 
-		var stdDev *float64 // Pointer to float64
-		if count > 1 {
-			variance := (stats[1].(float64) - (stats[0].(float64)*stats[0].(float64))/count) / (count - 1)
-			std := math.Sqrt(variance)
-			stdDev = &std // Calculate standard deviation if more than one item
+		if count == 1 {
+			// If there's only one element, use it as the mean, and set stdDev to nil
+			mean := stats[0].(float64)
+			fieldStats[key] = []interface{}{mean, nil}
+			continue
 		}
 
+		// Compute mean and standard deviation for fields with more than one data point
+		mean := stats[0].(float64) / count
+		variance := (stats[1].(float64) - mean*mean*count) / (count - 1)
+		stdDev := math.Sqrt(variance)
 		fieldStats[key] = []interface{}{mean, stdDev}
 	}
 
@@ -98,7 +106,44 @@ func processMap(val reflect.Value, fieldStats map[string][]interface{}) {
 		}
 		if mapValue.Kind() == reflect.Float64 {
 			processField(mapValue, key.String(), fieldStats)
+		} else if mapValue.Kind() == reflect.Slice {
+			processSlice(mapValue, key.String(), fieldStats)
 		}
+	}
+}
+
+func processSlice(sliceVal reflect.Value, key string, fieldStats map[string][]interface{}) {
+	var sum, sumOfSquares, count float64
+
+	for i := 0; i < sliceVal.Len(); i++ {
+		elem := sliceVal.Index(i)
+		if elem.Kind() == reflect.Float64 {
+			value := elem.Float()
+			sum += value
+			sumOfSquares += value * value
+			count++
+		}
+	}
+
+	if count > 0 {
+		mean := sum / count
+		variance := sumOfSquares - mean*mean*count
+		var stdDev float64
+		if count > 1 {
+			stdDev = math.Sqrt(variance / (count - 1))
+		}
+
+		// Update field statistics for the key
+		updateMeanStdDevStats(fieldStats, key, mean, stdDev)
+	}
+}
+
+func updateMeanStdDevStats(fieldStats map[string][]interface{}, key string, mean, stdDev float64) {
+	fieldStats[key+"Mean"] = []interface{}{mean, nil}
+	if stdDev > 0 {
+		fieldStats[key+"StdDev"] = []interface{}{stdDev, nil}
+	} else {
+		fieldStats[key+"StdDev"] = []interface{}{nil, nil}
 	}
 }
 
@@ -116,11 +161,21 @@ func processField(field reflect.Value, key string, fieldStats map[string][]inter
 func updateFieldStats(fieldStats map[string][]interface{}, key string, value float64) {
 	stats, exists := fieldStats[key]
 	if !exists {
-		stats = []interface{}{0.0, 0.0, 0.0} // sum, sum of squares, count
+		// Initialize stats with zero values for sum, sum of squares, and count
+		stats = []interface{}{0.0, 0.0, 0.0}
 	}
-	stats[0] = stats[0].(float64) + value       // sum
-	stats[1] = stats[1].(float64) + value*value // sum of squares
-	stats[2] = stats[2].(float64) + 1           // count
+
+	// Safely update the stats slice elements
+	sum := stats[0].(float64) + value                // Update sum
+	sumOfSquares := stats[1].(float64) + value*value // Update sum of squares
+	count := stats[2].(float64) + 1                  // Update count
+
+	// Assign updated values back to the stats slice
+	stats[0] = sum
+	stats[1] = sumOfSquares
+	stats[2] = count
+
+	// Update the fieldStats map
 	fieldStats[key] = stats
 }
 

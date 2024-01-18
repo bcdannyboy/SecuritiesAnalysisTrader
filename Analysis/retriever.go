@@ -13,9 +13,9 @@ import (
 	"github.com/spacecodewor/fmpcloud-go/objects"
 )
 
-func PullCompanyFundamentals(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) (*CompanyFundamentals, error) {
+func PullCompanyFundamentals(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) (CompanyFundamentals, error) {
 	// Pull fundamentals / ratios from FMP / calculations for a given ticker
-	FundamentalsObj := &CompanyFundamentals{
+	FundamentalsObj := CompanyFundamentals{
 		Symbol: Symbol,
 	}
 
@@ -162,10 +162,10 @@ func PullCompanyRatings(APIClient *fmpcloud.APIClient, Symbol string) ([]map[str
 	return RatingsMaps, RatingsMapsGrowth, RatingsMapsMeanSTD, RatingsMapsGrowthMeanSTD, nil
 }
 
-func PullCompanyOutlook(APIClient *fmpcloud.APIClient, Symbol string) (*CompanyOutlook, error) {
+func PullCompanyOutlook(APIClient *fmpcloud.APIClient, Symbol string) (CompanyOutlook, error) {
 	ValuationInfo, err := APIClient.CompanyValuation.CompanyOutlook(Symbol)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get company outlook for %s: %s", Symbol, err.Error())
+		return CompanyOutlook{}, fmt.Errorf("failed to get company outlook for %s: %s", Symbol, err.Error())
 	}
 
 	Beta := ValuationInfo.Profile.Beta
@@ -341,7 +341,7 @@ func PullCompanyOutlook(APIClient *fmpcloud.APIClient, Symbol string) (*CompanyO
 		}
 	}
 
-	return &CompanyOutlook{
+	return CompanyOutlook{
 		Beta:                       Beta,
 		AvgVolume:                  AvgVolume,
 		MarketCap:                  MarketCap,

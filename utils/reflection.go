@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -39,17 +38,20 @@ func GetFloat64PtrIfNotEmpty(inp interface{}, fieldName string) *float64 {
 
 	// Check if the struct is valid and the field exists
 	if rv.Kind() != reflect.Struct || !rv.FieldByName(fieldName).IsValid() {
-		fmt.Printf("Field %s not found in the provided struct\n", fieldName)
 		return nil
 	}
 
 	fieldValue := rv.FieldByName(fieldName)
 
-	// Assuming the field is already of type *float64
-	if fieldValue.CanInterface() {
-		fieldInterface := fieldValue.Interface()
-		if fieldPtr, ok := fieldInterface.(*float64); ok {
-			return fieldPtr
+	// Check for *float64 and float64 types
+	if fieldValue.Kind() == reflect.Ptr && fieldValue.Elem().Kind() == reflect.Float64 {
+		if !fieldValue.IsNil() {
+			return fieldValue.Interface().(*float64)
+		}
+	} else if fieldValue.Kind() == reflect.Float64 {
+		if fieldValue.CanAddr() {
+			value := fieldValue.Float()
+			return &value
 		}
 	}
 

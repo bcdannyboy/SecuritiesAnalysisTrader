@@ -11,25 +11,25 @@ type CompanyFundamentals struct {
 	BalanceSheetStatements                                             []objects.BalanceSheetStatement
 	BalanceSheetStatementGrowth                                        []objects.BalanceSheetStatementGrowth
 	BalanceSheetStatementAsReported                                    []objects.BalanceSheetStatementAsReported
-	GrowthBalanceSheetStatementAsReported                              []*fundamentals.GrowthBalanceSheetStatementAsReported
-	DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported []*fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported
+	GrowthBalanceSheetStatementAsReported                              []fundamentals.GrowthBalanceSheetStatementAsReported
+	DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported []fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported
 
 	IncomeStatement                                        []objects.IncomeStatement
 	IncomeStatementGrowth                                  []objects.IncomeStatementGrowth
 	IncomeStatementAsReported                              []objects.IncomeStatementAsReported
-	GrowthIncomeStatementAsReported                        []*fundamentals.GrowthIncomeStatementAsReported
-	DiscrepancyIncomeStatementAndIncomeStatementAsReported []*fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported
+	GrowthIncomeStatementAsReported                        []fundamentals.GrowthIncomeStatementAsReported
+	DiscrepancyIncomeStatementAndIncomeStatementAsReported []fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported
 
 	CashFlowStatement                                          []objects.CashFlowStatement
 	CashFlowStatementGrowth                                    []objects.CashFlowStatementGrowth
 	CashFlowStatementAsReported                                []objects.CashFlowStatementAsReported
-	CashFlowStatementAsReportedGrowth                          []*fundamentals.CashFlowStatementAsReportedGrowth
-	DiscrepancyCashFlowStatementAndCashFlowStatementAsReported []*fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported
+	CashFlowStatementAsReportedGrowth                          []fundamentals.CashFlowStatementAsReportedGrowth
+	DiscrepancyCashFlowStatementAndCashFlowStatementAsReported []fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported
 
 	FinancialRatios          []objects.FinancialRatios
 	FinancialRatiosTTM       []objects.FinancialRatiosTTM
-	FinancialRatiosGrowth    []*fundamentals.FinancialRatiosGrowth
-	FinancialRatiosTTMGrowth []*fundamentals.FinancialRatiosTTMGrowth
+	FinancialRatiosGrowth    []fundamentals.FinancialRatiosGrowth
+	FinancialRatiosTTMGrowth []fundamentals.FinancialRatiosTTMGrowth
 
 	FullFinancialStatement       []objects.FullFinancialStatementAsReported
 	FullFinancialStatementGrowth []objects.FinancialStatementsGrowth
@@ -37,9 +37,9 @@ type CompanyFundamentals struct {
 
 type FundamentalsCalculationsResults struct {
 	Symbol           string
-	Fundamentals     *CompanyFundamentals
+	Fundamentals     CompanyFundamentals
 	PeriodLength     objects.CompanyValuationPeriod
-	Outlook          *CompanyOutlook
+	Outlook          CompanyOutlook
 	NumEmployees     float64
 	CostOfEquity     float64
 	Beta             float64
@@ -111,8 +111,8 @@ type FundamentalsCalculationsResults struct {
 	FinancialRatios struct {
 		FPMRatios          []objects.FinancialRatios
 		FPMRatiosTTM       []objects.FinancialRatiosTTM
-		FPMRatiosGrowth    []*fundamentals.FinancialRatiosGrowth
-		FPMRatiosTTMGrowth []*fundamentals.FinancialRatiosTTMGrowth
+		FPMRatiosGrowth    []fundamentals.FinancialRatiosGrowth
+		FPMRatiosTTMGrowth []fundamentals.FinancialRatiosTTMGrowth
 
 		AverageSTDFPMRatios                     map[string][]interface{}
 		AverageSTDFPMRatiosTTM                  map[string][]interface{}
@@ -166,7 +166,7 @@ type CompanyOutlook struct {
 }
 
 type FinalNumbers struct {
-	CalculationsOutlookFundamentls *FundamentalsCalculationsResults
+	CalculationsOutlookFundamentls FundamentalsCalculationsResults
 	FMPDCF                         []objects.DiscountedCashFlow
 	FMPDCFMeanSTD                  map[string][]interface{}
 	FMPMeanSTDDCF                  map[string][]interface{}

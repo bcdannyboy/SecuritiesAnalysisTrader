@@ -32,12 +32,6 @@ func NetTangibleAssetsPerShare(TangibleNetWorth float64, SharesOutstanding float
 	return TangibleNetWorth / SharesOutstanding
 }
 
-func MarketValueOfEquity(SharePrice, SharesOutstanding float64) float64 {
-	// Market value of equity is the total dollar value of a company's equity calculated by multiplying the current stock price by total outstanding shares.
-
-	return SharePrice * SharesOutstanding
-}
-
 func MarketValueOfDebt(SharePrice, SharesOutstanding, BookValueOfDebt float64) float64 {
 	// Market value of debt is the total dollar value of a company's debt, calculated by multiplying the current market price of a company's debt by its total outstanding debt.
 

@@ -8,11 +8,11 @@ import (
 	"reflect"
 )
 
-func AnalyzeFinancialRatios(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.FinancialRatios, []objects.FinancialRatiosTTM, []*fundamentals.FinancialRatiosGrowth, []*fundamentals.FinancialRatiosTTMGrowth, error) {
+func AnalyzeFinancialRatios(APIClient *fmpcloud.APIClient, Symbol string, Period objects.CompanyValuationPeriod) ([]objects.FinancialRatios, []objects.FinancialRatiosTTM, []fundamentals.FinancialRatiosGrowth, []fundamentals.FinancialRatiosTTMGrowth, error) {
 	var FIN_RATIOS []objects.FinancialRatios
 	var FIN_RATIOS_TTM []objects.FinancialRatiosTTM
-	var FR_GROWTH []*fundamentals.FinancialRatiosGrowth
-	var FR_TTM_GROWTH []*fundamentals.FinancialRatiosTTMGrowth
+	var FR_GROWTH []fundamentals.FinancialRatiosGrowth
+	var FR_TTM_GROWTH []fundamentals.FinancialRatiosTTMGrowth
 
 	FIN_RATIOS, err := APIClient.CompanyValuation.FinancialRatios(
 		objects.RequestFinancialRatios{
@@ -34,19 +34,23 @@ func AnalyzeFinancialRatios(APIClient *fmpcloud.APIClient, Symbol string, Period
 	return FIN_RATIOS, FIN_RATIOS_TTM, FR_GROWTH, FR_TTM_GROWTH, nil
 }
 
-func GetGrowthOfFinancialRatios(ratios []objects.FinancialRatios) []*fundamentals.FinancialRatiosGrowth {
-	growth := []*fundamentals.FinancialRatiosGrowth{}
+func GetGrowthOfFinancialRatios(ratios []objects.FinancialRatios) []fundamentals.FinancialRatiosGrowth {
+	growth := []fundamentals.FinancialRatiosGrowth{}
 	var lastRatios objects.FinancialRatios
 
 	for i, ratio := range ratios {
-		growthObj := &fundamentals.FinancialRatiosGrowth{
+		growthObj := fundamentals.FinancialRatiosGrowth{
 			Symbol: ratio.Symbol,
 			Date:   ratio.Date,
 			Period: ratio.Period,
 		}
 
 		if i > 0 {
-			calculateGrowth(reflect.ValueOf(ratio), reflect.ValueOf(lastRatios), reflect.ValueOf(growthObj).Elem())
+			valRatio := reflect.ValueOf(ratio)
+			valLastRatios := reflect.ValueOf(lastRatios)
+			valGrowthObj := reflect.ValueOf(&growthObj).Elem()
+
+			calculateGrowth(valRatio, valLastRatios, valGrowthObj)
 		}
 
 		growth = append(growth, growthObj)
@@ -56,17 +60,21 @@ func GetGrowthOfFinancialRatios(ratios []objects.FinancialRatios) []*fundamental
 	return growth
 }
 
-func GetGrowthOfFinancialRatiosTTM(ratiosTTM []objects.FinancialRatiosTTM) []*fundamentals.FinancialRatiosTTMGrowth {
-	growthTTM := []*fundamentals.FinancialRatiosTTMGrowth{}
+func GetGrowthOfFinancialRatiosTTM(ratiosTTM []objects.FinancialRatiosTTM) []fundamentals.FinancialRatiosTTMGrowth {
+	growthTTM := []fundamentals.FinancialRatiosTTMGrowth{}
 	var lastRatiosTTM objects.FinancialRatiosTTM
 
 	for i, ratioTTM := range ratiosTTM {
-		growthObjTTM := &fundamentals.FinancialRatiosTTMGrowth{
+		growthObjTTM := fundamentals.FinancialRatiosTTMGrowth{
 			Symbol: ratioTTM.Symbol,
 		}
 
 		if i > 0 {
-			calculateGrowth(reflect.ValueOf(ratioTTM), reflect.ValueOf(lastRatiosTTM), reflect.ValueOf(growthObjTTM).Elem())
+			valRatioTTM := reflect.ValueOf(ratioTTM)
+			valLastRatiosTTM := reflect.ValueOf(lastRatiosTTM)
+			valGrowthObjTTM := reflect.ValueOf(&growthObjTTM).Elem()
+
+			calculateGrowth(valRatioTTM, valLastRatiosTTM, valGrowthObjTTM)
 		}
 
 		growthTTM = append(growthTTM, growthObjTTM)
@@ -82,17 +90,20 @@ func calculateGrowth(valCurrent, valLast, valGrowth reflect.Value) {
 		fieldLast := valLast.Field(j)
 		fieldGrowth := valGrowth.Field(j)
 
-		if fieldCurrent.Kind() == reflect.Float64 {
-			growthValue := fieldCurrent.Float() - fieldLast.Float()
-			fieldGrowth.SetFloat(growthValue)
-		}
+		// Ensure fieldGrowth is addressable
+		if fieldGrowth.CanSet() {
+			if fieldCurrent.Kind() == reflect.Float64 {
+				growthValue := fieldCurrent.Float() - fieldLast.Float()
+				fieldGrowth.SetFloat(growthValue)
+			}
 
-		// Handle the case for Interface type fields
-		if fieldCurrent.Kind() == reflect.Interface && !fieldCurrent.IsNil() {
-			curVal, okCur := fieldCurrent.Interface().(float64)
-			lastVal, okLast := fieldLast.Interface().(float64)
-			if okCur && okLast {
-				fieldGrowth.SetFloat(curVal - lastVal)
+			// Handle the case for Interface type fields
+			if fieldCurrent.Kind() == reflect.Interface && !fieldCurrent.IsNil() {
+				curVal, okCur := fieldCurrent.Interface().(float64)
+				lastVal, okLast := fieldLast.Interface().(float64)
+				if okCur && okLast {
+					fieldGrowth.SetFloat(curVal - lastVal)
+				}
 			}
 		}
 	}
