@@ -1,7 +1,7 @@
 package Optimization
 
 type SecurityAnalysisWeights struct {
-	CalculationsOutlookFundamentls struct {
+	CalculationsOutlookFundamentals struct {
 		Fundamentals struct {
 			BalanceSheetStatements []struct {
 				CashAndCashEquivalents                  float64 `json:"cashAndCashEquivalents"`
@@ -1809,7 +1809,7 @@ type SecurityAnalysisWeights struct {
 			} `json:"MeanZippedSTDCashFlowStatementAndAsReportedGrowth"`
 		} `json:"CashFlowStatement"`
 		FinancialRatios struct {
-			FPMRatios []struct {
+			FPMRatios struct {
 				CurrentRatio                       float64 `json:"currentRatio"`
 				QuickRatio                         float64 `json:"quickRatio"`
 				CashRatio                          float64 `json:"cashRatio"`
@@ -1865,7 +1865,7 @@ type SecurityAnalysisWeights struct {
 				EnterpriseValueMultiple            float64 `json:"enterpriseValueMultiple"`
 				PriceFairValue                     float64 `json:"priceFairValue"`
 			} `json:"FPMRatios"`
-			FPMRatiosTTM []struct {
+			FPMRatiosTTM struct {
 				DividendYielTTM                       float64 `json:"dividendYielTTM"`
 				DividendYielPercentageTTM             float64 `json:"dividendYielPercentageTTM"`
 				PeRatioTTM                            float64 `json:"peRatioTTM"`
@@ -1925,7 +1925,7 @@ type SecurityAnalysisWeights struct {
 				PriceFairValueTTM                     float64 `json:"priceFairValueTTM"`
 				DividendPerShareTTM                   float64 `json:"dividendPerShareTTM"`
 			} `json:"FPMRatiosTTM"`
-			FPMRatiosGrowth []struct {
+			FPMRatiosGrowth struct {
 				CurrentRatio                       float64 `json:"currentRatio"`
 				QuickRatio                         float64 `json:"quickRatio"`
 				CashRatio                          float64 `json:"cashRatio"`
@@ -1981,7 +1981,7 @@ type SecurityAnalysisWeights struct {
 				EnterpriseValueMultiple            float64 `json:"enterpriseValueMultiple"`
 				PriceFairValue                     float64 `json:"priceFairValue"`
 			} `json:"FPMRatiosGrowth"`
-			FPMRatiosTTMGrowth []struct {
+			FPMRatiosTTMGrowth struct {
 				DividendYielTTM                       float64 `json:"dividendYielTTM"`
 				DividendYielPercentageTTM             float64 `json:"dividendYielPercentageTTM"`
 				PeRatioTTM                            float64 `json:"peRatioTTM"`
@@ -2388,7 +2388,7 @@ type SecurityAnalysisWeights struct {
 				TotalDebtToCapitalizationTTM          float64 `json:"TotalDebtToCapitalizationTTM"`
 			} `json:"AverageSTDFZippedFPMRationsAndTTMRatios"`
 		} `json:"FinancialRatios"`
-		CustomCalculations []struct {
+		CustomCalculations struct {
 			AccountsPayable                         float64 `json:"AccountsPayable"`
 			AccountsPayableTurnoverRatio            float64 `json:"AccountsPayableTurnoverRatio"`
 			AcidTestRatio                           float64 `json:"AcidTestRatio"`
@@ -3129,7 +3129,7 @@ type SecurityAnalysisWeights struct {
 			WorkingCapitalTurnoverRatioMean               float64 `json:"WorkingCapitalTurnoverRatioMean"`
 			WorkingCapitalTurnoverRatioStdDev             float64 `json:"WorkingCapitalTurnoverRatioStdDev"`
 		} `json:"MeanSTDCustomCalculationsGrowth"`
-		CustomCalculationsAsReported []struct {
+		CustomCalculationsAsReported struct {
 			AccountsPayable                         float64 `json:"AccountsPayable"`
 			AccountsPayableTurnoverRatio            float64 `json:"AccountsPayableTurnoverRatio"`
 			AccountsReceivable                      float64 `json:"AccountsReceivable"`
@@ -3882,7 +3882,7 @@ type SecurityAnalysisWeights struct {
 			WorkingCapitalTurnoverRatioStdDev             float64 `json:"WorkingCapitalTurnoverRatioStdDev"`
 		} `json:"MeanZippedSTDCustomCalculationsAndAsReportedGrowth"`
 	} `json:"CalculationsOutlookFundamentls"`
-	Fmpdcf []struct {
+	FMPDCF struct {
 		Dcf        float64 `json:"dcf"`
 		StockPrice float64 `json:"Stock Price"`
 	} `json:"FMPDCF"`
@@ -3892,7 +3892,7 @@ type SecurityAnalysisWeights struct {
 		StockPrice float64 `json:"StockPrice"`
 	} `json:"FMPMeanSTDDCF"`
 	EmployeeCount float64 `json:"EmployeeCount"`
-	FMPRatings    []struct {
+	FMPRatings    struct {
 		RatingDetailsDCFScore float64 `json:"RatingDetailsDCFScore"`
 		RatingDetailsDEScore  float64 `json:"RatingDetailsDEScore"`
 		RatingDetailsPBScore  float64 `json:"RatingDetailsPBScore"`

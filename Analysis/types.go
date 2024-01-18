@@ -166,13 +166,13 @@ type CompanyOutlook struct {
 }
 
 type FinalNumbers struct {
-	CalculationsOutlookFundamentls FundamentalsCalculationsResults
-	FMPDCF                         []objects.DiscountedCashFlow
-	FMPDCFMeanSTD                  map[string][]interface{}
-	FMPMeanSTDDCF                  map[string][]interface{}
-	EmployeeCount                  float64
-	FMPRatings                     []map[string]*float64
-	FMPRatingsGrowth               map[string][]float64
-	FMPRatingsMeanSTD              map[string][]interface{}
-	FMPRatingsGrowthMeanSTD        map[string][]interface{}
+	CalculationsOutlookFundamentals FundamentalsCalculationsResults
+	FMPDCF                          []objects.DiscountedCashFlow
+	FMPDCFMeanSTD                   map[string][]interface{}
+	FMPMeanSTDDCF                   map[string][]interface{}
+	EmployeeCount                   float64
+	FMPRatings                      []map[string]*float64
+	FMPRatingsGrowth                map[string][]float64
+	FMPRatingsMeanSTD               map[string][]interface{}
+	FMPRatingsGrowthMeanSTD         map[string][]interface{}
 }

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Optimization"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"os"
@@ -67,24 +68,23 @@ func main() {
 	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, EmployeeCount)
 
 	FinalResults := Analysis.FinalNumbers{
-		CalculationsOutlookFundamentls: CalculationResults,
-		FMPDCF:                         FMPDCF,
-		FMPMeanSTDDCF:                  FMPMeanSTDDCF,
-		FMPRatings:                     Ratings,
-		FMPRatingsGrowth:               RatingsGrowth,
-		FMPRatingsMeanSTD:              RatingsMeanSTD,
-		FMPRatingsGrowthMeanSTD:        RatingsGrowthMeanSTD,
+		CalculationsOutlookFundamentals: CalculationResults,
+		FMPDCF:                          FMPDCF,
+		FMPMeanSTDDCF:                   FMPMeanSTDDCF,
+		FMPRatings:                      Ratings,
+		FMPRatingsGrowth:                RatingsGrowth,
+		FMPRatingsMeanSTD:               RatingsMeanSTD,
+		FMPRatingsGrowthMeanSTD:         RatingsGrowthMeanSTD,
 	}
 
-	jFinalResults, err := json.MarshalIndent(FinalResults, "", "	")
-	if err != nil {
-		panic(fmt.Errorf("failed to marshal final results for %s: %s\n", Ticker, err.Error()))
-	}
+	SecAnalysisWeights := Optimization.SecurityAnalysisWeights{}
+	utils.InitStructWithRandomFloats(&SecAnalysisWeights)
 
-	f := fmt.Sprintf("results_%s.json", Ticker)
-	err = os.WriteFile(f, jFinalResults, 0644)
+	FinalValue, err := Optimization.CalculateWeightedAverage(SecAnalysisWeights, FinalResults, "root")
 	if err != nil {
-		panic(fmt.Errorf("failed to write final results for %s: %s\n", Ticker, err.Error()))
+		fmt.Printf("failed to calculate weighted average: %s\n", err.Error())
+	} else {
+		fmt.Printf("Final Value: %f\n", FinalValue)
 	}
 
 }
