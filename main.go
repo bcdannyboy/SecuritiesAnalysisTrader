@@ -16,7 +16,7 @@ import (
 
 const (
 	MaxRatePerMinute = 20 // for each item we're doing ~10 API calls, so we need to limit the rate
-	WorkerCount      = 10 // Adjust the number of workers as needed
+	WorkerCount      = 10
 )
 
 type CompanyData struct {
@@ -83,8 +83,7 @@ func main() {
 	if Debug {
 		// Limit the number of symbols for debugging
 		newList := []objects.StockSymbolList{}
-		// pick 10 random symbols
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 5; i++ {
 			Symbol := SymbolList[rand.Intn(len(SymbolList))]
 			fmt.Printf("Debug: Choosing symbol %s\n", Symbol.Symbol)
 			newList = append(newList, Symbol)
@@ -184,7 +183,24 @@ func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, 
 
 	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, EmployeeCount, DefaultEffectiveTaxRate)
 
+	FromDate := time.Now().AddDate(-20, 0, 0)
+	Today := time.Now()
+
+	CandleSticks, err := APIClient.Stock.Candles(objects.RequestStockCandleList{
+		Period: "1min",
+		Symbol: Ticker,
+		From:   &FromDate,
+		To:     &Today,
+	})
+	if err != nil {
+		if Debug {
+			fmt.Printf("failed to pull candles for %s: %s\n", Ticker, err.Error())
+		}
+		return CompanyData{}, err
+	}
+
 	FinalResults := Analysis.FinalNumbers{
+		CandleSticks:                    CandleSticks,
 		CalculationsOutlookFundamentals: CalculationResults,
 		FMPDCF:                          FMPDCF,
 		FMPMeanSTDDCF:                   FMPMeanSTDDCF,

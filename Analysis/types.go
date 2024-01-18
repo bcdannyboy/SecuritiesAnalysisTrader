@@ -166,6 +166,7 @@ type CompanyOutlook struct {
 }
 
 type FinalNumbers struct {
+	CandleSticks                    []objects.StockCandle
 	CalculationsOutlookFundamentals FundamentalsCalculationsResults
 	FMPDCF                          []objects.DiscountedCashFlow
 	FMPDCFMeanSTD                   map[string][]interface{}
