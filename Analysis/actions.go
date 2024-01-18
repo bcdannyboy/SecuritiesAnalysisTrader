@@ -1667,7 +1667,7 @@ func PerformCustomCalculations(Fundamentals CompanyFundamentals, Period objects.
 			if value == nil {
 				return nil
 			}
-
+			// TODO: why are we getting infinties and NaNs????
 			if math.IsInf(*value, 0) || math.IsNaN(*value) || math.IsInf(*value, -1) || math.IsInf(*value, 1) {
 				return nil
 			}
