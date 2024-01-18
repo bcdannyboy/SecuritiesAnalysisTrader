@@ -1,6 +1,17 @@
 
 # Securities Analysis Based AutoTrading
 
+## .env
+
+`API_KEY` - API key from https://site.financialmodelingprep.com/developer/docs/dashboard
+`DEBUG` - Debug printing
+`MarketRate` - market rate of return
+`RiskFreeRate` - risk free rate
+`DefaultEffectiveTaxRate` - effective tax rate to use if one isn't reported
+
+
+## Steps
+
 1. Gather up the fundamentals of a ton of companies (at least 1000)
 2. Perform and document as many securities analysis functions as possible against the financial statements
 3. Give each result a weight from -1.0 to 1.0, the final value will be result*weight
