@@ -8,7 +8,7 @@ import (
 	"math"
 )
 
-func PerformFundamentalsCalculations(Fundamentals CompanyFundamentals, Period string, RiskFreeRate float64, MarketReturn float64, Outlook CompanyOutlook, NumEmployees *float64) FundamentalsCalculationsResults {
+func PerformFundamentalsCalculations(Fundamentals CompanyFundamentals, Period string, RiskFreeRate float64, MarketReturn float64, Outlook CompanyOutlook, NumEmployees *float64, DefaultEffectiveTaxRate float64) FundamentalsCalculationsResults {
 	TotEmployees := float64(0)
 	if NumEmployees != nil {
 		TotEmployees = *NumEmployees
@@ -21,7 +21,12 @@ func PerformFundamentalsCalculations(Fundamentals CompanyFundamentals, Period st
 	}
 
 	Beta := Outlook.Beta
-	EffectiveTaxRate := Fundamentals.FinancialRatiosTTM[len(Fundamentals.FinancialRatiosTTM)-1].EffectiveTaxRateTTM
+
+	EffectiveTaxRate := DefaultEffectiveTaxRate
+	if len(Fundamentals.FinancialRatiosTTM) > 0 {
+		EffectiveTaxRate = Fundamentals.FinancialRatiosTTM[len(Fundamentals.FinancialRatiosTTM)-1].EffectiveTaxRateTTM
+	}
+
 	PricePerShare := Outlook.StockPrice
 
 	CalculationResults.BalanceSheet.DifferenceInLengthBetweenBalanceSheetStatementAndBalanceSheetStatementAsReported = len(Fundamentals.BalanceSheetStatements) - len(Fundamentals.BalanceSheetStatementAsReported)
@@ -65,14 +70,33 @@ func PerformFundamentalsCalculations(Fundamentals CompanyFundamentals, Period st
 		IncomeStatementReportDates = append(IncomeStatementReportDates, income_stmt.Date)
 	}
 
-	_, _, BalanceSheetStatementMissingPeriods, BalanceSheetStatementConsecutivePeriods, BalanceSheetStatementGapPeriods := Calculations.ProcessReportDates(BalanceSheetStatementReportDates, Period)
-	_, _, BalanceSheetStatementAsReportedMissingPeriods, BalanceSheetStatementAsReportedConsecutivePeriods, BalanceSheetStatementAsReportedGapPeriods := Calculations.ProcessReportDates(BalanceSheetAsReportedReportDates, Period)
+	BalanceSheetStatementMissingPeriods, BalanceSheetStatementConsecutivePeriods, BalanceSheetStatementGapPeriods := 0, 0, 0
+	BalanceSheetStatementAsReportedMissingPeriods, BalanceSheetStatementAsReportedConsecutivePeriods, BalanceSheetStatementAsReportedGapPeriods := 0, 0, 0
+	IncomeStatementMissingPeriods, IncomeStatementConsecutivePeriods, IncomeStatementGapPeriods := 0, 0, 0
+	IncomeStatementAsReportedMissingPeriods, IncomeStatementAsReportedConsecutivePeriods, IncomeStatementAsReportedGapPeriods := 0, 0, 0
+	CashFlowStatementMissingPeriods, CashFlowStatementConsecutivePeriods, CashFlowStatementGapPeriods := 0, 0, 0
+	CashFlowStatementAsReportedMissingPeriods, CashFlowStatementAsReportedConsecutivePeriods, CashFlowStatementAsReportedGapPeriods := 0, 0, 0
 
-	_, _, IncomeStatementMissingPeriods, IncomeStatementConsecutivePeriods, IncomeStatementGapPeriods := Calculations.ProcessReportDates(IncomeStatementReportDates, Period)
-	_, _, IncomeStatementAsReportedMissingPeriods, IncomeStatementAsReportedConsecutivePeriods, IncomeStatementAsReportedGapPeriods := Calculations.ProcessReportDates(IncomeStatementAsReportedReportDates, Period)
+	if len(BalanceSheetStatementReportDates) > 0 {
+		_, _, BalanceSheetStatementMissingPeriods, BalanceSheetStatementConsecutivePeriods, BalanceSheetStatementGapPeriods = Calculations.ProcessReportDates(BalanceSheetStatementReportDates, Period)
+	}
+	if len(BalanceSheetAsReportedReportDates) > 0 {
+		_, _, BalanceSheetStatementAsReportedMissingPeriods, BalanceSheetStatementAsReportedConsecutivePeriods, BalanceSheetStatementAsReportedGapPeriods = Calculations.ProcessReportDates(BalanceSheetAsReportedReportDates, Period)
+	}
 
-	_, _, CashFlowStatementMissingPeriods, CashFlowStatementConsecutivePeriods, CashFlowStatementGapPeriods := Calculations.ProcessReportDates(CashFlowReportDates, Period)
-	_, _, CashFlowStatementAsReportedMissingPeriods, CashFlowStatementAsReportedConsecutivePeriods, CashFlowStatementAsReportedGapPeriods := Calculations.ProcessReportDates(CashFlowAsReportedReportDates, Period)
+	if len(IncomeStatementReportDates) > 0 {
+		_, _, IncomeStatementMissingPeriods, IncomeStatementConsecutivePeriods, IncomeStatementGapPeriods = Calculations.ProcessReportDates(IncomeStatementReportDates, Period)
+	}
+	if len(IncomeStatementAsReportedReportDates) > 0 {
+		_, _, IncomeStatementAsReportedMissingPeriods, IncomeStatementAsReportedConsecutivePeriods, IncomeStatementAsReportedGapPeriods = Calculations.ProcessReportDates(IncomeStatementAsReportedReportDates, Period)
+	}
+
+	if len(CashFlowReportDates) > 0 {
+		_, _, CashFlowStatementMissingPeriods, CashFlowStatementConsecutivePeriods, CashFlowStatementGapPeriods = Calculations.ProcessReportDates(CashFlowReportDates, Period)
+	}
+	if len(CashFlowAsReportedReportDates) > 0 {
+		_, _, CashFlowStatementAsReportedMissingPeriods, CashFlowStatementAsReportedConsecutivePeriods, CashFlowStatementAsReportedGapPeriods = Calculations.ProcessReportDates(CashFlowAsReportedReportDates, Period)
+	}
 
 	CalculationResults.BalanceSheet.TotalGapsInBalanceSheetStatementPeriods = BalanceSheetStatementGapPeriods
 	CalculationResults.BalanceSheet.TotalConsecutivePeriodsWithNoGapsInBalanceSheetStatement = BalanceSheetStatementConsecutivePeriods
