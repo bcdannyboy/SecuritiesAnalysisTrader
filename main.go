@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Optimization"
@@ -10,7 +9,6 @@ import (
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 	"os"
-	"sort"
 	"time"
 )
 
@@ -19,9 +17,9 @@ const (
 	WorkerCount      = 10 // Adjust the number of workers as needed
 )
 
-type Result struct {
+type CompanyData struct {
 	Ticker string
-	Value  float64
+	Data   Analysis.FinalNumbers
 }
 
 func main() {
@@ -58,12 +56,12 @@ func main() {
 		panic(fmt.Sprintf("Error getting avalible symbols: %s", err.Error()))
 	}
 
-	ResultsMap := []Result{}
+	ResultsMap := []CompanyData{}
 	fmt.Printf("Resolving %d symbols\n", len(SymbolList))
 
 	// Create channels for tasks and results
 	tasks := make(chan objects.StockSymbolList, len(SymbolList))
-	results := make(chan Result, len(SymbolList))
+	results := make(chan CompanyData, len(SymbolList))
 
 	// Start worker goroutines
 	for i := 0; i < WorkerCount; i++ {
@@ -85,23 +83,13 @@ func main() {
 	// Collect results
 	for range SymbolList {
 		result := <-results
-		fmt.Printf("Got result for %s: %f\n", result.Ticker, result.Value)
+		fmt.Printf("Got result for %s: %f\n", result.Ticker, result.Data)
 		ResultsMap = append(ResultsMap, result)
 	}
 
-	sort.Slice(ResultsMap, func(i, j int) bool {
-		return ResultsMap[i].Value > ResultsMap[j].Value
-	})
-
-	jResultsMap, err := json.MarshalIndent(ResultsMap, "", "    ")
-	if err != nil {
-		fmt.Printf("failed to marshal results map: %s\n", err.Error())
-	} else {
-		fmt.Printf("%s\n", string(jResultsMap))
-	}
 }
 
-func worker(tasks <-chan objects.StockSymbolList, results chan<- Result, APIClient *fmp.APIClient, Debug bool, RiskFreeRate float64, MarketReturn float64, DefaultEffectiveTaxRate float64, SecAnalysisWeights Optimization.SecurityAnalysisWeights) {
+func worker(tasks <-chan objects.StockSymbolList, results chan<- CompanyData, APIClient *fmp.APIClient, Debug bool, RiskFreeRate float64, MarketReturn float64, DefaultEffectiveTaxRate float64, SecAnalysisWeights Optimization.SecurityAnalysisWeights) {
 	for SymbolObj := range tasks {
 		result, err := processSymbol(SymbolObj, APIClient, Debug, RiskFreeRate, MarketReturn, DefaultEffectiveTaxRate, SecAnalysisWeights)
 		if err != nil {
@@ -114,7 +102,7 @@ func worker(tasks <-chan objects.StockSymbolList, results chan<- Result, APIClie
 	}
 }
 
-func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, Debug bool, RiskFreeRate float64, MarketReturn float64, DefaultEffectiveTaxRate float64, SecAnalysisWeights Optimization.SecurityAnalysisWeights) (Result, error) {
+func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, Debug bool, RiskFreeRate float64, MarketReturn float64, DefaultEffectiveTaxRate float64, SecAnalysisWeights Optimization.SecurityAnalysisWeights) (CompanyData, error) {
 	Ticker := SymbolObj.Symbol
 
 	fundamentals, err := Analysis.PullCompanyFundamentals(APIClient, Ticker, "quarter")
@@ -122,7 +110,7 @@ func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, 
 		if Debug {
 			fmt.Printf("failed to pull fundamentals for %s: %s\n", Ticker, err.Error())
 		}
-		return Result{}, err
+		return CompanyData{}, err
 	}
 
 	FMPDCF, FMPMeanSTDDCF, err := Analysis.PullCompanyDCFs(APIClient, Ticker)
@@ -130,7 +118,7 @@ func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, 
 		if Debug {
 			fmt.Printf("failed to pull DCFs for %s: %s\n", Ticker, err.Error())
 		}
-		return Result{}, err
+		return CompanyData{}, err
 	}
 
 	Ratings, RatingsGrowth, RatingsMeanSTD, RatingsGrowthMeanSTD, err := Analysis.PullCompanyRatings(APIClient, Ticker)
@@ -138,7 +126,7 @@ func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, 
 		if Debug {
 			fmt.Printf("failed to pull ratings for %s: %s\n", Ticker, err.Error())
 		}
-		return Result{}, err
+		return CompanyData{}, err
 	}
 
 	CompanyOutlookObj, err := Analysis.PullCompanyOutlook(APIClient, Ticker)
@@ -146,7 +134,7 @@ func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, 
 		if Debug {
 			fmt.Printf("failed to pull outlook for %s: %s\n", Ticker, err.Error())
 		}
-		return Result{}, err
+		return CompanyData{}, err
 	}
 
 	EmployeeCount, err := Analysis.PullEmployeeCount(APIClient, Ticker)
@@ -154,7 +142,7 @@ func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, 
 		if Debug {
 			fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
 		}
-		return Result{}, err
+		return CompanyData{}, err
 	}
 
 	CalculationResults := Analysis.PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, EmployeeCount, DefaultEffectiveTaxRate)
@@ -169,13 +157,5 @@ func processSymbol(SymbolObj objects.StockSymbolList, APIClient *fmp.APIClient, 
 		FMPRatingsGrowthMeanSTD:         RatingsGrowthMeanSTD,
 	}
 
-	FinalValue, err := Optimization.CalculateWeightedAverage(SecAnalysisWeights, FinalResults, "root")
-	if err != nil {
-		if Debug {
-			fmt.Printf("failed to calculate weighted average for %s: %s\n", Ticker, err.Error())
-		}
-		return Result{}, err
-	}
-
-	return Result{Ticker: Ticker, Value: FinalValue}, nil
+	return CompanyData{Ticker: Ticker, Data: FinalResults}, nil
 }
