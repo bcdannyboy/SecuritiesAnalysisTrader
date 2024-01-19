@@ -1,14 +1,39 @@
 package Backtest
 
-import "github.com/spacecodewor/fmpcloud-go/objects"
+import (
+	"fmt"
+	"sync"
+)
 
-func BackTest(Candles []map[string][]objects.StockCandle, RiskFreeRate float64, Strategy string, StartCash float64) map[string]PortfolioResults {
-	ResultsMap := map[string]PortfolioResults{}
+func BackTest(Params BackTestParameters) map[string]PortfolioResults {
+	ResultsMap := make(map[string]PortfolioResults)
+	var wg sync.WaitGroup
+	resultsChan := make(chan map[string]PortfolioResults)
 
-	switch Strategy {
-	case "equalweightbuyandhold":
-		ResultsMap["equalweightbuyandhold"] = EqualWeightBuyAndHold(Candles, RiskFreeRate, StartCash)
-		break
+	for _, strategy := range Params.Strategies {
+		wg.Add(1)
+		go func(strategy string) {
+			defer wg.Done()
+			switch strategy {
+			case "equalweightbuyandhold":
+				fmt.Printf("Initiating Equal Weight Buy and Hold Strategy\n")
+				resultsChan <- map[string]PortfolioResults{"equalweightbuyandhold": EqualWeightBuyAndHold(Params.Candles, Params.RiskFreeRate, Params.StartingCash)}
+			case "rankedweightbuyandhold":
+				fmt.Printf("Initiating Ranked Weight Buy and Hold Strategy\n")
+				resultsChan <- map[string]PortfolioResults{"rankedweightbuyandhold": RankedWeightBuyAndHold(Params.Candles, Params.StockOrder, Params.RiskFreeRate, Params.StartingCash)}
+			}
+		}(strategy)
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	for result := range resultsChan {
+		for key, value := range result {
+			ResultsMap[key] = value
+		}
 	}
 
 	return ResultsMap

@@ -87,7 +87,20 @@ func main() {
 		Sticks = append(Sticks, map[string][]objects.StockCandle{CompanyDataObject.Ticker: CompanyDataObject.CandleSticks})
 	}
 
-	BacktestResults := Backtest.BackTest(Sticks, RiskFreeRate, "equalweightbuyandhold", 10000)
+	StickKeys := []string{}
+	for _, Stick := range Sticks {
+		for key, _ := range Stick {
+			StickKeys = append(StickKeys, key)
+		}
+	}
+
+	BacktestResults := Backtest.BackTest(Backtest.BackTestParameters{
+		Strategies:   []string{"equalweightbuyandhold", "rankedweightbuyandhold"},
+		Candles:      Sticks,
+		StartingCash: 10000,
+		RiskFreeRate: RiskFreeRate,
+		StockOrder:   StickKeys,
+	})
 	for key, value := range BacktestResults {
 		fmt.Printf("Results for Strategy: %s\n", key)
 		fmt.Printf("\tTotal Portfolio Profit/Loss: %f\n", value.Total.TotalProfitLoss)
@@ -96,15 +109,5 @@ func main() {
 		fmt.Printf("\tPortfolio Sharpe Ratio: %f\n", value.Total.SharpeRatio)
 		fmt.Printf("\tPortfolio Sortino Ratio: %f\n", value.Total.SortinoRatio)
 		fmt.Printf("\tPortfolio Max Drawdown: %f\n", value.Total.MaxDrawdown)
-		fmt.Printf("Individual Stock Results:\n")
-		for StockTicker, StockResult := range value.IndividualStocks {
-			fmt.Printf("\t%s\n", StockTicker)
-			fmt.Printf("\t\tProfit/Loss: %f\n", StockResult.TotalProfitLoss)
-			fmt.Printf("\t\tAnnualized Return: %f\n", StockResult.AnnualizedReturn)
-			fmt.Printf("\t\tVolatility: %f\n", StockResult.Volatility)
-			fmt.Printf("\t\tSharpe Ratio: %f\n", StockResult.SharpeRatio)
-			fmt.Printf("\t\tSortino Ratio: %f\n", StockResult.SortinoRatio)
-			fmt.Printf("\t\tMax Drawdown: %f\n", StockResult.MaxDrawdown)
-		}
 	}
 }
