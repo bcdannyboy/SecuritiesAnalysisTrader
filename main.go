@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Backtest"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Optimization"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/joho/godotenv"
@@ -74,8 +75,7 @@ func main() {
 		panic(fmt.Sprintf("Error getting avalible symbols: %s", err.Error()))
 	}
 	if Debug {
-		TickerList = []string{"MSFT", "AAPL", "GME"}
-	} else {
+		TickerList = Backtest.NASDAQStockTickers
 		for _, Symbol := range SymbolList {
 			TickerList = append(TickerList, Symbol.Symbol)
 		}
