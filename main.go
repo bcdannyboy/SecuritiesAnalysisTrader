@@ -7,13 +7,12 @@ import (
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
-	"math/rand"
 	"os"
 	"strconv"
 )
 
 const (
-	MaxRatePerMinute = 20 // for each item we're doing ~10 API calls, so we need to limit the rate
+	MaxRatePerMinute = 17 // for each item we're doing ~15 API calls, so we need to limit the rate
 	WorkerCount      = 10
 )
 
@@ -75,15 +74,7 @@ func main() {
 		panic(fmt.Sprintf("Error getting avalible symbols: %s", err.Error()))
 	}
 	if Debug {
-		// Limit the number of symbols for debugging
-		newList := []string{}
-		for i := 0; i < 5; i++ {
-			Symbol := SymbolList[rand.Intn(len(SymbolList))]
-			fmt.Printf("Debug: Choosing symbol %s\n", Symbol.Symbol)
-			newList = append(newList, Symbol.Symbol)
-		}
-
-		TickerList = newList
+		TickerList = []string{"MSFT", "AAPL", "GME"}
 	} else {
 		for _, Symbol := range SymbolList {
 			TickerList = append(TickerList, Symbol.Symbol)

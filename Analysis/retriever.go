@@ -9,6 +9,7 @@ import (
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Fundamentals/FullFinancialStatement"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis/Fundamentals/IncomeStatement"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
+	"github.com/markcheno/go-quote"
 	"github.com/spacecodewor/fmpcloud-go"
 	"github.com/spacecodewor/fmpcloud-go/objects"
 	"time"
@@ -86,7 +87,7 @@ func PullCompanyFundamentals(APIClient *fmpcloud.APIClient, Symbol string, Perio
 	F_STMT, F_STMT_GROWTH, err := FullFinancialStatement.AnalyzeFinancialStatement(APIClient, Symbol, Period)
 	if err != nil {
 		if len(F_STMT) == 0 {
-			fmt.Printf("Failed to get full financial statement for %s: %s\n", Symbol, err.Error())
+			//fmt.Printf("Failed to get full financial statement for %s: %s\n", Symbol, err.Error())
 		} else if len(F_STMT_GROWTH) == 0 {
 			fmt.Printf("Failed to get full financial statement growth for %s: %s\n", Symbol, err.Error())
 			FundamentalsObj.FullFinancialStatement = F_STMT
@@ -390,7 +391,6 @@ func PullCompanyData(APIClient *fmpcloud.APIClient, Tickers []string, MaxRatePer
 			if Debug {
 				fmt.Printf("failed to pull fundamentals for %s: %s\n", Ticker, err.Error())
 			}
-			return CompanyData{}, err
 		}
 
 		FMPDCF, FMPMeanSTDDCF, err := PullCompanyDCFs(APIClient, Ticker)
@@ -398,7 +398,6 @@ func PullCompanyData(APIClient *fmpcloud.APIClient, Tickers []string, MaxRatePer
 			if Debug {
 				fmt.Printf("failed to pull DCFs for %s: %s\n", Ticker, err.Error())
 			}
-			return CompanyData{}, err
 		}
 
 		Ratings, RatingsGrowth, RatingsMeanSTD, RatingsGrowthMeanSTD, err := PullCompanyRatings(APIClient, Ticker)
@@ -406,7 +405,6 @@ func PullCompanyData(APIClient *fmpcloud.APIClient, Tickers []string, MaxRatePer
 			if Debug {
 				fmt.Printf("failed to pull ratings for %s: %s\n", Ticker, err.Error())
 			}
-			return CompanyData{}, err
 		}
 
 		CompanyOutlookObj, err := PullCompanyOutlook(APIClient, Ticker)
@@ -414,33 +412,85 @@ func PullCompanyData(APIClient *fmpcloud.APIClient, Tickers []string, MaxRatePer
 			if Debug {
 				fmt.Printf("failed to pull outlook for %s: %s\n", Ticker, err.Error())
 			}
-			return CompanyData{}, err
 		}
 
 		EmployeeCount, err := PullEmployeeCount(APIClient, Ticker)
 		if err != nil {
 			if Debug {
-				fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
+				//fmt.Printf("failed to pull employee count for %s: %s\n", Ticker, err.Error())
 			}
-			return CompanyData{}, err
 		}
 
 		CalculationResults := PerformFundamentalsCalculations(fundamentals, "quarter", RiskFreeRate, MarketReturn, CompanyOutlookObj, EmployeeCount, DefaultEffectiveTaxRate)
 
-		FromDate := time.Now().AddDate(-20, 0, 0)
-		Today := time.Now()
+		FromDate := time.Now().AddDate(-20, 0, 0).Format("2006-01-02")
+		Today := time.Now().Format("2006-01-02")
 
-		CandleSticks, err := APIClient.Stock.Candles(objects.RequestStockCandleList{
-			Period: "1min",
-			Symbol: Ticker,
-			From:   &FromDate,
-			To:     &Today,
-		})
+		Sticks, err := quote.NewQuoteFromYahoo(Ticker, FromDate, Today, quote.Daily, true)
 		if err != nil {
 			if Debug {
 				fmt.Printf("failed to pull candles for %s: %s\n", Ticker, err.Error())
 			}
 			return CompanyData{}, err
+		}
+
+		CandleSticks := []objects.StockCandle{}
+		for i := 0; i < len(Sticks.Date); i++ {
+			Date := Sticks.Date[i].Format("2006-01-02 15:04:05")
+			Open := float64(-1)
+			High := float64(-1)
+			Low := float64(-1)
+			Close := float64(-1)
+			Volume := float64(-1)
+
+			if len(Sticks.Open) > i {
+				Open = Sticks.Open[i]
+			} else {
+				if Debug {
+					fmt.Printf("[!] no open for %s on %s\n", Ticker, Date)
+				}
+			}
+
+			if len(Sticks.High) > i {
+				High = Sticks.High[i]
+			} else {
+				if Debug {
+					fmt.Printf("[!] no high for %s on %s\n", Ticker, Date)
+				}
+			}
+
+			if len(Sticks.Low) > i {
+				Low = Sticks.Low[i]
+			} else {
+				if Debug {
+					fmt.Printf("[!] no low for %s on %s\n", Ticker, Date)
+				}
+			}
+
+			if len(Sticks.Close) > i {
+				Close = Sticks.Close[i]
+			} else {
+				if Debug {
+					fmt.Printf("[!] no close for %s on %s\n", Ticker, Date)
+				}
+			}
+
+			if len(Sticks.Volume) > i {
+				Volume = Sticks.Volume[i]
+			} else {
+				if Debug {
+					fmt.Printf("[!] no volume for %s on %s\n", Ticker, Date)
+				}
+			}
+
+			CandleSticks = append(CandleSticks, objects.StockCandle{
+				Date:   Date,
+				Open:   Open,
+				High:   High,
+				Low:    Low,
+				Close:  Close,
+				Volume: Volume,
+			})
 		}
 
 		FinalResults := FinalNumbers{
