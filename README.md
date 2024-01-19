@@ -11,7 +11,6 @@
 `RiskFreeRate` - risk free rate
 `DefaultEffectiveTaxRate` - effective tax rate to use if one isn't reported
 
-
 ## Steps
 
 1. Gather up the fundamentals of a ton of companies (at least 1000)

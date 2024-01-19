@@ -8,6 +8,7 @@ import (
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
+	"github.com/spacecodewor/fmpcloud-go/objects"
 	"os"
 	"strconv"
 )
@@ -69,21 +70,41 @@ func main() {
 		panic(fmt.Sprintf("Error parsing DefaultEffectiveTaxRate: %s", err.Error()))
 	}
 
-	TickerList := []string{}
-	SymbolList, err := APIClient.Stock.AvalibleSymbols()
-	if err != nil {
-		panic(fmt.Sprintf("Error getting avalible symbols: %s", err.Error()))
-	}
+	SymbolList := Backtest.NASDAQStockTickers
 	if Debug {
-		TickerList = Backtest.NASDAQStockTickers
-		for _, Symbol := range SymbolList {
-			TickerList = append(TickerList, Symbol.Symbol)
-		}
+		SymbolList = Backtest.NASDAQStockTickers[:5]
 	}
 
-	CompanyDataObjects := Analysis.PullCompanyData(APIClient, TickerList, MaxRatePerMinute, WorkerCount, Debug, RiskFreeRate, MarketReturn, DefaultEffectiveTaxRate)
+	CompanyDataObjects := Analysis.PullCompanyData(APIClient, SymbolList, MaxRatePerMinute, WorkerCount, Debug, RiskFreeRate, MarketReturn, DefaultEffectiveTaxRate)
 	if len(CompanyDataObjects) == 0 {
 		panic("No company data objects returned")
 	}
 
+	Sticks := []map[string][]objects.StockCandle{}
+
+	for _, CompanyDataObject := range CompanyDataObjects {
+		fmt.Printf("[+] Adding %s to backtest portfolio\n", CompanyDataObject.Ticker)
+		Sticks = append(Sticks, map[string][]objects.StockCandle{CompanyDataObject.Ticker: CompanyDataObject.CandleSticks})
+	}
+
+	BacktestResults := Backtest.BackTest(Sticks, RiskFreeRate, "equalweightbuyandhold", 10000)
+	for key, value := range BacktestResults {
+		fmt.Printf("Results for Strategy: %s\n", key)
+		fmt.Printf("\tTotal Portfolio Profit/Loss: %f\n", value.Total.TotalProfitLoss)
+		fmt.Printf("\tPortfolio Annualized Return: %f\n", value.Total.AnnualizedReturn)
+		fmt.Printf("\tPortfolio Volatility: %f\n", value.Total.Volatility)
+		fmt.Printf("\tPortfolio Sharpe Ratio: %f\n", value.Total.SharpeRatio)
+		fmt.Printf("\tPortfolio Sortino Ratio: %f\n", value.Total.SortinoRatio)
+		fmt.Printf("\tPortfolio Max Drawdown: %f\n", value.Total.MaxDrawdown)
+		fmt.Printf("Individual Stock Results:\n")
+		for StockTicker, StockResult := range value.IndividualStocks {
+			fmt.Printf("\t%s\n", StockTicker)
+			fmt.Printf("\t\tProfit/Loss: %f\n", StockResult.TotalProfitLoss)
+			fmt.Printf("\t\tAnnualized Return: %f\n", StockResult.AnnualizedReturn)
+			fmt.Printf("\t\tVolatility: %f\n", StockResult.Volatility)
+			fmt.Printf("\t\tSharpe Ratio: %f\n", StockResult.SharpeRatio)
+			fmt.Printf("\t\tSortino Ratio: %f\n", StockResult.SortinoRatio)
+			fmt.Printf("\t\tMax Drawdown: %f\n", StockResult.MaxDrawdown)
+		}
+	}
 }

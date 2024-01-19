@@ -2,12 +2,12 @@ package Backtest
 
 import "github.com/spacecodewor/fmpcloud-go/objects"
 
-func BackTest(Candles []objects.StockCandle, RiskFreeRate float64, Strategy string) map[string]BackTestResults {
-	ResultsMap := map[string]BackTestResults{}
+func BackTest(Candles []map[string][]objects.StockCandle, RiskFreeRate float64, Strategy string, StartCash float64) map[string]PortfolioResults {
+	ResultsMap := map[string]PortfolioResults{}
 
 	switch Strategy {
-	case "buyandhold":
-		ResultsMap["buyandhold"] = BuyAndHold(Candles, RiskFreeRate)
+	case "equalweightbuyandhold":
+		ResultsMap["equalweightbuyandhold"] = EqualWeightBuyAndHold(Candles, RiskFreeRate, StartCash)
 		break
 	}
 
