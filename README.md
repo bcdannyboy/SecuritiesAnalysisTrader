@@ -1,6 +1,7 @@
 
 
 
+
 # Securities Analysis Based AutoTrading
 
 ## .env

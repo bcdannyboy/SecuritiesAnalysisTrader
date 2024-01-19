@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Backtest"
-	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Optimization"
-	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
-	"github.com/spacecodewor/fmpcloud-go/objects"
+	"math/rand"
 	"os"
 	"strconv"
 )
@@ -40,9 +38,6 @@ func main() {
 		APIClient.Debug = true
 	}
 
-	SecAnalysisWeights := Optimization.SecurityAnalysisWeights{}
-	utils.InitStructWithRandomFloats(&SecAnalysisWeights)
-
 	RiskFreeRateStr := os.Getenv("RiskFreeRate")
 	if RiskFreeRateStr == "" {
 		panic("RiskFreeRate is empty")
@@ -72,7 +67,13 @@ func main() {
 
 	SymbolList := Backtest.NASDAQStockTickers
 	if Debug {
-		SymbolList = Backtest.NASDAQStockTickers[:5]
+		RandSymbols := []string{}
+		// get 10 random symbols from SymbolList
+		for i := 0; i < 10; i++ {
+			RandSymbols = append(RandSymbols, SymbolList[rand.Intn(len(SymbolList))])
+		}
+
+		SymbolList = RandSymbols
 	}
 
 	CompanyDataObjects := Analysis.PullCompanyData(APIClient, SymbolList, MaxRatePerMinute, WorkerCount, Debug, RiskFreeRate, MarketReturn, DefaultEffectiveTaxRate)
@@ -80,38 +81,4 @@ func main() {
 		panic("No company data objects returned")
 	}
 
-	Sticks := []map[string][]objects.StockCandle{}
-
-	for _, CompanyDataObject := range CompanyDataObjects {
-		fmt.Printf("[+] Adding %s to backtest portfolio\n", CompanyDataObject.Ticker)
-		Sticks = append(Sticks, map[string][]objects.StockCandle{CompanyDataObject.Ticker: CompanyDataObject.CandleSticks})
-	}
-
-	StickKeys := []string{}
-	for _, Stick := range Sticks {
-		for key, _ := range Stick {
-			StickKeys = append(StickKeys, key)
-		}
-	}
-
-	BacktestResults := Backtest.BackTest(Backtest.BackTestParameters{
-		Strategies:   []string{"equalweightbuyandhold", "rankedweightbuyandhold"},
-		Candles:      Sticks,
-		StartingCash: 10000,
-		RiskFreeRate: RiskFreeRate,
-		StockOrder:   StickKeys,
-	})
-	for key, value := range BacktestResults {
-		fmt.Printf("Results for Strategy: %s\n", key)
-		fmt.Printf("\tTotal Portfolio Profit/Loss: %f\n", value.Total.TotalProfitLoss)
-		fmt.Printf("\tPortfolio Annualized Return: %f\n", value.Total.AnnualizedReturn)
-		fmt.Printf("\tPortfolio Volatility: %f\n", value.Total.Volatility)
-		fmt.Printf("\tPortfolio Sharpe Ratio: %f\n", value.Total.SharpeRatio)
-		fmt.Printf("\tPortfolio Sortino Ratio: %f\n", value.Total.SortinoRatio)
-		fmt.Printf("\tPortfolio Max Drawdown: %f\n", value.Total.MaxDrawdown)
-	}
-
-	for key, value := range BacktestResults {
-		fmt.Printf("Score for Strategy: %s - %f\n", key, Backtest.EvaluateResults(value.Total))
-	}
 }

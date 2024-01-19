@@ -3,12 +3,11 @@ package Backtest
 import "github.com/spacecodewor/fmpcloud-go/objects"
 
 type BackTestParameters struct {
-	Strategies           []string
-	StartingCash         float64
-	RiskFreeRate         float64
-	Candles              []map[string][]objects.StockCandle
-	StockOrder           []string
-	StockSpecificWeights map[string]float64
+	Strategies   []string
+	StartingCash float64
+	RiskFreeRate float64
+	Candles      []map[string][]objects.StockCandle
+	StockOrder   []string
 }
 
 type StockResults struct {
