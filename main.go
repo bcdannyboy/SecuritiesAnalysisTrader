@@ -110,4 +110,8 @@ func main() {
 		fmt.Printf("\tPortfolio Sortino Ratio: %f\n", value.Total.SortinoRatio)
 		fmt.Printf("\tPortfolio Max Drawdown: %f\n", value.Total.MaxDrawdown)
 	}
+
+	for key, value := range BacktestResults {
+		fmt.Printf("Score for Strategy: %s - %f\n", key, Backtest.EvaluateResults(value.Total))
+	}
 }
