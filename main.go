@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Backtest"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/GeneticAlgorithm"
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"math/rand"
@@ -76,9 +78,26 @@ func main() {
 		SymbolList = RandSymbols
 	}
 
+	fmt.Printf("Retriving data for %d symbols\n", len(SymbolList))
 	CompanyDataObjects := Analysis.PullCompanyData(APIClient, SymbolList, MaxRatePerMinute, WorkerCount, Debug, RiskFreeRate, MarketReturn, DefaultEffectiveTaxRate)
 	if len(CompanyDataObjects) == 0 {
 		panic("No company data objects returned")
+	}
+
+	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 1000, 100, 0.1337, 0.5, 0.1337, 0.1, 0.001, RiskFreeRate)
+	jOptimizedWeights, err := json.Marshal(OptimizedSecurityAnalysisWeights)
+
+	outname := "optimized_weights.json"
+	// output the optimized weights to a file
+	f, err := os.Create(outname)
+	defer f.Close()
+	if err != nil {
+		panic(fmt.Sprintf("Error creating file: %s", err.Error()))
+	}
+	_, err = f.Write(jOptimizedWeights)
+	if err != nil {
+		fmt.Printf("failed to write to file: %s\n\nOptimized Weights:\n", err.Error())
+		fmt.Println(string(jOptimizedWeights))
 	}
 
 }

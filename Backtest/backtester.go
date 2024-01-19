@@ -1,7 +1,6 @@
 package Backtest
 
 import (
-	"fmt"
 	"math"
 	"sync"
 )
@@ -29,10 +28,8 @@ func BackTest(Params BackTestParameters) map[string]PortfolioResults {
 			defer wg.Done()
 			switch strategy {
 			case "equalweightbuyandhold":
-				fmt.Printf("Initiating Equal Weight Buy and Hold Strategy\n")
 				resultsChan <- map[string]PortfolioResults{"equalweightbuyandhold": EqualWeightBuyAndHold(Params.Candles, Params.RiskFreeRate, Params.StartingCash)}
 			case "rankedweightbuyandhold":
-				fmt.Printf("Initiating Ranked Weight Buy and Hold Strategy\n")
 				resultsChan <- map[string]PortfolioResults{"rankedweightbuyandhold": RankedWeightBuyAndHold(Params.Candles, Params.StockOrder, Params.RiskFreeRate, Params.StartingCash)}
 			}
 		}(strategy)

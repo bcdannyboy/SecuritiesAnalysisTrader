@@ -15,12 +15,13 @@ type GeneticAlgorithmInput struct {
 }
 
 type GeneticAlgorithm struct {
-	AlgorithmInputs []GeneticAlgorithmInput
-	Population      int
-	Generations     int
-	MutationRate    float64
-	CrossoverRate   float64
-	MaxWeightChange float64
-	MinWeightChange float64
-	RiskFreeRate    float64
+	AlgorithmInputs     []GeneticAlgorithmInput
+	Population          int
+	Generations         int
+	MutationRate        float64
+	CrossoverRate       float64
+	MaxWeightChange     float64
+	MinWeightChange     float64
+	TournamentThreshold float64
+	RiskFreeRate        float64
 }

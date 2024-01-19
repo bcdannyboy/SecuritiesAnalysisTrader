@@ -14,12 +14,24 @@ func getSubsections(data []map[string][]objects.StockCandle) [][]map[string][]ob
 	totalLength := len(data)
 	var subsections [][]map[string][]objects.StockCandle
 
-	// Define the lengths of each subsection. These can be adjusted as needed.
-	lengths := []int{
-		rnd.Intn(totalLength/5) + 1, // Ensure at least 1 element
-		rnd.Intn(totalLength/5) + 1,
-		rnd.Intn(totalLength/5) + 1,
-		rnd.Intn(totalLength/5) + 1,
+	if totalLength == 0 {
+		return subsections // Return empty if no data is present
+	}
+
+	// Adjust the number of subsections based on the total length
+	numSubsections := 4
+	if totalLength < numSubsections {
+		numSubsections = totalLength
+	}
+
+	// Define the lengths of each subsection
+	lengths := make([]int, numSubsections)
+	for i := range lengths {
+		if totalLength > 0 {
+			lengths[i] = rnd.Intn(totalLength/numSubsections) + 1
+		} else {
+			lengths[i] = 1 // Ensure at least 1 element
+		}
 	}
 
 	start := 0
