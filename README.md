@@ -33,4 +33,7 @@
 - [x] create a weight system from -1.0 to 1.0 for each fundamentals item 
     - [ ] TODO: fix the full financial document and employee count retrievers and add the full financial document type to the final results struct type / weight type for weighting
 - [x] calculate a normalized weighted value that represents every value in all of the fundamentals / calculations * their field weights
-- [ ] set up a backtesting utility for backtesting a buy/sell strategy across multiple timelines, tickers, and portfolios
+- [x] set up a backtesting utility for backtesting a buy/sell strategy across multiple timelines, tickers, and portfolios
+- [x] set up some function to rate the backtesting performance
+- [x] create a genetic algorithm to identify optimized fundamentals analysis weights
+- [ ] add more complex portfolio backtesting strategies 

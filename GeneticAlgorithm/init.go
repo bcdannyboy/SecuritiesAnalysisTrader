@@ -56,7 +56,7 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 		index   int
 	}
 
-	batchSize := 200
+	batchSize := 100
 	for generation := 0; generation < ga.Generations; generation++ {
 		fmt.Printf("Starting Generation %d with %d weight sets\n", generation, len(ga.PopulationWeights))
 
