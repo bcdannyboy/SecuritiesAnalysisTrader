@@ -513,6 +513,7 @@ func PullCompanyData(APIClient *fmpcloud.APIClient, Tickers []string, MaxRatePer
 	worker := func(tasks <-chan string, results chan<- CompanyData, APIClient *fmpcloud.APIClient, Debug bool, RiskFreeRate float64, MarketReturn float64, DefaultEffectiveTaxRate float64) {
 		for SymbolObj := range tasks {
 			result, err := processSymbol(SymbolObj, APIClient, Debug, RiskFreeRate, MarketReturn, DefaultEffectiveTaxRate)
+			fmt.Printf("returning result for %s\n", SymbolObj)
 			if err != nil {
 				if Debug {
 					fmt.Printf("Error processing symbol %s: %s\n", SymbolObj, err.Error())

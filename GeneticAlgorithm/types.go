@@ -6,6 +6,11 @@ import (
 	"github.com/spacecodewor/fmpcloud-go/objects"
 )
 
+type weightedCompany struct {
+	Company Analysis.CompanyData
+	Weight  float64
+}
+
 type GeneticAlgorithmInput struct {
 	Ticker                  string
 	SecurityAnalysisResults *Analysis.FinalNumbers
@@ -15,7 +20,8 @@ type GeneticAlgorithmInput struct {
 }
 
 type GeneticAlgorithm struct {
-	AlgorithmInputs     []GeneticAlgorithmInput
+	PopulationWeights   []*Optimization.SecurityAnalysisWeights
+	Companies           []Analysis.CompanyData
 	Population          int
 	Generations         int
 	MutationRate        float64

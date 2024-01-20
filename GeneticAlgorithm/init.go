@@ -3,55 +3,32 @@ package GeneticAlgorithm
 import (
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Backtest"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Optimization"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/spacecodewor/fmpcloud-go/objects"
+	"math"
+	"sort"
+	"sync"
 )
 
-func InitGeneticAlgorithm(
-	Companies []Analysis.CompanyData,
-	Population int,
-	Generations int,
-	MutationRate float64,
-	CrossoverRate float64,
-	TournamentThreshold float64,
-	MaxWeightChange float64,
-	MinWeightChange float64,
-	RiskFreeRate float64) *Optimization.SecurityAnalysisWeights {
-	AlgorithmInputs := []GeneticAlgorithmInput{}
-
-	// first we initialize a random weight for the genetic algorithm's initial inputs
-	SecAnalysisWeights := Optimization.SecurityAnalysisWeights{}
-	utils.InitStructWithRandomFloats(&SecAnalysisWeights)
-
-	for _, Company := range Companies {
-		SecAnalysisScore, err := Optimization.CalculateWeightedAverage(SecAnalysisWeights, Company.Data, "root")
-		if err != nil {
-			fmt.Printf("failed to calculate weighted average for company %s: %s\n", Company.Ticker, err.Error())
-			continue // for now just ignore the company if we can't calculate the weighted average
-		}
-
-		AlgorithmInputs = append(AlgorithmInputs, GeneticAlgorithmInput{
-			Ticker:                  Company.Ticker,
-			SecurityAnalysisResults: &Company.Data,
-			SecurityAnalysisWeights: &SecAnalysisWeights,
-			SecurityAnalysisScore:   SecAnalysisScore,
-			CandleSticks:            Company.CandleSticks,
-		})
+func InitGeneticAlgorithm(Companies []Analysis.CompanyData, Population int, Generations int, MutationRate float64, CrossoverRate float64, TournamentThreshold float64, MaxWeightChange float64, MinWeightChange float64, RiskFreeRate float64) *Optimization.SecurityAnalysisWeights {
+	if Population <= 0 {
+		fmt.Println("Error: Population size must be greater than 0.")
+		return nil
 	}
 
-	// sort the inputs by their security analysis score
-	for i := 0; i < len(AlgorithmInputs); i++ {
-		for j := i + 1; j < len(AlgorithmInputs); j++ {
-			if AlgorithmInputs[i].SecurityAnalysisScore < AlgorithmInputs[j].SecurityAnalysisScore {
-				AlgorithmInputs[i], AlgorithmInputs[j] = AlgorithmInputs[j], AlgorithmInputs[i]
-			}
-		}
+	PopulationWeights := make([]*Optimization.SecurityAnalysisWeights, Population)
+	for i := 0; i < Population; i++ {
+		// The InitStructWithRandomFloats function should return a pointer
+		SecAnalysisWeights := utils.InitStructWithRandomFloats(new(Optimization.SecurityAnalysisWeights)).(*Optimization.SecurityAnalysisWeights)
+		PopulationWeights[i] = SecAnalysisWeights
+		fmt.Printf("Initialized weight set %d\n", i)
 	}
 
-	// now we can initialize the genetic algorithm
 	GeneticAlgorithm := GeneticAlgorithm{
-		AlgorithmInputs:     AlgorithmInputs,
+		PopulationWeights:   PopulationWeights,
+		Companies:           Companies,
 		Population:          Population,
 		Generations:         Generations,
 		MutationRate:        MutationRate,
@@ -62,59 +39,194 @@ func InitGeneticAlgorithm(
 		TournamentThreshold: TournamentThreshold,
 	}
 
-	fmt.Printf("Starting evolution with %d inputs\n", len(GeneticAlgorithm.AlgorithmInputs))
+	fmt.Printf("Genetic Algorithm initialized with %d weight sets\n", len(PopulationWeights))
 	return startEvolution(&GeneticAlgorithm)
 }
 
 func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights {
 	var bestWeights *Optimization.SecurityAnalysisWeights
-	var bestScore float64
-	firstScore := true
+	var bestScore float64 = math.Inf(-1)
+	var mutex sync.Mutex
 
-	for generation := 0; generation < ga.Generations; generation++ {
-		newPopulation := make([]GeneticAlgorithmInput, 0, ga.Population)
+	fmt.Printf("Starting evolution for %d generations with a population of %d\n", ga.Generations, ga.Population)
 
-		for i := 0; i < ga.Population; i++ {
-			// Parent Selection
-			parent1, parent2 := SelectParents(ga)
-
-			// Crossover
-			offspringWeights := Crossover(parent1.SecurityAnalysisWeights, parent2.SecurityAnalysisWeights, ga.CrossoverRate)
-
-			// Mutation
-			Mutate(offspringWeights, ga.MutationRate, ga.MaxWeightChange, ga.MinWeightChange)
-
-			// Create new input with the new weights
-			newInput := CreateGeneticAlgorithmInput(offspringWeights, parent1)
-
-			// Convert CandleSticks to the required format for CalculateFitness
-			candleMap := make(map[string][]objects.StockCandle)
-			candleMap[newInput.Ticker] = newInput.CandleSticks
-			candles := []map[string][]objects.StockCandle{candleMap}
-
-			// Calculate fitness score for the new input
-			newScore := CalculateFitness(ga.RiskFreeRate, candles, []string{newInput.Ticker})
-
-			// Update the best score and weights if this is the first score or if it's better than the current best
-			if firstScore || newScore > bestScore {
-				bestScore = newScore
-				bestWeights = offspringWeights
-				firstScore = false
-			}
-
-			// Append new input to the new population
-			newPopulation = append(newPopulation, newInput)
-		}
-
-		// Replace old population with the new one
-		ga.AlgorithmInputs = newPopulation
-
-		// Log the best score of this generation
-		fmt.Printf("Generation %d completed. Best Score: %f\n", generation, bestScore)
+	type offspringResult struct {
+		weights *Optimization.SecurityAnalysisWeights
+		score   float64
+		index   int
 	}
 
-	// Log the overall best score after all generations
-	fmt.Printf("Evolution completed. Best Score: %f\n", bestScore)
+	batchSize := 200
+	for generation := 0; generation < ga.Generations; generation++ {
+		fmt.Printf("Starting Generation %d with %d weight sets\n", generation, len(ga.PopulationWeights))
+
+		newGenerationWeights := make([]*Optimization.SecurityAnalysisWeights, len(ga.PopulationWeights))
+
+		for batchStart := 0; batchStart < len(ga.PopulationWeights); batchStart += batchSize {
+			batchEnd := batchStart + batchSize
+			if batchEnd > len(ga.PopulationWeights) {
+				batchEnd = len(ga.PopulationWeights)
+			}
+
+			resultsChan := make(chan offspringResult, batchEnd-batchStart)
+			var wg sync.WaitGroup
+
+			for i := batchStart; i < batchEnd; i++ {
+				wg.Add(1)
+				go func(index int) {
+					defer wg.Done()
+					fmt.Printf("Creating offspring %d in generation %d\n", index, generation)
+
+					// Parent Selection
+					parent1Weights, parent2Weights := SelectParents(ga)
+					fmt.Printf("Selected parents for offspring %d\n", index)
+
+					// Crossover
+					offspringWeights := Crossover(parent1Weights, parent2Weights, ga.CrossoverRate)
+					fmt.Printf("Crossover completed for offspring %d\n", index)
+
+					// Mutation
+					offspringWeights = Mutate(offspringWeights, ga.MutationRate, ga.MaxWeightChange, ga.MinWeightChange)
+					fmt.Printf("Mutation completed for offspring %d\n", index)
+
+					// Select top 10 companies based on the security analysis score
+					top10Candles := getTop10Companies(ga.Companies, offspringWeights)
+					fmt.Printf("Selected top 10 companies for offspring %d\n", index)
+
+					// Extract the tickers from the top 10 companies
+					top10Tickers := extractTickers(top10Candles)
+					fmt.Printf("Top 10 tickers for offspring %d\n", index)
+
+					// Calculate fitness for the top 10 companies
+					fitnessScore := CalculateFitness(ga, top10Candles, top10Tickers)
+					if math.IsNaN(fitnessScore) || math.IsInf(fitnessScore, 0) {
+						fmt.Printf("Invalid fitness score for offspring %d in generation %d\n", index, generation)
+						resultsChan <- offspringResult{nil, 0, index}
+						return
+					}
+					fmt.Printf("Calculated fitness score %f for offspring %d\n", fitnessScore, index)
+
+					resultsChan <- offspringResult{offspringWeights, fitnessScore, index}
+				}(i)
+			}
+
+			wg.Wait()
+			close(resultsChan)
+
+			localBestScore := bestScore
+			localBestWeights := bestWeights
+
+			for result := range resultsChan {
+				if result.weights != nil && result.score > localBestScore {
+					localBestScore = result.score
+					localBestWeights = result.weights
+					fmt.Printf("New best score %f found in generation %d for offspring %d\n", localBestScore, generation, result.index)
+				}
+				newGenerationWeights[result.index] = result.weights
+			}
+
+			mutex.Lock()
+			if localBestScore > bestScore {
+				bestScore = localBestScore
+				bestWeights = localBestWeights
+			}
+			mutex.Unlock()
+		}
+
+		ga.PopulationWeights = newGenerationWeights
+		fmt.Printf("Generation %d completed with best score %f\n", generation, bestScore)
+	}
+
+	// Perform final backtest with the best weights
+	if bestWeights != nil {
+		top10Candles := getTop10Companies(ga.Companies, bestWeights)
+		top10Tickers := extractTickers(top10Candles)
+
+		// Prepare the backtest parameters
+		backtestParams := Backtest.BackTestParameters{
+			Strategies:   []string{"equalweightbuyandhold", "rankedweightbuyandhold"},
+			StartingCash: 10000,
+			RiskFreeRate: ga.RiskFreeRate,
+			Candles:      top10Candles,
+			StockOrder:   top10Tickers,
+		}
+
+		// Perform the backtest
+		backtestResults := Backtest.BackTest(backtestParams)
+
+		// Print out the backtest statistics
+		printBacktestResults(backtestResults)
+	}
 
 	return bestWeights
+}
+
+func getTop10Companies(companies []Analysis.CompanyData, weights *Optimization.SecurityAnalysisWeights) []map[string][]objects.StockCandle {
+	weightedCompanies := make([]weightedCompany, len(companies))
+	for i, company := range companies {
+		score, err := Optimization.CalculateWeightedAverage(company, weights, "path")
+		if err != nil {
+			fmt.Printf("failed to calculate weighted average for company %s\n", company.Ticker)
+			continue
+		}
+		weightedCompanies[i] = weightedCompany{
+			Company: company,
+			Weight:  score,
+		}
+	}
+
+	// Sort companies based on weight
+	sort.Slice(weightedCompanies, func(i, j int) bool {
+		return weightedCompanies[i].Weight > weightedCompanies[j].Weight
+	})
+
+	// Select top 10 companies and create a slice of map[string][]objects.StockCandle
+	top10Candles := make([]map[string][]objects.StockCandle, 0, 10)
+	for i := 0; i < 10 && i < len(weightedCompanies); i++ {
+		company := weightedCompanies[i].Company
+		top10Candles = append(top10Candles, map[string][]objects.StockCandle{company.Ticker: company.CandleSticks})
+	}
+
+	return top10Candles
+}
+
+func extractTickers(candles []map[string][]objects.StockCandle) []string {
+	tickers := make([]string, 0, len(candles))
+	for _, candleMap := range candles {
+		for ticker := range candleMap {
+			tickers = append(tickers, ticker)
+		}
+	}
+	return tickers
+}
+
+func printBacktestResults(results map[string]Backtest.PortfolioResults) {
+	for strategy, backtestResult := range results {
+		fmt.Printf("Result for strategy: %s\n", strategy)
+		fmt.Printf("Total Return: %f\n", backtestResult.Total.TotalProfitLoss)
+		fmt.Printf("Annualized Return: %f\n", backtestResult.Total.AnnualizedReturn)
+		fmt.Printf("Volatility: %f\n", backtestResult.Total.Volatility)
+		fmt.Printf("Sharpe Ratio: %f\n", backtestResult.Total.SharpeRatio)
+		fmt.Printf("Sortino Ratio: %f\n", backtestResult.Total.SortinoRatio)
+		fmt.Printf("Max Drawdown: %f\n", backtestResult.Total.MaxDrawdown)
+		fmt.Printf("YoY Profit/Loss:\n")
+		for year, profitLoss := range backtestResult.Total.YoYProfitLoss {
+			fmt.Printf("\t%s: %f\n", year, profitLoss)
+		}
+
+		for ticker, stockResult := range backtestResult.IndividualStocks {
+			fmt.Printf("[%s] Result for stock: %s\n", strategy, ticker)
+			fmt.Printf("Total Return: %f\n", stockResult.TotalProfitLoss)
+			fmt.Printf("Annualized Return: %f\n", stockResult.AnnualizedReturn)
+			fmt.Printf("Volatility: %f\n", stockResult.Volatility)
+			fmt.Printf("Sharpe Ratio: %f\n", stockResult.SharpeRatio)
+			fmt.Printf("Sortino Ratio: %f\n", stockResult.SortinoRatio)
+			fmt.Printf("Max Drawdown: %f\n", stockResult.MaxDrawdown)
+			fmt.Printf("YoY Profit/Loss:\n")
+			for year, profitLoss := range stockResult.YoYProfitLoss {
+				fmt.Printf("\t%s: %f\n", year, profitLoss)
+			}
+		}
+
+	}
 }

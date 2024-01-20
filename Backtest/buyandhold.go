@@ -14,6 +14,12 @@ func EqualWeightBuyAndHold(portfolio []map[string][]objects.StockCandle, riskFre
 		Total:            StockResults{YoYProfitLoss: make(map[string]float64)},
 	}
 
+	numStocks := len(portfolio)
+	if numStocks == 0 {
+		return portfolioResults // Handle empty portfolio case
+	}
+
+	individualStockAmount := startAmount / float64(numStocks)
 	var totalReturns, cumulativeReturns []float64
 
 	for _, stockMap := range portfolio {
@@ -26,10 +32,8 @@ func EqualWeightBuyAndHold(portfolio []map[string][]objects.StockCandle, riskFre
 				return candles[i].Date < candles[j].Date
 			})
 
-			// Calculations for each stock
-			stockWeight := startAmount / float64(len(stockMap))
 			initialPrice := candles[0].Open
-			sharesBought := stockWeight / initialPrice // Calculate the number of shares that can be bought
+			sharesBought := individualStockAmount / initialPrice // Fractional shares allowed
 
 			finalPrice := candles[len(candles)-1].Close
 			stockProfitLoss := sharesBought * (finalPrice - initialPrice) // Profit/loss based on the number of shares bought
@@ -50,13 +54,13 @@ func EqualWeightBuyAndHold(portfolio []map[string][]objects.StockCandle, riskFre
 				// Year-over-Year calculation
 				currentYear, _ := time.Parse("2006-01-02 15:04:05", candle.Date)
 				if currentYear.Year() != prevYear.Year() {
-					stockYoYProfitLoss[fmt.Sprintf("%d", prevYear.Year())] = stockWeight * cumulativeReturn
+					stockYoYProfitLoss[fmt.Sprintf("%d", prevYear.Year())] = sharesBought * candle.Close
 					cumulativeReturn = 1.0
 				}
 				prevYear = currentYear
 			}
 			if len(stockReturns) > 0 {
-				stockYoYProfitLoss[fmt.Sprintf("%d", prevYear.Year())] = stockWeight * cumulativeReturn
+				stockYoYProfitLoss[fmt.Sprintf("%d", prevYear.Year())] = sharesBought * candles[len(candles)-1].Close
 			}
 
 			avgReturn := mean(stockReturns)
@@ -64,7 +68,7 @@ func EqualWeightBuyAndHold(portfolio []map[string][]objects.StockCandle, riskFre
 			volatility := stdDev * math.Sqrt(252)
 			sharpeRatio := calculateSharpeRatio(avgReturn, riskFreeRate, stdDev)
 			downsideDev := downsideDeviation(stockReturns)
-			sortinoRatio := calculateSharpeRatio(avgReturn, riskFreeRate, downsideDev) // Reusing Sharpe Ratio calculation as the formula is similar
+			sortinoRatio := calculateSharpeRatio(avgReturn, riskFreeRate, downsideDev)
 			maxDrawdown := calculateMaxDrawdown(cumulativeReturns)
 
 			// Store individual stock results
@@ -146,7 +150,7 @@ func RankedWeightBuyAndHold(portfolio []map[string][]objects.StockCandle, weight
 			// Adjust stock weight based on its position in weightedOrder
 			stockWeight := (startAmount * weightMap[ticker]) / totalWeights
 			initialPrice := candles[0].Open
-			sharesBought := stockWeight / initialPrice // Calculate the number of shares that can be bought
+			sharesBought := stockWeight / initialPrice // Fractional shares allowed
 
 			finalPrice := candles[len(candles)-1].Close
 			stockProfitLoss := sharesBought * (finalPrice - initialPrice) // Profit/loss based on the number of shares bought
@@ -167,13 +171,13 @@ func RankedWeightBuyAndHold(portfolio []map[string][]objects.StockCandle, weight
 				// Year-over-Year calculation
 				currentYear, _ := time.Parse("2006-01-02 15:04:05", candle.Date)
 				if currentYear.Year() != prevYear.Year() {
-					stockYoYProfitLoss[fmt.Sprintf("%d", prevYear.Year())] = stockWeight * cumulativeReturn
+					stockYoYProfitLoss[fmt.Sprintf("%d", prevYear.Year())] = sharesBought * candle.Close
 					cumulativeReturn = 1.0
 				}
 				prevYear = currentYear
 			}
 			if len(stockReturns) > 0 {
-				stockYoYProfitLoss[fmt.Sprintf("%d", prevYear.Year())] = stockWeight * cumulativeReturn
+				stockYoYProfitLoss[fmt.Sprintf("%d", prevYear.Year())] = sharesBought * candles[len(candles)-1].Close
 			}
 
 			avgReturn := mean(stockReturns)

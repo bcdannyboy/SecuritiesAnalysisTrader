@@ -158,7 +158,11 @@ func IdentifyDiscrepanciesBetweenBalanceSheetStatementAndBalanceSheetStatementAs
 				}
 
 				if bsar.Assets != nil {
-					discrepancy.TotalAssetsMatch = calculateDiscrepancyPercentage(bs.TotalAssets, bsar.Assets.(float64))
+					if floatValue, ok := bsar.Assets.(float64); ok {
+						discrepancy.TotalAssetsMatch = calculateDiscrepancyPercentage(bs.TotalAssets, floatValue)
+					} else {
+						discrepancy.TotalAssetsMatch = calculateDiscrepancyPercentage(bs.TotalAssets, 0)
+					}
 				} else {
 					discrepancy.TotalAssetsMatch = calculateDiscrepancyPercentage(bs.TotalAssets, 0)
 				}
@@ -170,7 +174,11 @@ func IdentifyDiscrepanciesBetweenBalanceSheetStatementAndBalanceSheetStatementAs
 				}
 
 				if bsar.Liabilities != nil {
-					discrepancy.TotalLiabilitiesMatch = calculateDiscrepancyPercentage(bs.TotalLiabilities, bsar.Liabilities.(float64))
+					if floatValue, ok := bsar.Liabilities.(float64); ok {
+						discrepancy.TotalLiabilitiesMatch = calculateDiscrepancyPercentage(bs.TotalLiabilities, floatValue)
+					} else {
+						discrepancy.TotalLiabilitiesMatch = calculateDiscrepancyPercentage(bs.TotalLiabilities, 0)
+					}
 				} else {
 					discrepancy.TotalLiabilitiesMatch = calculateDiscrepancyPercentage(bs.TotalLiabilities, 0)
 				}

@@ -70,9 +70,10 @@ func main() {
 	SymbolList := Backtest.NASDAQStockTickers
 	if Debug {
 		RandSymbols := []string{}
-		// get 10 random symbols from SymbolList
-		for i := 0; i < 10; i++ {
-			RandSymbols = append(RandSymbols, SymbolList[rand.Intn(len(SymbolList))])
+		for i := 0; i < 100; i++ {
+			Symbol := SymbolList[rand.Intn(len(SymbolList))]
+			fmt.Printf("Debug picking random symbol: %s\n", Symbol)
+			RandSymbols = append(RandSymbols, Symbol)
 		}
 
 		SymbolList = RandSymbols
@@ -84,17 +85,17 @@ func main() {
 		panic("No company data objects returned")
 	}
 
-	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 1000, 100, 0.1337, 0.5, 0.1337, 0.1, 0.001, RiskFreeRate)
+	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 100, 50, 0.1337, 0.5, 0.1337, 0.1, 0.001, RiskFreeRate)
 	jOptimizedWeights, err := json.Marshal(OptimizedSecurityAnalysisWeights)
 
 	outname := "optimized_weights.json"
 	// output the optimized weights to a file
-	f, err := os.Create(outname)
-	defer f.Close()
+	f1, err := os.Create(outname)
+	defer f1.Close()
 	if err != nil {
 		panic(fmt.Sprintf("Error creating file: %s", err.Error()))
 	}
-	_, err = f.Write(jOptimizedWeights)
+	_, err = f1.Write(jOptimizedWeights)
 	if err != nil {
 		fmt.Printf("failed to write to file: %s\n\nOptimized Weights:\n", err.Error())
 		fmt.Println(string(jOptimizedWeights))
