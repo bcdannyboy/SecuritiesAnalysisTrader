@@ -214,18 +214,9 @@ func printBacktestResults(results map[string]Backtest.PortfolioResults) {
 			fmt.Printf("\t%s: %f\n", year, profitLoss)
 		}
 
-		for ticker, stockResult := range backtestResult.IndividualStocks {
-			fmt.Printf("[%s] Result for stock: %s\n", strategy, ticker)
-			fmt.Printf("Total Return: %f\n", stockResult.TotalProfitLoss)
-			fmt.Printf("Annualized Return: %f\n", stockResult.AnnualizedReturn)
-			fmt.Printf("Volatility: %f\n", stockResult.Volatility)
-			fmt.Printf("Sharpe Ratio: %f\n", stockResult.SharpeRatio)
-			fmt.Printf("Sortino Ratio: %f\n", stockResult.SortinoRatio)
-			fmt.Printf("Max Drawdown: %f\n", stockResult.MaxDrawdown)
-			fmt.Printf("YoY Profit/Loss:\n")
-			for year, profitLoss := range stockResult.YoYProfitLoss {
-				fmt.Printf("\t%s: %f\n", year, profitLoss)
-			}
+		fmt.Printf("Tickers in portfolio:\n")
+		for ticker, _ := range backtestResult.IndividualStocks {
+			fmt.Printf("\t%s\n", ticker)
 		}
 
 	}

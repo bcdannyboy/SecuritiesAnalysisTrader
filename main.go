@@ -85,7 +85,7 @@ func main() {
 		panic("No company data objects returned")
 	}
 
-	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 100, 50, 0.1337, 0.5, 0.1337, 0.1, 0.001, RiskFreeRate)
+	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 160000, 5000, 0.1337, 0.5, 0.1337, 0.1, 0.001, RiskFreeRate)
 	jOptimizedWeights, err := json.Marshal(OptimizedSecurityAnalysisWeights)
 
 	outname := "optimized_weights.json"
