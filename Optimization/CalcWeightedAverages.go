@@ -114,7 +114,6 @@ func calculateWeightedAverageRecursive(Weights interface{}, DataToWeight interfa
 		return 0, 0, nil
 	}
 
-	fmt.Printf("Returning totalWeightedValue: %f, totalWeight: %f\n", totalWeightedValue, totalWeight)
 	return totalWeightedValue, totalWeight, nil
 }
 

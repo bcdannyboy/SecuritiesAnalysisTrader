@@ -72,7 +72,7 @@ func main() {
 		RandSymbols := []string{}
 		symbolMap := make(map[string]bool) // Map to track added symbols
 
-		for len(RandSymbols) < 100 {
+		for len(RandSymbols) < 2 {
 			Symbol := SymbolList[rand.Intn(len(SymbolList))]
 			fmt.Printf("Debug picking random symbol: %s\n", Symbol)
 

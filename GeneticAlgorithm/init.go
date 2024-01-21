@@ -92,10 +92,8 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 					localTotalScore := 0.0
 					for j := start; j < end; j++ {
 						lScore := CalculateTotalScore(ga.PopulationWeights[j], ga.Companies)
-						fmt.Printf("Calculated score %f for weight set %d in generation %d\n", lScore, j, generation)
 						localTotalScore += lScore
 					}
-					fmt.Printf("got local total score %f for start %d to end %d in generation %d\n", localTotalScore, start, end, generation)
 					scoreMutex.Lock()
 					fmt.Printf("Adding %f to total score from start %d to end %d in generation %d\n", localTotalScore, start, end, generation)
 					totalScore += localTotalScore

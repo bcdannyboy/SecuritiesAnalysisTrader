@@ -87,7 +87,6 @@ func CalculateTotalScore(weights *Optimization.SecurityAnalysisWeights, companie
 	var totalScore float64
 	for _, company := range companies {
 		score, err := Optimization.CalculateWeightedAverage(weights, company.Data, "root")
-		fmt.Printf("got score in CalculateTotalScore %f\n", score)
 		if err != nil {
 			fmt.Printf("Error calculating weighted average for company %s: %v\n", company.Ticker, err)
 			// Decide how to handle the error. For example, you might continue with a default score.
