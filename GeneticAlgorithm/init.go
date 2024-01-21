@@ -61,7 +61,7 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 	// Cache for storing fitness scores
 	fitnessCache := make(map[string]float64)
 
-	batchSize := 1000
+	batchSize := 5000
 	for generation := 0; generation < ga.Generations; generation++ {
 		fmt.Printf("Starting Generation %d with %d weight sets\n", generation, len(ga.PopulationWeights))
 
@@ -76,6 +76,35 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 			resultsChan := make(chan offspringResult, batchEnd-batchStart)
 			var wg sync.WaitGroup
 
+			var totalScore float64
+			var scoreMutex sync.Mutex
+			// Calculate the total score for the current generation in batches
+			chunkSize := (len(ga.PopulationWeights) + batchSize - 1) / batchSize
+			for i := 0; i < len(ga.PopulationWeights); i += chunkSize {
+				end := i + chunkSize
+				if end > len(ga.PopulationWeights) {
+					end = len(ga.PopulationWeights)
+				}
+
+				wg.Add(1)
+				go func(start, end int) {
+					defer wg.Done()
+					localTotalScore := 0.0
+					for j := start; j < end; j++ {
+						lScore := CalculateTotalScore(ga.PopulationWeights[j], ga.Companies)
+						fmt.Printf("Calculated score %f for weight set %d in generation %d\n", lScore, j, generation)
+						localTotalScore += lScore
+					}
+					fmt.Printf("got local total score %f for start %d to end %d in generation %d\n", localTotalScore, start, end, generation)
+					scoreMutex.Lock()
+					fmt.Printf("Adding %f to total score from start %d to end %d in generation %d\n", localTotalScore, start, end, generation)
+					totalScore += localTotalScore
+					scoreMutex.Unlock()
+				}(i, end)
+			}
+
+			wg.Wait()
+
 			for i := batchStart; i < batchEnd; i++ {
 				wg.Add(1)
 				go func(index int) {
@@ -83,7 +112,7 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 					fmt.Printf("Creating offspring %d in generation %d\n", index, generation)
 
 					// Parent Selection
-					parent1Weights, parent2Weights := SelectParents(ga)
+					parent1Weights, parent2Weights := SelectParents(ga.PopulationWeights, ga.Companies, totalScore, ga.TournamentThreshold)
 					fmt.Printf("Selected parents for offspring %d\n", index)
 
 					// Crossover

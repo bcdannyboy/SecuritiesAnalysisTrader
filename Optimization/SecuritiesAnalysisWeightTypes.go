@@ -3,7 +3,7 @@ package Optimization
 type SecurityAnalysisWeights struct {
 	CalculationsOutlookFundamentals struct {
 		Fundamentals struct {
-			BalanceSheetStatements []struct {
+			BalanceSheetStatements struct {
 				CashAndCashEquivalents                  float64 `json:"cashAndCashEquivalents"`
 				ShortTermInvestments                    float64 `json:"shortTermInvestments"`
 				CashAndShortTermInvestments             float64 `json:"cashAndShortTermInvestments"`
@@ -44,7 +44,7 @@ type SecurityAnalysisWeights struct {
 				TotalDebt                               float64 `json:"totalDebt"`
 				NetDebt                                 float64 `json:"netDebt"`
 			} `json:"BalanceSheetStatements"`
-			BalanceSheetStatementGrowth []struct {
+			BalanceSheetStatementGrowth struct {
 				GrowthCashAndCashEquivalents                  float64 `json:"growthCashAndCashEquivalents"`
 				GrowthShortTermInvestments                    float64 `json:"growthShortTermInvestments"`
 				GrowthCashAndShortTermInvestments             float64 `json:"growthCashAndShortTermInvestments"`
@@ -85,7 +85,7 @@ type SecurityAnalysisWeights struct {
 				GrowthTotalDebt                               float64 `json:"growthTotalDebt"`
 				GrowthNetDebt                                 float64 `json:"growthNetDebt"`
 			} `json:"BalanceSheetStatementGrowth"`
-			BalanceSheetStatementAsReported []struct {
+			BalanceSheetStatementAsReported struct {
 				Liabilitiesandstockholdersequity                float64 `json:"liabilitiesandstockholdersequity"`
 				Liabilities                                     float64 `json:"liabilities"`
 				Liabilitiescurrent                              float64 `json:"liabilitiescurrent"`
@@ -118,7 +118,7 @@ type SecurityAnalysisWeights struct {
 				Accumulatedothercomprehensiveincomelossnetoftax float64 `json:"accumulatedothercomprehensiveincomelossnetoftax"`
 				Othershorttermborrowings                        float64 `json:"othershorttermborrowings"`
 			} `json:"BalanceSheetStatementAsReported"`
-			GrowthBalanceSheetStatementAsReported []struct {
+			GrowthBalanceSheetStatementAsReported struct {
 				Growthliabilitiesandstockholdersequity                float64 `json:"growthliabilitiesandstockholdersequity"`
 				Growthliabilities                                     float64 `json:"growthliabilities"`
 				Growthliabilitiescurrent                              float64 `json:"growthliabilitiescurrent"`
@@ -152,7 +152,7 @@ type SecurityAnalysisWeights struct {
 				Growthothershorttermborrowings                        float64 `json:"growthothershorttermborrowings"`
 			} `json:"GrowthBalanceSheetStatementAsReported"`
 			DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported float64 `json:"DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported"`
-			IncomeStatement                                                    []struct {
+			IncomeStatement                                                    struct {
 				Revenue                                 float64 `json:"revenue"`
 				CostOfRevenue                           float64 `json:"costOfRevenue"`
 				GrossProfit                             float64 `json:"grossProfit"`
@@ -181,7 +181,7 @@ type SecurityAnalysisWeights struct {
 				WeightedAverageShsOut                   float64 `json:"weightedAverageShsOut"`
 				WeightedAverageShsOutDil                float64 `json:"weightedAverageShsOutDil"`
 			} `json:"IncomeStatement"`
-			IncomeStatementGrowth []struct {
+			IncomeStatementGrowth struct {
 				GrowthRevenue                          float64 `json:"growthRevenue"`
 				GrowthCostOfRevenue                    float64 `json:"growthCostOfRevenue"`
 				GrowthGrossProfit                      float64 `json:"growthGrossProfit"`
@@ -209,7 +209,7 @@ type SecurityAnalysisWeights struct {
 				GrowthWeightedAverageShsOut            float64 `json:"growthWeightedAverageShsOut"`
 				GrowthWeightedAverageShsOutDil         float64 `json:"growthWeightedAverageShsOutDil"`
 			} `json:"IncomeStatementGrowth"`
-			IncomeStatementAsReported []struct {
+			IncomeStatementAsReported struct {
 				Costofgoodsandservicessold                                                                  float64 `json:"costofgoodsandservicessold"`
 				Netincomeloss                                                                               float64 `json:"netincomeloss"`
 				Researchanddevelopmentexpense                                                               float64 `json:"researchanddevelopmentexpense"`
@@ -238,7 +238,7 @@ type SecurityAnalysisWeights struct {
 				Othercomprehensiveincomelossderivativeinstrumentgainlossafterreclassificationandtax         float64 `json:"othercomprehensiveincomelossderivativeinstrumentgainlossafterreclassificationandtax"`
 				Othercomprehensiveincomelosscashflowhedgegainlossreclassificationaftertax                   float64 `json:"othercomprehensiveincomelosscashflowhedgegainlossreclassificationaftertax"`
 			} `json:"IncomeStatementAsReported"`
-			GrowthIncomeStatementAsReported []struct {
+			GrowthIncomeStatementAsReported struct {
 				Costofgoodsandservicessoldgrowth                                                                  float64 `json:"costofgoodsandservicessoldgrowth"`
 				Netincomelossgrowth                                                                               float64 `json:"netincomelossgrowth"`
 				Researchanddevelopmentexpensegrowth                                                               float64 `json:"researchanddevelopmentexpensegrowth"`
@@ -268,7 +268,7 @@ type SecurityAnalysisWeights struct {
 				Othercomprehensiveincomelosscashflowhedgegainlossreclassificationaftertaxgrowth                   float64 `json:"othercomprehensiveincomelosscashflowhedgegainlossreclassificationaftertaxgrowth"`
 			} `json:"GrowthIncomeStatementAsReported"`
 			DiscrepancyIncomeStatementAndIncomeStatementAsReported float64 `json:"DiscrepancyIncomeStatementAndIncomeStatementAsReported"`
-			CashFlowStatement                                      []struct {
+			CashFlowStatement                                      struct {
 				NetIncome                                float64 `json:"netIncome"`
 				DepreciationAndAmortization              float64 `json:"depreciationAndAmortization"`
 				DeferredIncomeTax                        float64 `json:"deferredIncomeTax"`
@@ -300,7 +300,7 @@ type SecurityAnalysisWeights struct {
 				CapitalExpenditure                       float64 `json:"capitalExpenditure"`
 				FreeCashFlow                             float64 `json:"freeCashFlow"`
 			} `json:"CashFlowStatement"`
-			CashFlowStatementGrowth []struct {
+			CashFlowStatementGrowth struct {
 				GrowthNetIncome                                float64 `json:"growthNetIncome"`
 				GrowthDepreciationAndAmortization              float64 `json:"growthDepreciationAndAmortization"`
 				GrowthDeferredIncomeTax                        float64 `json:"growthDeferredIncomeTax"`
@@ -332,7 +332,7 @@ type SecurityAnalysisWeights struct {
 				GrowthCapitalExpenditure                       float64 `json:"growthCapitalExpenditure"`
 				GrowthFreeCashFlow                             float64 `json:"growthFreeCashFlow"`
 			} `json:"CashFlowStatementGrowth"`
-			CashFlowStatementAsReported []struct {
+			CashFlowStatementAsReported struct {
 				Paymentsforrepurchaseofcommonstock                                                                             float64 `json:"paymentsforrepurchaseofcommonstock"`
 				Sharebasedcompensation                                                                                         float64 `json:"sharebasedcompensation"`
 				Netincomeloss                                                                                                  float64 `json:"netincomeloss"`
@@ -370,7 +370,7 @@ type SecurityAnalysisWeights struct {
 				Increasedecreaseinotheroperatingassets                                                                         float64 `json:"increasedecreaseinotheroperatingassets"`
 				Proceedsfromothershorttermdebt                                                                                 float64 `json:"proceedsfromothershorttermdebt"`
 			} `json:"CashFlowStatementAsReported"`
-			CashFlowStatementAsReportedGrowth []struct {
+			CashFlowStatementAsReportedGrowth struct {
 				Paymentsforrepurchaseofcommonstockgrowth                                                                             float64 `json:"paymentsforrepurchaseofcommonstockgrowth"`
 				Sharebasedcompensationgrowth                                                                                         float64 `json:"sharebasedcompensationgrowth"`
 				Netincomelossgrowth                                                                                                  float64 `json:"netincomelossgrowth"`
@@ -409,7 +409,7 @@ type SecurityAnalysisWeights struct {
 				Proceedsfromothershorttermdebtgrowth                                                                                 float64 `json:"proceedsfromothershorttermdebtgrowth"`
 			} `json:"CashFlowStatementAsReportedGrowth"`
 			DiscrepancyCashFlowStatementAndCashFlowStatementAsReported float64 `json:"DiscrepancyCashFlowStatementAndCashFlowStatementAsReported"`
-			FinancialRatios                                            []struct {
+			FinancialRatios                                            struct {
 				CurrentRatio                       float64 `json:"currentRatio"`
 				QuickRatio                         float64 `json:"quickRatio"`
 				CashRatio                          float64 `json:"cashRatio"`
@@ -465,7 +465,7 @@ type SecurityAnalysisWeights struct {
 				EnterpriseValueMultiple            float64 `json:"enterpriseValueMultiple"`
 				PriceFairValue                     float64 `json:"priceFairValue"`
 			} `json:"FinancialRatios"`
-			FinancialRatiosTTM []struct {
+			FinancialRatiosTTM struct {
 				DividendYielTTM                       float64 `json:"dividendYielTTM"`
 				DividendYielPercentageTTM             float64 `json:"dividendYielPercentageTTM"`
 				PeRatioTTM                            float64 `json:"peRatioTTM"`
@@ -525,7 +525,7 @@ type SecurityAnalysisWeights struct {
 				PriceFairValueTTM                     float64 `json:"priceFairValueTTM"`
 				DividendPerShareTTM                   float64 `json:"dividendPerShareTTM"`
 			} `json:"FinancialRatiosTTM"`
-			FinancialRatiosGrowth []struct {
+			FinancialRatiosGrowth struct {
 				CurrentRatio                       float64 `json:"currentRatio"`
 				QuickRatio                         float64 `json:"quickRatio"`
 				CashRatio                          float64 `json:"cashRatio"`
@@ -581,7 +581,7 @@ type SecurityAnalysisWeights struct {
 				EnterpriseValueMultiple            float64 `json:"enterpriseValueMultiple"`
 				PriceFairValue                     float64 `json:"priceFairValue"`
 			} `json:"FinancialRatiosGrowth"`
-			FinancialRatiosTTMGrowth []struct {
+			FinancialRatiosTTMGrowth struct {
 				DividendYielTTM                       float64 `json:"dividendYielTTM"`
 				DividendYielPercentageTTM             float64 `json:"dividendYielPercentageTTM"`
 				PeRatioTTM                            float64 `json:"peRatioTTM"`
@@ -654,7 +654,7 @@ type SecurityAnalysisWeights struct {
 			FMPDcf            float64 `json:"FMPDcf"`
 			StockPrice        float64 `json:"StockPrice"`
 			TotalExecutivePay float64 `json:"TotalExecutivePay"`
-			InsiderTrades     []struct {
+			InsiderTrades     struct {
 				SecuritiesOwned      float64 `json:"SecuritiesOwned"`
 				SecuritiesTransacted float64 `json:"SecuritiesTransacted"`
 				TotalPrice           float64 `json:"TotalPrice"`
@@ -679,7 +679,7 @@ type SecurityAnalysisWeights struct {
 			} `json:"InsiderTradesGrowthMeanSTD"`
 			Splits       float64 `json:"Splits"`
 			SplitMeanSTD float64 `json:"SplitMeanSTD"`
-			DividendHist []struct {
+			DividendHist struct {
 				AdjDividend float64 `json:"AdjDividend"`
 				Dividend    float64 `json:"Dividend"`
 			} `json:"DividendHist"`
@@ -701,7 +701,7 @@ type SecurityAnalysisWeights struct {
 			CurrentVolume    float64 `json:"CurrentVolume"`
 			YearHigh         float64 `json:"YearHigh"`
 			YearLow          float64 `json:"YearLow"`
-			Ratios           []struct {
+			Ratios           struct {
 				AssetTurnoverTTM                      float64 `json:"AssetTurnoverTTM"`
 				CapitalExpenditureCoverageRatioTTM    float64 `json:"CapitalExpenditureCoverageRatioTTM"`
 				CashConversionCycleTTM                float64 `json:"CashConversionCycleTTM"`
