@@ -70,10 +70,17 @@ func main() {
 	SymbolList := Backtest.SP500Tickers
 	if Debug {
 		RandSymbols := []string{}
-		for i := 0; i < 100; i++ {
+		symbolMap := make(map[string]bool) // Map to track added symbols
+
+		for len(RandSymbols) < 100 {
 			Symbol := SymbolList[rand.Intn(len(SymbolList))]
 			fmt.Printf("Debug picking random symbol: %s\n", Symbol)
-			RandSymbols = append(RandSymbols, Symbol)
+
+			// Check if the symbol is already in the map
+			if !symbolMap[Symbol] {
+				RandSymbols = append(RandSymbols, Symbol)
+				symbolMap[Symbol] = true // Mark this symbol as added
+			}
 		}
 
 		SymbolList = RandSymbols
@@ -85,7 +92,7 @@ func main() {
 		panic("No company data objects returned")
 	}
 
-	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 1000, 5000, 0.1337, 0.5, 0.1337, 0.1, 0.001, RiskFreeRate)
+	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 1000, 1000, 0.1337, 0.5, 0.1337, 0.1, 0.001, RiskFreeRate)
 	jOptimizedWeights, err := json.Marshal(OptimizedSecurityAnalysisWeights)
 
 	outname := "optimized_weights.json"

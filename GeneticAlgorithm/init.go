@@ -1,6 +1,8 @@
 package GeneticAlgorithm
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Backtest"
@@ -56,7 +58,10 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 		index   int
 	}
 
-	batchSize := 100
+	// Cache for storing fitness scores
+	fitnessCache := make(map[string]float64)
+
+	batchSize := 1000
 	for generation := 0; generation < ga.Generations; generation++ {
 		fmt.Printf("Starting Generation %d with %d weight sets\n", generation, len(ga.PopulationWeights))
 
@@ -89,24 +94,35 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 					offspringWeights = Mutate(offspringWeights, ga.MutationRate, ga.MaxWeightChange, ga.MinWeightChange)
 					fmt.Printf("Mutation completed for offspring %d\n", index)
 
-					// Select top 10 companies based on the security analysis score
-					top10Candles := getTop10Companies(ga.Companies, offspringWeights)
-					fmt.Printf("Selected top 10 companies for offspring %d\n", index)
+					// Generate a unique key for the current weights
+					weightsKey := generateWeightsKey(offspringWeights)
 
-					// Extract the tickers from the top 10 companies
-					top10Tickers := extractTickers(top10Candles)
-					fmt.Printf("Top 10 tickers for offspring %d\n", index)
+					// Check if the fitness score is already in the cache
+					if score, found := fitnessCache[weightsKey]; found {
+						fmt.Printf("Using cached fitness score for offspring %d\n", index)
+						resultsChan <- offspringResult{offspringWeights, score, index}
+					} else {
+						// Select top 10 companies based on the security analysis score
+						top10Candles := getTop10Companies(ga.Companies, offspringWeights)
+						fmt.Printf("Selected top 10 companies for offspring %d\n", index)
 
-					// Calculate fitness for the top 10 companies
-					fitnessScore := CalculateFitness(ga, top10Candles, top10Tickers)
-					if math.IsNaN(fitnessScore) || math.IsInf(fitnessScore, 0) {
-						fmt.Printf("Invalid fitness score for offspring %d in generation %d\n", index, generation)
-						resultsChan <- offspringResult{nil, 0, index}
-						return
+						// Extract the tickers from the top 10 companies
+						top10Tickers := extractTickers(top10Candles)
+						fmt.Printf("Top 10 tickers for offspring %d\n", index)
+
+						// Calculate fitness for the top 10 companies
+						fitnessScore := CalculateFitness(ga, top10Candles, top10Tickers)
+						if math.IsNaN(fitnessScore) || math.IsInf(fitnessScore, 0) {
+							fmt.Printf("Invalid fitness score for offspring %d in generation %d\n", index, generation)
+							resultsChan <- offspringResult{nil, 0, index}
+							return
+						}
+						fmt.Printf("Calculated fitness score %f for offspring %d\n", fitnessScore, index)
+
+						// Store the calculated fitness score in the cache
+						fitnessCache[weightsKey] = fitnessScore
+						resultsChan <- offspringResult{offspringWeights, fitnessScore, index}
 					}
-					fmt.Printf("Calculated fitness score %f for offspring %d\n", fitnessScore, index)
-
-					resultsChan <- offspringResult{offspringWeights, fitnessScore, index}
 				}(i)
 			}
 
@@ -126,6 +142,7 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 			}
 
 			mutex.Lock()
+			fmt.Printf("Locking mutex in generation %d to calculate best score \n", generation)
 			if localBestScore > bestScore {
 				bestScore = localBestScore
 				bestWeights = localBestWeights
@@ -220,4 +237,11 @@ func printBacktestResults(results map[string]Backtest.PortfolioResults) {
 		}
 
 	}
+}
+
+func generateWeightsKey(weights *Optimization.SecurityAnalysisWeights) string {
+	weightsStr := fmt.Sprintf("%v", weights)
+	hash := sha256.New()
+	hash.Write([]byte(weightsStr))
+	return hex.EncodeToString(hash.Sum(nil))
 }
