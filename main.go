@@ -67,7 +67,7 @@ func main() {
 		panic(fmt.Sprintf("Error parsing DefaultEffectiveTaxRate: %s", err.Error()))
 	}
 
-	SymbolList := Backtest.NASDAQStockTickers
+	SymbolList := Backtest.SP500Tickers
 	if Debug {
 		RandSymbols := []string{}
 		for i := 0; i < 100; i++ {

@@ -27,12 +27,18 @@ func calculateSharpeRatio(avgReturn, riskFreeRate, stdDev float64) float64 {
 }
 
 func calculateMaxDrawdown(cumulativeReturns []float64) float64 {
+	if len(cumulativeReturns) == 0 {
+		return math.Inf(-1) // TODO: what should we return here?
+	}
 	peak := cumulativeReturns[0]
 	maxDrawdown := 0.0
 
 	for _, value := range cumulativeReturns {
 		if value > peak {
 			peak = value
+		}
+		if peak == 0 {
+			maxDrawdown = peak - value
 		}
 		drawdown := (peak - value) / peak
 		if drawdown > maxDrawdown {
