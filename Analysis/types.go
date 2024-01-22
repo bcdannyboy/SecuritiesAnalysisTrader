@@ -8,173 +8,173 @@ import (
 type CompanyFundamentals struct {
 	Symbol string
 
-	BalanceSheetStatements                                             []objects.BalanceSheetStatement
-	BalanceSheetStatementGrowth                                        []objects.BalanceSheetStatementGrowth
-	BalanceSheetStatementAsReported                                    []objects.BalanceSheetStatementAsReported
-	GrowthBalanceSheetStatementAsReported                              []fundamentals.GrowthBalanceSheetStatementAsReported
-	DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported []fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported
+	BalanceSheetStatements                                             []objects.BalanceSheetStatement                                                   `json:"balancesheetstatements,omitempty"`
+	BalanceSheetStatementGrowth                                        []objects.BalanceSheetStatementGrowth                                             `json:"balancesheetstatementgrowth,omitempty"`
+	BalanceSheetStatementAsReported                                    []objects.BalanceSheetStatementAsReported                                         `json:"balancesheetstatementasreported,omitempty"`
+	GrowthBalanceSheetStatementAsReported                              []fundamentals.GrowthBalanceSheetStatementAsReported                              `json:"growthbalancesheetstatementasreported,omitempty"`
+	DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported []fundamentals.DiscrepancyBalanceSheetStatementAndBalanceSheetStatementAsReported `json:"discrepancybalancesheetstatementandbalancesheetstatementasreported,omitempty"`
 
-	IncomeStatement                                        []objects.IncomeStatement
-	IncomeStatementGrowth                                  []objects.IncomeStatementGrowth
-	IncomeStatementAsReported                              []objects.IncomeStatementAsReported
-	GrowthIncomeStatementAsReported                        []fundamentals.GrowthIncomeStatementAsReported
-	DiscrepancyIncomeStatementAndIncomeStatementAsReported []fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported
+	IncomeStatement                                        []objects.IncomeStatement                                             `json:"incomestatement,omitempty"`
+	IncomeStatementGrowth                                  []objects.IncomeStatementGrowth                                       `json:"incomestatementgrowth,omitempty"`
+	IncomeStatementAsReported                              []objects.IncomeStatementAsReported                                   `json:"incomestatementasreported,omitempty"`
+	GrowthIncomeStatementAsReported                        []fundamentals.GrowthIncomeStatementAsReported                        `json:"growthincomestatementasreported,omitempty"`
+	DiscrepancyIncomeStatementAndIncomeStatementAsReported []fundamentals.DiscrepancyIncomeStatementAndIncomeStatementAsReported `json:"discrepancyincomestatementandincomestatementasreported,omitempty"`
 
-	CashFlowStatement                                          []objects.CashFlowStatement
-	CashFlowStatementGrowth                                    []objects.CashFlowStatementGrowth
-	CashFlowStatementAsReported                                []objects.CashFlowStatementAsReported
-	CashFlowStatementAsReportedGrowth                          []fundamentals.CashFlowStatementAsReportedGrowth
-	DiscrepancyCashFlowStatementAndCashFlowStatementAsReported []fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported
+	CashFlowStatement                                          []objects.CashFlowStatement                                               `json:"cashflowstatement,omitempty"`
+	CashFlowStatementGrowth                                    []objects.CashFlowStatementGrowth                                         `json:"cashflowstatementgrowth,omitempty"`
+	CashFlowStatementAsReported                                []objects.CashFlowStatementAsReported                                     `json:"cashflowstatementasreported,omitempty"`
+	CashFlowStatementAsReportedGrowth                          []fundamentals.CashFlowStatementAsReportedGrowth                          `json:"cashflowstatementasreportedgrowth,omitempty"`
+	DiscrepancyCashFlowStatementAndCashFlowStatementAsReported []fundamentals.DiscrepancyCashFlowStatementAndCashFlowStatementAsReported `json:"discrepancycashflowstatementandcashflowstatementasreported,omitempty"`
 
-	FinancialRatios          []objects.FinancialRatios
-	FinancialRatiosTTM       []objects.FinancialRatiosTTM
-	FinancialRatiosGrowth    []fundamentals.FinancialRatiosGrowth
-	FinancialRatiosTTMGrowth []fundamentals.FinancialRatiosTTMGrowth
+	FinancialRatios          []objects.FinancialRatios               `json:"financialratios,omitempty"`
+	FinancialRatiosTTM       []objects.FinancialRatiosTTM            `json:"financialratiosttm,omitempty"`
+	FinancialRatiosGrowth    []fundamentals.FinancialRatiosGrowth    `json:"financialratiosgrowth,omitempty"`
+	FinancialRatiosTTMGrowth []fundamentals.FinancialRatiosTTMGrowth `json:"financialratiosttmgrowth,omitempty"`
 
-	FullFinancialStatement       []objects.FullFinancialStatementAsReported
-	FullFinancialStatementGrowth []objects.FinancialStatementsGrowth
+	FullFinancialStatement       []objects.FullFinancialStatementAsReported `json:"fullfinancialstatementasreported,omitempty"`
+	FullFinancialStatementGrowth []objects.FinancialStatementsGrowth        `json:"fullfinancialstatementgrowth,omitempty"`
 }
 
 type FundamentalsCalculationsResults struct {
-	Symbol           string
-	Fundamentals     CompanyFundamentals
-	PeriodLength     objects.CompanyValuationPeriod
-	Outlook          CompanyOutlook
-	NumEmployees     float64
-	CostOfEquity     float64
-	Beta             float64
-	EffectiveTaxRate float64
+	Symbol           string                         `json:"symbol,omitempty"`
+	Fundamentals     CompanyFundamentals            `json:"fundamentals,omitempty"`
+	PeriodLength     objects.CompanyValuationPeriod `json:"periodlength,omitempty"`
+	Outlook          CompanyOutlook                 `json:"outlook,omitempty"`
+	NumEmployees     float64                        `json:"numemployees,omitempty"`
+	CostOfEquity     float64                        `json:"costofequity,omitempty"`
+	Beta             float64                        `json:"beta,omitempty"`
+	EffectiveTaxRate float64                        `json:"effectivetaxrate,omitempty"`
 
 	BalanceSheet struct {
-		DifferenceInLengthBetweenBalanceSheetStatementAndBalanceSheetStatementAsReported int
-		StatementAndReportDiscrepancyGrowth                                              map[string][]float64
+		DifferenceInLengthBetweenBalanceSheetStatementAndBalanceSheetStatementAsReported int                  `json:"differenceinlengthbetweenbalancesheetstatementandbalancesheetstatementasreported,omitempty"`
+		StatementAndReportDiscrepancyGrowth                                              map[string][]float64 `json:"statementandreportdiscrepancygrowth,omitempty"`
 
-		TotalGapsInBalanceSheetStatementPeriods                  int
-		TotalConsecutivePeriodsWithNoGapsInBalanceSheetStatement int
-		TotalConsecutiveMissingPeriodsInBalanceSheetStatement    int
+		TotalGapsInBalanceSheetStatementPeriods                  int `json:"totalgapsinbalancesheetstatementperiods,omitempty"`
+		TotalConsecutivePeriodsWithNoGapsInBalanceSheetStatement int `json:"totalconsecutiveperiodswithnogapsinbalancesheetstatement,omitempty"`
+		TotalConsecutiveMissingPeriodsInBalanceSheetStatement    int `json:"totalconsecutivemissingperiodsinbalancesheetstatement,omitempty"`
 
-		TotalGapsInBalanceSheetStatementAsReportedPeriods                  int
-		TotalConsecutivePeriodsWithNoGapsInBalanceSheetStatementAsReported int
-		TotalConsecutiveMissingPeriodsInBalanceSheetStatementAsReported    int
+		TotalGapsInBalanceSheetStatementAsReportedPeriods                  int `json:"totalgapsinbalancesheetstatementasreportedperiods,omitempty"`
+		TotalConsecutivePeriodsWithNoGapsInBalanceSheetStatementAsReported int `json:"totalconsecutiveperiodswithnogapsinbalancesheetstatementasreported,omitempty"`
+		TotalConsecutiveMissingPeriodsInBalanceSheetStatementAsReported    int `json:"totalconsecutivemissingperiodsinbalancesheetstatementasreported,omitempty"`
 
-		MeanSTDBalanceSheetStatement                          map[string][]interface{}
-		MeanSTDBalanceSheetStatementAsReported                map[string][]interface{}
-		MeanSTDBalanceSheetStatementGrowth                    map[string][]interface{}
-		MeanSTDBalanceSheetStatementAsReportedGrowth          map[string][]interface{}
-		MeanSTDBalanceSheetDiscrepancies                      map[string][]interface{}
-		MeanZippedSTDBalanceSheetStatementAndAsReported       map[string][]interface{}
-		MeanZippedSTDBalanceSheetStatementAndAsReportedGrowth map[string][]interface{}
-	}
+		MeanSTDBalanceSheetStatement                          map[string][]interface{} `json:"meanstdbalancesheetstatement,omitempty"`
+		MeanSTDBalanceSheetStatementAsReported                map[string][]interface{} `json:"meanstdbalancesheetstatementasreported,omitempty"`
+		MeanSTDBalanceSheetStatementGrowth                    map[string][]interface{} `json:"meanstdbalancesheetstatementgrowth,omitempty"`
+		MeanSTDBalanceSheetStatementAsReportedGrowth          map[string][]interface{} `json:"meanstdbalancesheetstatementasreportedgrowth,omitempty"`
+		MeanSTDBalanceSheetDiscrepancies                      map[string][]interface{} `json:"meanstdbalancesheetdiscrepancies,omitempty"`
+		MeanZippedSTDBalanceSheetStatementAndAsReported       map[string][]interface{} `json:"meanstdzippedbalancesheetstatementandasreported,omitempty"`
+		MeanZippedSTDBalanceSheetStatementAndAsReportedGrowth map[string][]interface{} `json:"meanstdzippedbalancesheetstatementandasreportedgrowth,omitempty"`
+	} `json:"balancesheet,omitempty"`
 
 	IncomeStatement struct {
-		DifferenceInLengthBetweenIncomeStatementAndIncomeStatementAsReported int
-		StatementAndReportDiscrepancyGrowth                                  map[string][]float64
+		DifferenceInLengthBetweenIncomeStatementAndIncomeStatementAsReported int                  `json:"differenceinlengthbetweenincomestatementandincomestatementasreported,omitempty"`
+		StatementAndReportDiscrepancyGrowth                                  map[string][]float64 `json:"statementandreportdiscrepancygrowth,omitempty"`
 
-		TotalGapsInIncomeStatementPeriods                  int
-		TotalConsecutivePeriodsWithNoGapsInIncomeStatement int
-		TotalConsecutiveMissingPeriodsInIncomeStatement    int
+		TotalGapsInIncomeStatementPeriods                  int `json:"totalgapsinincomestatementperiods,omitempty"`
+		TotalConsecutivePeriodsWithNoGapsInIncomeStatement int `json:"totalconsecutiveperiodswithnogapsinincomestatement,omitempty"`
+		TotalConsecutiveMissingPeriodsInIncomeStatement    int `json:"totalconsecutivemissingperiodsinincomestatement,omitempty"`
 
-		TotalGapsInIncomeStatementAsReportedPeriods                  int
-		TotalConsecutivePeriodsWithNoGapsInIncomeStatementAsReported int
-		TotalConsecutiveMissingPeriodsInIncomeStatementAsReported    int
+		TotalGapsInIncomeStatementAsReportedPeriods                  int `json:"totalgapsinincomestatementasreportedperiods,omitempty"`
+		TotalConsecutivePeriodsWithNoGapsInIncomeStatementAsReported int `json:"totalconsecutiveperiodswithnogapsinincomestatementasreported,omitempty"`
+		TotalConsecutiveMissingPeriodsInIncomeStatementAsReported    int `json:"totalconsecutivemissingperiodsinincomestatementasreported,omitempty"`
 
-		MeanSTDIncomeStatement                          map[string][]interface{}
-		MeanSTDIncomeStatementAsReported                map[string][]interface{}
-		MeanSTDIncomeStatementGrowth                    map[string][]interface{}
-		MeanSTDIncomeStatementAsReportedGrowth          map[string][]interface{}
-		MeanSTDIncomeStatementDiscrepancies             map[string][]interface{}
-		MeanZippedSTDIncomeStatementAndAsReported       map[string][]interface{}
-		MeanZippedSTDIncomeStatementAndAsReportedGrowth map[string][]interface{}
-	}
+		MeanSTDIncomeStatement                          map[string][]interface{} `json:"meanstdincomestatement,omitempty"`
+		MeanSTDIncomeStatementAsReported                map[string][]interface{} `json:"meanstdincomestatementasreported,omitempty"`
+		MeanSTDIncomeStatementGrowth                    map[string][]interface{} `json:"meanstdincomestatementgrowth,omitempty"`
+		MeanSTDIncomeStatementAsReportedGrowth          map[string][]interface{} `json:"meanstdincomestatementasreportedgrowth,omitempty"`
+		MeanSTDIncomeStatementDiscrepancies             map[string][]interface{} `json:"meanstdincomestatementdiscrepancies,omitempty"`
+		MeanZippedSTDIncomeStatementAndAsReported       map[string][]interface{} `json:"meanstdincomestatementandasreported,omitempty"`
+		MeanZippedSTDIncomeStatementAndAsReportedGrowth map[string][]interface{} `json:"meanstdincomestatementandasreportedgrowth,omitempty"`
+	} `json:"incomestatement,omitempty"`
 
 	CashFlowStatement struct {
-		DifferenceInLengthBetweenCashFlowStatementAndCashFlowStatementAsReported int
-		StatementAndReportDiscrepancyGrowth                                      map[string][]float64
+		DifferenceInLengthBetweenCashFlowStatementAndCashFlowStatementAsReported int                  `json:"differenceinlengthbetweencashflowstatementandcashflowstatementasreported,omitempty"`
+		StatementAndReportDiscrepancyGrowth                                      map[string][]float64 `json:"statementandreportdiscrepancygrowth,omitempty"`
 
-		TotalGapsInCashFlowStatementPeriods                  int
-		TotalConsecutivePeriodsWithNoGapsInCashFlowStatement int
-		TotalConsecutiveMissingPeriodsInCashFlowStatement    int
+		TotalGapsInCashFlowStatementPeriods                  int `json:"totalgapsincashflowstatementperiods,omitempty"`
+		TotalConsecutivePeriodsWithNoGapsInCashFlowStatement int `json:"totalconsecutiveperiodswithnogapsincashflowstatement,omitempty"`
+		TotalConsecutiveMissingPeriodsInCashFlowStatement    int `json:"totalconsecutivemissingperiodsincashflowstatement,omitempty"`
 
-		TotalGapsInCashFlowStatementAsReportedPeriods                  int
-		TotalConsecutivePeriodsWithNoGapsInCashFlowStatementAsReported int
-		TotalConsecutiveMissingPeriodsInCashFlowStatementAsReported    int
+		TotalGapsInCashFlowStatementAsReportedPeriods                  int `json:"totalgapsincashflowstatementasreportedperiods,omitempty"`
+		TotalConsecutivePeriodsWithNoGapsInCashFlowStatementAsReported int `json:"totalconsecutiveperiodswithnogapsincashflowstatementasreported,omitempty"`
+		TotalConsecutiveMissingPeriodsInCashFlowStatementAsReported    int `json:"totalconsecutivemissingperiodsincashflowstatementasreported,omitempty"`
 
-		MeanSTDCashFlowStatement                          map[string][]interface{}
-		MeanSTDCashFlowStatementAsReported                map[string][]interface{}
-		MeanSTDCashFlowStatementGrowth                    map[string][]interface{}
-		MeanSTDCashFlowStatementAsReportedGrowth          map[string][]interface{}
-		MeanSTDCashFlowStatementDiscrepancies             map[string][]interface{}
-		MeanZippedSTDCashFlowStatementAndAsReported       map[string][]interface{}
-		MeanZippedSTDCashFlowStatementAndAsReportedGrowth map[string][]interface{}
+		MeanSTDCashFlowStatement                          map[string][]interface{} `json:"meanstdcashflowstatement,omitempty"`
+		MeanSTDCashFlowStatementAsReported                map[string][]interface{} `json:"meanstdcashflowstatementasreported,omitempty"`
+		MeanSTDCashFlowStatementGrowth                    map[string][]interface{} `json:"meanstdcashflowstatementgrowth,omitempty"`
+		MeanSTDCashFlowStatementAsReportedGrowth          map[string][]interface{} `json:"meanstdcashflowstatementasreportedgrowth,omitempty"`
+		MeanSTDCashFlowStatementDiscrepancies             map[string][]interface{} `json:"meanstdcashflowstatementdiscrepancies,omitempty"`
+		MeanZippedSTDCashFlowStatementAndAsReported       map[string][]interface{} `json:"meanstdcashflowstatementandasreported,omitempty"`
+		MeanZippedSTDCashFlowStatementAndAsReportedGrowth map[string][]interface{} `json:"meanstdcashflowstatementandasreportedgrowth,omitempty"`
 	}
 
 	FinancialRatios struct {
-		FPMRatios          []objects.FinancialRatios
-		FPMRatiosTTM       []objects.FinancialRatiosTTM
-		FPMRatiosGrowth    []fundamentals.FinancialRatiosGrowth
-		FPMRatiosTTMGrowth []fundamentals.FinancialRatiosTTMGrowth
+		FPMRatios          []objects.FinancialRatios               `json:"financialratios,omitempty"`
+		FPMRatiosTTM       []objects.FinancialRatiosTTM            `json:"financialratiosttm,omitempty"`
+		FPMRatiosGrowth    []fundamentals.FinancialRatiosGrowth    `json:"financialratiosgrowth,omitempty"`
+		FPMRatiosTTMGrowth []fundamentals.FinancialRatiosTTMGrowth `json:"financialratiosttmgrowth,omitempty"`
 
-		AverageSTDFPMRatios                     map[string][]interface{}
-		AverageSTDFPMRatiosTTM                  map[string][]interface{}
-		AverageSTDFPMRatiosGrowth               map[string][]interface{}
-		AverageSTDFPMRatiosTTMGrowth            map[string][]interface{}
-		AverageSTDFZippedFPMRationsAndTTMRatios map[string][]interface{}
-	}
+		AverageSTDFPMRatios                     map[string][]interface{} `json:"averagestdfinancialratios,omitempty"`
+		AverageSTDFPMRatiosTTM                  map[string][]interface{} `json:"averagestdfinancialratiosttm,omitempty"`
+		AverageSTDFPMRatiosGrowth               map[string][]interface{} `json:"averagestdfinancialratiosgrowth,omitempty"`
+		AverageSTDFPMRatiosTTMGrowth            map[string][]interface{} `json:"averagestdfinancialratiosttmgrowth,omitempty"`
+		AverageSTDFZippedFPMRationsAndTTMRatios map[string][]interface{} `json:"averagestdzippedfinancialratiosandfinancialratiosttm,omitempty"`
+	} `json:"financialratios,omitempty"`
 
-	CustomCalculations              []map[string]*float64
-	CustomCalculationsGrowth        map[string][]float64
-	MeanSTDCustomCalculations       map[string][]interface{}
-	MeanSTDCustomCalculationsGrowth map[string][]interface{}
+	CustomCalculations              []map[string]*float64    `json:"customcalculations,omitempty"`
+	CustomCalculationsGrowth        map[string][]float64     `json:"customcalculationsgrowth,omitempty"`
+	MeanSTDCustomCalculations       map[string][]interface{} `json:"meanstdcustomcalculations,omitempty"`
+	MeanSTDCustomCalculationsGrowth map[string][]interface{} `json:"meanstdcustomcalculationsgrowth,omitempty"`
 
-	CustomCalculationsAsReported              []map[string]*float64
-	CustomCalculationsAsReportedGrowth        map[string][]float64
-	MeanSTDCustomCalculationsAsReported       map[string][]interface{}
-	MeanSTDCustomCalculationsAsReportedGrowth map[string][]interface{}
+	CustomCalculationsAsReported              []map[string]*float64    `json:"customcalculationsasreported,omitempty"`
+	CustomCalculationsAsReportedGrowth        map[string][]float64     `json:"customcalculationsasreportedgrowth,omitempty"`
+	MeanSTDCustomCalculationsAsReported       map[string][]interface{} `json:"meanstdcustomcalculationsasreported,omitempty"`
+	MeanSTDCustomCalculationsAsReportedGrowth map[string][]interface{} `json:"meanstdcustomcalculationsasreportedgrowth,omitempty"`
 
-	MeanZippedSTDCustomCalculationsAndAsReported       map[string][]interface{}
-	MeanZippedSTDCustomCalculationsAndAsReportedGrowth map[string][]interface{}
+	MeanZippedSTDCustomCalculationsAndAsReported       map[string][]interface{} `json:"meanstdzippedcustomcalculationsandasreported,omitempty"`
+	MeanZippedSTDCustomCalculationsAndAsReportedGrowth map[string][]interface{} `json:"meanstdzippedcustomcalculationsandasreportedgrowth,omitempty"`
 }
 
 type CompanyOutlook struct {
-	Beta                       float64
-	AvgVolume                  float64
-	MarketCap                  float64
-	LastDividend               float64
-	Changes                    float64
-	FMPDcfDiff                 float64
-	FMPDcf                     float64
-	StockPrice                 float64
-	TotalExecutivePay          float64
-	InsiderTrades              []map[string]*float64
-	InsiderTradesGrowth        map[string][]float64
-	InsiderTradesMeanSTD       map[string][]interface{}
-	InsiderTradesGrowthMeanSTD map[string][]interface{}
-	Splits                     []float64
-	SplitMeanSTD               map[string][]interface{}
-	DividendHist               []map[string]*float64
-	DividendHistGrowth         map[string][]float64
-	DividendHistMeanSTD        map[string][]interface{}
-	DividendHistGrowthMeanSTD  map[string][]interface{}
-	DividendYieldTTM           float64
-	CurrentVolume              float64
-	YearHigh                   float64
-	YearLow                    float64
-	Ratios                     []map[string]*float64
-	RatiosGrowth               map[string][]float64
-	RatiosMeanSTD              map[string][]interface{}
-	RatiosGrowthMeanSTD        map[string][]interface{}
+	Beta                       float64                  `json:"beta,omitempty"`
+	AvgVolume                  float64                  `json:"avgvolume,omitempty"`
+	MarketCap                  float64                  `json:"marketcap,omitempty"`
+	LastDividend               float64                  `json:"lastdividend,omitempty"`
+	Changes                    float64                  `json:"changes,omitempty"`
+	FMPDcfDiff                 float64                  `json:"fmpdcfdiff,omitempty"`
+	FMPDcf                     float64                  `json:"fmpdcf,omitempty"`
+	StockPrice                 float64                  `json:"stockprice,omitempty"`
+	TotalExecutivePay          float64                  `json:"totalexecutivepay,omitempty"`
+	InsiderTrades              []map[string]*float64    `json:"insidertrades,omitempty"`
+	InsiderTradesGrowth        map[string][]float64     `json:"insidertradesgrowth,omitempty"`
+	InsiderTradesMeanSTD       map[string][]interface{} `json:"insidertradesmeanstd,omitempty"`
+	InsiderTradesGrowthMeanSTD map[string][]interface{} `json:"insidertradesgrowthmeanstd,omitempty"`
+	Splits                     []float64                `json:"splits,omitempty"`
+	SplitMeanSTD               map[string][]interface{} `json:"splitmeanstd,omitempty"`
+	DividendHist               []map[string]*float64    `json:"dividendhist,omitempty"`
+	DividendHistGrowth         map[string][]float64     `json:"dividendhistgrowth,omitempty"`
+	DividendHistMeanSTD        map[string][]interface{} `json:"dividendhistmeanstd,omitempty"`
+	DividendHistGrowthMeanSTD  map[string][]interface{} `json:"dividendhistgrowthmeanstd,omitempty"`
+	DividendYieldTTM           float64                  `json:"dividendyieldttm,omitempty"`
+	CurrentVolume              float64                  `json:"currentvolume,omitempty"`
+	YearHigh                   float64                  `json:"yearhigh,omitempty"`
+	YearLow                    float64                  `json:"yearlow,omitempty"`
+	Ratios                     []map[string]*float64    `json:"ratios,omitempty"`
+	RatiosGrowth               map[string][]float64     `json:"ratiosgrowth,omitempty"`
+	RatiosMeanSTD              map[string][]interface{} `json:"ratiosmeanstd,omitempty"`
+	RatiosGrowthMeanSTD        map[string][]interface{} `json:"ratiosgrowthmeanstd,omitempty"`
 }
 
 type FinalNumbers struct {
-	CalculationsOutlookFundamentals FundamentalsCalculationsResults
-	FMPDCF                          []objects.DiscountedCashFlow
-	FMPDCFMeanSTD                   map[string][]interface{}
-	FMPMeanSTDDCF                   map[string][]interface{}
-	EmployeeCount                   float64
-	FMPRatings                      []map[string]*float64
-	FMPRatingsGrowth                map[string][]float64
-	FMPRatingsMeanSTD               map[string][]interface{}
-	FMPRatingsGrowthMeanSTD         map[string][]interface{}
+	CalculationsOutlookFundamentals FundamentalsCalculationsResults `json:"calculationsoutlookfundamentals,omitempty"`
+	FMPDCF                          []objects.DiscountedCashFlow    `json:"fmpdcf,omitempty"`
+	FMPDCFMeanSTD                   map[string][]interface{}        `json:"fmpdcfmeanstd,omitempty"`
+	FMPMeanSTDDCF                   map[string][]interface{}        `json:"fmpmeanstddcf,omitempty"`
+	EmployeeCount                   float64                         `json:"employeecount,omitempty"`
+	FMPRatings                      []map[string]*float64           `json:"fmpratings,omitempty"`
+	FMPRatingsGrowth                map[string][]float64            `json:"fmpratingsgrowth,omitempty"`
+	FMPRatingsMeanSTD               map[string][]interface{}        `json:"fmpratingsmeanstd,omitempty"`
+	FMPRatingsGrowthMeanSTD         map[string][]interface{}        `json:"fmpratingsgrowthmeanstd,omitempty"`
 }
 
 type CompanyData struct {

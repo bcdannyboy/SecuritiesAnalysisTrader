@@ -6,11 +6,11 @@
 
 ## .env
 
-`API_KEY` - API key from https://site.financialmodelingprep.com/developer/docs/dashboard
-`DEBUG` - Debug printing
-`MarketRate` - market rate of return
-`RiskFreeRate` - risk free rate
-`DefaultEffectiveTaxRate` - effective tax rate to use if one isn't reported
+- `API_KEY` - API key from https://site.financialmodelingprep.com/developer/docs/dashboard
+- `DEBUG` - Debug printing
+- `MarketRate` - market rate of return
+- `RiskFreeRate` - risk free rate
+- `DefaultEffectiveTaxRate` - effective tax rate to use if one isn't reported
 
 ## Steps
 

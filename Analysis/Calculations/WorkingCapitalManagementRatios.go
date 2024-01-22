@@ -1,20 +1,32 @@
 package Calculations
 
+import "fmt"
+
 func AverageCollectionPeriod(AccountsReceivableTurnoverRatio float64) float64 {
 	// The average collection period is the average number of days in a year that a company takes to collect payments owed, after a sale of its goods or services has been made.
 
+	if AccountsReceivableTurnoverRatio == 0 {
+		fmt.Printf("got 0 for AccountsReceivableTurnoverRatio")
+		return 0
+	}
 	return 365 / AccountsReceivableTurnoverRatio
 }
 
 func AccountsPayableTurnoverRatio(SupplierPurchases float64, AverageAccountsPayable float64) float64 {
 	// The accounts payable turnover ratio is a short-term liquidity measure used to quantify the rate at which a company pays off its suppliers. Accounts payable turnover ratio is calculated by taking the total purchases made from suppliers and dividing it by the average accounts payable amount during the same period.
-
+	if AverageAccountsPayable == 0 {
+		fmt.Printf("got 0 for AverageAccountsPayable with SupplierPurchases: %f and AverageAccountsPayable: %f", SupplierPurchases, AverageAccountsPayable)
+		return 0
+	}
 	return SupplierPurchases / AverageAccountsPayable
 }
 
 func AverageAccountsPayablePaymentPeriod(AccountsPayableTurnoverRatio float64) float64 {
 	// The average payable period is the average number of days it takes a company to pay off credit accounts payable.
-
+	if AccountsPayableTurnoverRatio == 0 {
+		fmt.Printf("got 0 for AccountsPayableTurnoverRatio")
+		return 0
+	}
 	return 365 / AccountsPayableTurnoverRatio
 }
 
@@ -38,7 +50,10 @@ func EconomicValueAdded(NOPAT, WACC, TotalCapital float64) float64 {
 
 func ReturnOnInvestedCapital(NOPAT, TotalInvestedCapital float64) float64 {
 	// Return on invested capital (ROIC) is a calculation used to assess a company's efficiency at allocating the capital under its control to profitable investments.
-
+	if TotalInvestedCapital == 0 {
+		fmt.Printf("got 0 for TotalInvestedCapital with NOPAT: %f and TotalInvestedCapital: %f", NOPAT, TotalInvestedCapital)
+		return 0
+	}
 	return NOPAT / TotalInvestedCapital
 }
 

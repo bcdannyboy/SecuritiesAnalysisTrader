@@ -12,6 +12,7 @@ import (
 	"math"
 	"sort"
 	"sync"
+	"time"
 )
 
 func InitGeneticAlgorithm(Companies []Analysis.CompanyData, Population int, Generations int, MutationRate float64, CrossoverRate float64, TournamentThreshold float64, MaxWeightChange float64, MinWeightChange float64, RiskFreeRate float64) *Optimization.SecurityAnalysisWeights {
@@ -61,8 +62,9 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 	// Cache for storing fitness scores
 	fitnessCache := make(map[string]float64)
 
-	batchSize := 5000
+	batchSize := 100
 	for generation := 0; generation < ga.Generations; generation++ {
+		startTime := time.Now()
 		fmt.Printf("Starting Generation %d with %d weight sets\n", generation, len(ga.PopulationWeights))
 
 		newGenerationWeights := make([]*Optimization.SecurityAnalysisWeights, len(ga.PopulationWeights))
@@ -78,18 +80,20 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 
 			var totalScore float64
 			var scoreMutex sync.Mutex
+
 			// Calculate the total score for the current generation in batches
-			chunkSize := (len(ga.PopulationWeights) + batchSize - 1) / batchSize
-			for i := 0; i < len(ga.PopulationWeights); i += chunkSize {
-				end := i + chunkSize
-				if end > len(ga.PopulationWeights) {
-					end = len(ga.PopulationWeights)
+			fmt.Printf("calculating total score for generation %d\n", generation)
+			for batchStart := 0; batchStart < len(ga.PopulationWeights); batchStart += batchSize {
+				batchEnd := batchStart + batchSize
+				if batchEnd > len(ga.PopulationWeights) {
+					batchEnd = len(ga.PopulationWeights)
 				}
 
 				wg.Add(1)
 				go func(start, end int) {
 					defer wg.Done()
 					localTotalScore := 0.0
+					fmt.Printf("starting local total score calculation for generation %d from start %d to end %d\n", generation, start, end)
 					for j := start; j < end; j++ {
 						lScore := CalculateTotalScore(ga.PopulationWeights[j], ga.Companies)
 						localTotalScore += lScore
@@ -98,10 +102,12 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 					fmt.Printf("Adding %f to total score from start %d to end %d in generation %d\n", localTotalScore, start, end, generation)
 					totalScore += localTotalScore
 					scoreMutex.Unlock()
-				}(i, end)
+				}(batchStart, batchEnd)
 			}
-
 			wg.Wait()
+
+			fmt.Printf("got the total score for generation %d: %f\n", generation, totalScore)
+			fmt.Printf("got the total score for generation %d in %s\n", generation, time.Since(startTime))
 
 			for i := batchStart; i < batchEnd; i++ {
 				wg.Add(1)
@@ -179,6 +185,7 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 
 		ga.PopulationWeights = newGenerationWeights
 		fmt.Printf("Generation %d completed with best score %f\n", generation, bestScore)
+		fmt.Printf("Generation %d completed in %s\n", generation, time.Since(startTime))
 	}
 
 	// Perform final backtest with the best weights

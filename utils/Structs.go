@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"math/rand"
 	"reflect"
 	"time"
@@ -58,4 +59,59 @@ func initStructWithRand(v reflect.Value, r *rand.Rand) reflect.Value {
 	}
 
 	return newStruct
+}
+
+func removeNaNs(v reflect.Value) reflect.Value {
+	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		if v.IsNil() {
+			return v
+		}
+		v = v.Elem()
+	}
+
+	// Create a new value of the same type as v
+	newV := reflect.New(v.Type()).Elem()
+
+	switch v.Kind() {
+	case reflect.Struct:
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			newV.Field(i).Set(removeNaNs(field))
+		}
+	case reflect.Slice:
+		newV = reflect.MakeSlice(v.Type(), v.Len(), v.Cap())
+		for i := 0; i < v.Len(); i++ {
+			newV.Index(i).Set(removeNaNs(v.Index(i)))
+		}
+	case reflect.Map:
+		newV = reflect.MakeMapWithSize(v.Type(), v.Len())
+		for _, key := range v.MapKeys() {
+			mapValue := v.MapIndex(key)
+			newMapValue := removeNaNs(mapValue)
+			if mapValue.Kind() == reflect.Ptr && !mapValue.IsNil() && newMapValue.Kind() != reflect.Ptr {
+				// Create a new pointer of the correct type
+				newPtr := reflect.New(mapValue.Type().Elem())
+				newPtr.Elem().Set(newMapValue)
+				newV.SetMapIndex(key, newPtr)
+			} else {
+				newV.SetMapIndex(key, newMapValue)
+			}
+		}
+	case reflect.Float64:
+		if math.IsNaN(v.Float()) {
+			newV.SetFloat(0) // Replace NaN with zero
+		} else {
+			newV.Set(v)
+		}
+	default:
+		newV.Set(v)
+	}
+
+	return newV
+}
+
+func RemoveNaNsFromStruct(s interface{}) interface{} {
+	v := reflect.ValueOf(s)
+	newV := removeNaNs(v)
+	return newV.Interface()
 }

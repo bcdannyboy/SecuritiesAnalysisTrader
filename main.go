@@ -6,6 +6,7 @@ import (
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Backtest"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/GeneticAlgorithm"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
 	"github.com/joho/godotenv"
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"math/rand"
@@ -72,7 +73,7 @@ func main() {
 		RandSymbols := []string{}
 		symbolMap := make(map[string]bool) // Map to track added symbols
 
-		for len(RandSymbols) < 2 {
+		for len(RandSymbols) < 3 {
 			Symbol := SymbolList[rand.Intn(len(SymbolList))]
 			fmt.Printf("Debug picking random symbol: %s\n", Symbol)
 
@@ -91,8 +92,13 @@ func main() {
 	if len(CompanyDataObjects) == 0 {
 		panic("No company data objects returned")
 	}
+	finalCompanyDataObjects := []Analysis.CompanyData{}
+	for _, CompanyDataObject := range CompanyDataObjects {
+		newCDO := utils.RemoveNaNsFromStruct(CompanyDataObject)
+		finalCompanyDataObjects = append(finalCompanyDataObjects, newCDO.(Analysis.CompanyData))
+	}
 
-	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 5000, 1000, 0.1337, 0.5, 0.1337, 0.1, 0.001, RiskFreeRate)
+	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 100, 50, 0.1, 0.7302023, 0.7302023, 0.1, 0.001, RiskFreeRate)
 	jOptimizedWeights, err := json.Marshal(OptimizedSecurityAnalysisWeights)
 
 	outname := "optimized_weights.json"

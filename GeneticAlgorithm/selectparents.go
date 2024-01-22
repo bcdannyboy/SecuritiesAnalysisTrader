@@ -12,34 +12,20 @@ import (
 )
 
 func SelectParents(populationWeights []*Optimization.SecurityAnalysisWeights, companies []Analysis.CompanyData, totalScore float64, tournamentThreshold float64) (*Optimization.SecurityAnalysisWeights, *Optimization.SecurityAnalysisWeights) {
-	var wg sync.WaitGroup
-
-	rouletteWheelChan := make(chan []*Optimization.SecurityAnalysisWeights, 2)
-	tournamentResultChan := make(chan *Optimization.SecurityAnalysisWeights, 2)
-
-	wg.Add(2)
+	// Roulette Wheel Selection
+	var rouletteWheelResults [2][]*Optimization.SecurityAnalysisWeights
 	for i := 0; i < 2; i++ {
-		go func() {
-			defer wg.Done()
-			rouletteWheelChan <- performRouletteWheelSelection(populationWeights, companies, totalScore)
-		}()
+		fmt.Printf("initiating roulette wheel selection %d\n", i)
+		rouletteWheelResults[i] = performRouletteWheelSelection(populationWeights, companies, totalScore)
+		fmt.Printf("Completed roulette wheel selection %d\n", i)
 	}
 
-	wg.Add(2)
-	for i := 0; i < 2; i++ {
-		go func() {
-			defer wg.Done()
-			pool := <-rouletteWheelChan
-			tournamentResultChan <- tournamentSelection(pool, tournamentThreshold, companies)
-		}()
-	}
-
-	wg.Wait()
-	close(rouletteWheelChan)
-	close(tournamentResultChan)
-
-	parent1 := <-tournamentResultChan
-	parent2 := <-tournamentResultChan
+	// Tournament Selection
+	var parent1, parent2 *Optimization.SecurityAnalysisWeights
+	fmt.Printf("choosing parent 1 from roulette wheel results through a tournament with threshold %f\n", tournamentThreshold)
+	parent1 = tournamentSelection(rouletteWheelResults[0], tournamentThreshold, companies)
+	fmt.Printf("choosing parent 2 from roulette wheel results through a tournament with threshold %f\n", tournamentThreshold)
+	parent2 = tournamentSelection(rouletteWheelResults[1], tournamentThreshold, companies)
 
 	if parent1 == nil || parent2 == nil {
 		panic("SelectParents: failed to select non-nil parents")
@@ -50,32 +36,108 @@ func SelectParents(populationWeights []*Optimization.SecurityAnalysisWeights, co
 }
 
 func performRouletteWheelSelection(populationWeights []*Optimization.SecurityAnalysisWeights, companies []Analysis.CompanyData, totalScore float64) []*Optimization.SecurityAnalysisWeights {
-	rouletteWheel := make([]*Optimization.SecurityAnalysisWeights, 0)
-	for j := 0; j < len(populationWeights); j++ {
-		pick := rand.Float64() * totalScore
-		current := 0.0
-		for _, weights := range populationWeights {
-			current += CalculateTotalScore(weights, companies)
-			if current >= pick {
-				rouletteWheel = append(rouletteWheel, weights)
-				break
+	var wg sync.WaitGroup
+
+	// Decide on a batch size
+	batchSize := 100
+	batches := (len(populationWeights) + batchSize - 1) / batchSize
+
+	winnersChan := make(chan *Optimization.SecurityAnalysisWeights, len(populationWeights))
+
+	for i := 0; i < batches; i++ {
+		wg.Add(1)
+		go func(batchStart int) {
+			defer wg.Done()
+			batchEnd := batchStart + batchSize
+			if batchEnd > len(populationWeights) {
+				batchEnd = len(populationWeights)
 			}
-		}
+
+			for j := batchStart; j < batchEnd; j++ {
+				pick := rand.Float64() * totalScore
+				current := 0.0
+				for _, weights := range populationWeights {
+					current += CalculateTotalScore(weights, companies)
+					if current >= pick {
+						winnersChan <- weights
+						break
+					}
+				}
+			}
+		}(i * batchSize)
 	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+	close(winnersChan)
+
+	// Collect winners from channel
+	var rouletteWheel []*Optimization.SecurityAnalysisWeights
+	for winner := range winnersChan {
+		rouletteWheel = append(rouletteWheel, winner)
+	}
+
+	fmt.Printf("returning %d winners from roulette wheel\n", len(rouletteWheel))
 	return rouletteWheel
 }
 
 func tournamentSelection(pool []*Optimization.SecurityAnalysisWeights, threshold float64, companies []Analysis.CompanyData) *Optimization.SecurityAnalysisWeights {
-	sort.Slice(pool, func(i, j int) bool {
-		return CalculateTotalScore(pool[i], companies) > CalculateTotalScore(pool[j], companies)
+	var wg sync.WaitGroup
+
+	// Decide on a batch size
+	batchSize := 100 // Adjust this according to your needs
+	batches := (len(pool) + batchSize - 1) / batchSize
+
+	scoresChan := make(chan struct {
+		index int
+		score float64
+	}, len(pool))
+
+	// Concurrently calculate scores in batches
+	for i := 0; i < batches; i++ {
+		wg.Add(1)
+		go func(batchStart int) {
+			defer wg.Done()
+			batchEnd := batchStart + batchSize
+			if batchEnd > len(pool) {
+				batchEnd = len(pool)
+			}
+			for j := batchStart; j < batchEnd; j++ {
+				score := CalculateTotalScore(pool[j], companies)
+				scoresChan <- struct {
+					index int
+					score float64
+				}{j, score}
+			}
+		}(i * batchSize)
+	}
+
+	wg.Wait()
+	close(scoresChan)
+
+	// Collect scores
+	scores := make([]struct {
+		index int
+		score float64
+	}, len(pool))
+	for s := range scoresChan {
+		scores[s.index] = s
+	}
+
+	// Sort the scores
+	sort.Slice(scores, func(i, j int) bool {
+		return scores[i].score > scores[j].score
 	})
 
-	topCompetitors := int(float64(len(pool)) * threshold)
+	topCompetitors := int(float64(len(scores)) * threshold)
 	if topCompetitors == 0 {
 		topCompetitors = 1
 	}
+
+	// Select a random winner from the top competitors
 	winnerIndex := rand.Intn(topCompetitors)
-	return pool[winnerIndex]
+	fmt.Printf("returning winner from tournament selection\n")
+	return pool[scores[winnerIndex].index]
 }
 
 // CalculateTotalScore calculates the total score for a given set of weights.
