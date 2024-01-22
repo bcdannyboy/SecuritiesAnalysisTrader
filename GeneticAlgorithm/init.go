@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func InitGeneticAlgorithm(Companies []Analysis.CompanyData, Population int, Generations int, MutationRate float64, CrossoverRate float64, TournamentThreshold float64, MaxWeightChange float64, MinWeightChange float64, RiskFreeRate float64) *Optimization.SecurityAnalysisWeights {
+func InitGeneticAlgorithm(Companies []Analysis.CompanyData, Population int, Generations int, MutationRate float64, CrossoverRate float64, TournamentThreshold float64, MaxWeightChange float64, MinWeightChange float64, RiskFreeRate float64, RouletteScaleTilt float64) *Optimization.SecurityAnalysisWeights {
 	if Population <= 0 {
 		fmt.Println("Error: Population size must be greater than 0.")
 		return nil
@@ -40,6 +40,7 @@ func InitGeneticAlgorithm(Companies []Analysis.CompanyData, Population int, Gene
 		MinWeightChange:     MinWeightChange,
 		RiskFreeRate:        RiskFreeRate,
 		TournamentThreshold: TournamentThreshold,
+		RouletteScaleTilt:   RouletteScaleTilt,
 	}
 
 	fmt.Printf("Genetic Algorithm initialized with %d weight sets\n", len(PopulationWeights))
@@ -116,7 +117,7 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 					fmt.Printf("Creating offspring %d in generation %d\n", index, generation)
 
 					// Parent Selection
-					parent1Weights, parent2Weights := SelectParents(ga.PopulationWeights, ga.Companies, totalScore, ga.TournamentThreshold)
+					parent1Weights, parent2Weights := SelectParents(ga.PopulationWeights, ga.Companies, totalScore, ga.TournamentThreshold, ga.RouletteScaleTilt)
 					fmt.Printf("Selected parents for offspring %d\n", index)
 
 					// Crossover

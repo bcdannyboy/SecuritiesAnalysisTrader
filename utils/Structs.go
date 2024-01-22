@@ -62,11 +62,21 @@ func initStructWithRand(v reflect.Value, r *rand.Rand) reflect.Value {
 }
 
 func removeNaNs(v reflect.Value) reflect.Value {
+	// Check if the value is valid and can be nil before calling IsNil
+	if !v.IsValid() || (v.Kind() != reflect.Chan && v.Kind() != reflect.Func && v.Kind() != reflect.Interface && v.Kind() != reflect.Map && v.Kind() != reflect.Ptr && v.Kind() != reflect.Slice) {
+		return v
+	}
+
 	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
 		if v.IsNil() {
-			return v
+			return reflect.Zero(v.Type()) // Return a zero value for the type
 		}
 		v = v.Elem()
+	}
+
+	// Check for *string and string types and return as is
+	if v.Kind() == reflect.String || (v.Kind() == reflect.Ptr && v.Elem().Kind() == reflect.String) {
+		return v
 	}
 
 	// Create a new value of the same type as v
@@ -88,10 +98,14 @@ func removeNaNs(v reflect.Value) reflect.Value {
 		for _, key := range v.MapKeys() {
 			mapValue := v.MapIndex(key)
 			newMapValue := removeNaNs(mapValue)
-			if mapValue.Kind() == reflect.Ptr && !mapValue.IsNil() && newMapValue.Kind() != reflect.Ptr {
+
+			// Check if the map's element type is a pointer
+			if v.Type().Elem().Kind() == reflect.Ptr {
 				// Create a new pointer of the correct type
-				newPtr := reflect.New(mapValue.Type().Elem())
-				newPtr.Elem().Set(newMapValue)
+				newPtr := reflect.New(v.Type().Elem().Elem())
+				if !newMapValue.IsNil() {
+					newPtr.Elem().Set(newMapValue.Elem())
+				}
 				newV.SetMapIndex(key, newPtr)
 			} else {
 				newV.SetMapIndex(key, newMapValue)

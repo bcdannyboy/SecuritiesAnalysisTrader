@@ -30,4 +30,5 @@ type GeneticAlgorithm struct {
 	MinWeightChange     float64
 	TournamentThreshold float64
 	RiskFreeRate        float64
+	RouletteScaleTilt   float64
 }

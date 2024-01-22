@@ -11,12 +11,12 @@ import (
 	"sync"
 )
 
-func SelectParents(populationWeights []*Optimization.SecurityAnalysisWeights, companies []Analysis.CompanyData, totalScore float64, tournamentThreshold float64) (*Optimization.SecurityAnalysisWeights, *Optimization.SecurityAnalysisWeights) {
+func SelectParents(populationWeights []*Optimization.SecurityAnalysisWeights, companies []Analysis.CompanyData, totalScore float64, tournamentThreshold float64, roletteScaleTile float64) (*Optimization.SecurityAnalysisWeights, *Optimization.SecurityAnalysisWeights) {
 	// Roulette Wheel Selection
 	var rouletteWheelResults [2][]*Optimization.SecurityAnalysisWeights
 	for i := 0; i < 2; i++ {
 		fmt.Printf("initiating roulette wheel selection %d\n", i)
-		rouletteWheelResults[i] = performRouletteWheelSelection(populationWeights, companies, totalScore)
+		rouletteWheelResults[i] = performRouletteWheelSelection(populationWeights, companies, totalScore, roletteScaleTile)
 		fmt.Printf("Completed roulette wheel selection %d\n", i)
 	}
 
@@ -35,7 +35,7 @@ func SelectParents(populationWeights []*Optimization.SecurityAnalysisWeights, co
 	return parent1, parent2
 }
 
-func performRouletteWheelSelection(populationWeights []*Optimization.SecurityAnalysisWeights, companies []Analysis.CompanyData, totalScore float64) []*Optimization.SecurityAnalysisWeights {
+func performRouletteWheelSelection(populationWeights []*Optimization.SecurityAnalysisWeights, companies []Analysis.CompanyData, totalScore float64, ScaleTilt float64) []*Optimization.SecurityAnalysisWeights {
 	var wg sync.WaitGroup
 
 	// Decide on a batch size
@@ -54,11 +54,14 @@ func performRouletteWheelSelection(populationWeights []*Optimization.SecurityAna
 			}
 
 			for j := batchStart; j < batchEnd; j++ {
-				pick := rand.Float64() * totalScore
+				seed := utils.GetRandomSeed()
+				rnd := rand.New(rand.NewSource(seed))
+				pick := rnd.Float64() * (totalScore + ScaleTilt)
 				current := 0.0
-				for _, weights := range populationWeights {
+				for w, weights := range populationWeights {
 					current += CalculateTotalScore(weights, companies)
 					if current >= pick {
+						fmt.Printf("found a winner with weight %d/%d in wheel %d/%d: %f >= %f with seed %d, totalScore %f, and ScaleTilt %f\n", w, len(populationWeights), j, batchEnd-batchStart, current, pick, seed, totalScore, ScaleTilt)
 						winnersChan <- weights
 						break
 					}
@@ -74,6 +77,7 @@ func performRouletteWheelSelection(populationWeights []*Optimization.SecurityAna
 	// Collect winners from channel
 	var rouletteWheel []*Optimization.SecurityAnalysisWeights
 	for winner := range winnersChan {
+		fmt.Printf("adding winner to roulette wheel winners list\n")
 		rouletteWheel = append(rouletteWheel, winner)
 	}
 
@@ -94,7 +98,9 @@ func tournamentSelection(pool []*Optimization.SecurityAnalysisWeights, threshold
 	}, len(pool))
 
 	// Concurrently calculate scores in batches
+	fmt.Printf("calculating scores for %d weights in %d batches for tournaments\n", len(pool), batches)
 	for i := 0; i < batches; i++ {
+		fmt.Printf("submitting batch %d/%d\n", i, batches)
 		wg.Add(1)
 		go func(batchStart int) {
 			defer wg.Done()
@@ -121,9 +127,11 @@ func tournamentSelection(pool []*Optimization.SecurityAnalysisWeights, threshold
 		score float64
 	}, len(pool))
 	for s := range scoresChan {
+		fmt.Printf("getting score for weight %d in tournament\n", s.index)
 		scores[s.index] = s
 	}
 
+	fmt.Printf("sorting scores for tournament selection\n")
 	// Sort the scores
 	sort.Slice(scores, func(i, j int) bool {
 		return scores[i].score > scores[j].score
@@ -133,10 +141,13 @@ func tournamentSelection(pool []*Optimization.SecurityAnalysisWeights, threshold
 	if topCompetitors == 0 {
 		topCompetitors = 1
 	}
+	fmt.Printf("got %d top competitors for tournament selection\n", topCompetitors)
 
+	seed := utils.GetRandomSeed()
+	rnd := rand.New(rand.NewSource(seed))
 	// Select a random winner from the top competitors
-	winnerIndex := rand.Intn(topCompetitors)
-	fmt.Printf("returning winner from tournament selection\n")
+	winnerIndex := rnd.Intn(topCompetitors)
+	fmt.Printf("returning winner from tournament selection with seed: %d\n", seed)
 	return pool[scores[winnerIndex].index]
 }
 

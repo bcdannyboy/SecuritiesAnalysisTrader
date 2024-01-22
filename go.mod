@@ -6,6 +6,7 @@ require (
 	github.com/go-echarts/go-echarts v1.0.0 // indirect
 	github.com/go-resty/resty/v2 v2.11.0 // indirect
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

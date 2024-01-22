@@ -73,7 +73,7 @@ func main() {
 		RandSymbols := []string{}
 		symbolMap := make(map[string]bool) // Map to track added symbols
 
-		for len(RandSymbols) < 3 {
+		for len(RandSymbols) < 101 {
 			Symbol := SymbolList[rand.Intn(len(SymbolList))]
 			fmt.Printf("Debug picking random symbol: %s\n", Symbol)
 
@@ -98,7 +98,7 @@ func main() {
 		finalCompanyDataObjects = append(finalCompanyDataObjects, newCDO.(Analysis.CompanyData))
 	}
 
-	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 100, 50, 0.1, 0.7302023, 0.7302023, 0.1, 0.001, RiskFreeRate)
+	OptimizedSecurityAnalysisWeights := GeneticAlgorithm.InitGeneticAlgorithm(CompanyDataObjects, 100, 50, 0.1337, 0.787483, 0.73023, 0.1, 0.001, RiskFreeRate, 0.01)
 	jOptimizedWeights, err := json.Marshal(OptimizedSecurityAnalysisWeights)
 
 	outname := "optimized_weights.json"
