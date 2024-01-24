@@ -1,16 +1,16 @@
 package GeneticAlgorithm
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Analysis"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Backtest"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/GeneticAlgorithm/Crossover"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/GeneticAlgorithm/GAUtils"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/GeneticAlgorithm/Mutation"
+	"github.com/bcdannyboy/SecuritiesAnalysisTrader/GeneticAlgorithm/ParentSelection"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/Optimization"
 	"github.com/bcdannyboy/SecuritiesAnalysisTrader/utils"
-	"github.com/spacecodewor/fmpcloud-go/objects"
 	"math"
-	"sort"
 	"sync"
 	"time"
 )
@@ -26,7 +26,6 @@ func InitGeneticAlgorithm(Companies []Analysis.CompanyData, Population int, Gene
 		// The InitStructWithRandomFloats function should return a pointer
 		SecAnalysisWeights := utils.InitStructWithRandomFloats(new(Optimization.SecurityAnalysisWeights)).(*Optimization.SecurityAnalysisWeights)
 		PopulationWeights[i] = SecAnalysisWeights
-		fmt.Printf("Initialized weight set %d\n", i)
 	}
 
 	GeneticAlgorithm := GeneticAlgorithm{
@@ -60,108 +59,68 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 		index   int
 	}
 
-	// Cache for storing fitness scores
-	fitnessCache := make(map[string]float64)
+	batchSize := GAUtils.DetermineOptimalBatchSize(len(ga.PopulationWeights), len(ga.Companies))
+	fmt.Printf("got batch size %d\n", batchSize)
 
-	batchSize := 100
 	for generation := 0; generation < ga.Generations; generation++ {
-		startTime := time.Now()
+		genStartTime := time.Now()
 		fmt.Printf("Starting Generation %d with %d weight sets\n", generation, len(ga.PopulationWeights))
 
 		newGenerationWeights := make([]*Optimization.SecurityAnalysisWeights, len(ga.PopulationWeights))
 
+		// Calculate totalScore for the current generation
+		var totalScore float64
+		for _, weights := range ga.PopulationWeights {
+			score := GAUtils.CalculateTotalScore(weights, ga.Companies)
+			totalScore += score
+		}
+		fmt.Printf("Total score for generation %d: %f\n", generation, totalScore)
+
 		for batchStart := 0; batchStart < len(ga.PopulationWeights); batchStart += batchSize {
-			batchEnd := batchStart + batchSize
-			if batchEnd > len(ga.PopulationWeights) {
-				batchEnd = len(ga.PopulationWeights)
-			}
-
-			resultsChan := make(chan offspringResult, batchEnd-batchStart)
-			var wg sync.WaitGroup
-
-			var totalScore float64
-			var scoreMutex sync.Mutex
-
-			// Calculate the total score for the current generation in batches
-			fmt.Printf("calculating total score for generation %d\n", generation)
-			for batchStart := 0; batchStart < len(ga.PopulationWeights); batchStart += batchSize {
-				batchEnd := batchStart + batchSize
-				if batchEnd > len(ga.PopulationWeights) {
-					batchEnd = len(ga.PopulationWeights)
-				}
-
-				wg.Add(1)
-				go func(start, end int) {
-					defer wg.Done()
-					localTotalScore := 0.0
-					fmt.Printf("starting local total score calculation for generation %d from start %d to end %d\n", generation, start, end)
-					for j := start; j < end; j++ {
-						lScore := CalculateTotalScore(ga.PopulationWeights[j], ga.Companies)
-						localTotalScore += lScore
-					}
-					scoreMutex.Lock()
-					fmt.Printf("Adding %f to total score from start %d to end %d in generation %d\n", localTotalScore, start, end, generation)
-					totalScore += localTotalScore
-					scoreMutex.Unlock()
-				}(batchStart, batchEnd)
-			}
-			wg.Wait()
-
-			fmt.Printf("got the total score for generation %d: %f\n", generation, totalScore)
-			fmt.Printf("got the total score for generation %d in %s\n", generation, time.Since(startTime))
+			batchStartTime := time.Now()
+			batchEnd := utils.Min(batchStart+batchSize, len(ga.PopulationWeights))
+			resultsChan := make(chan offspringResult, batchSize)
+			var batchWg sync.WaitGroup
 
 			for i := batchStart; i < batchEnd; i++ {
-				wg.Add(1)
-				go func(index int) {
-					defer wg.Done()
-					fmt.Printf("Creating offspring %d in generation %d\n", index, generation)
+				batchWg.Add(1)
+				go func(index int, batchtot int) {
+					indexStartTime := time.Now()
+					defer batchWg.Done()
+					fmt.Printf("getting parent weights for index %d/%d in generation %d\n", index, batchtot, generation)
+					parent1Weights, parent2Weights := ParentSelection.SelectParents(ga.PopulationWeights, ga.Companies, totalScore, ga.TournamentThreshold, ga.RouletteScaleTilt)
 
-					// Parent Selection
-					parent1Weights, parent2Weights := SelectParents(ga.PopulationWeights, ga.Companies, totalScore, ga.TournamentThreshold, ga.RouletteScaleTilt)
-					fmt.Printf("Selected parents for offspring %d\n", index)
+					fmt.Printf("getting crossover weights for index %d/%d in generation %d\n", index, batchtot, generation)
+					offspringWeights := Crossover.Crossover(parent1Weights, parent2Weights, ga.CrossoverRate)
 
-					// Crossover
-					offspringWeights := Crossover(parent1Weights, parent2Weights, ga.CrossoverRate)
-					fmt.Printf("Crossover completed for offspring %d\n", index)
+					fmt.Printf("getting mutation weights for index %d/%d in generation %d\n", index, batchtot, generation)
+					offspringWeights = Mutation.Mutate(offspringWeights, ga.MutationRate, ga.MaxWeightChange, ga.MinWeightChange)
 
-					// Mutation
-					offspringWeights = Mutate(offspringWeights, ga.MutationRate, ga.MaxWeightChange, ga.MinWeightChange)
-					fmt.Printf("Mutation completed for offspring %d\n", index)
+					fmt.Printf("generating weights key for index %d/%d in generation %d\n", index, batchtot, generation)
+					weightsKey := GAUtils.GenerateCacheKey(offspringWeights, ga.Companies)
 
-					// Generate a unique key for the current weights
-					weightsKey := generateWeightsKey(offspringWeights)
-
-					// Check if the fitness score is already in the cache
-					if score, found := fitnessCache[weightsKey]; found {
-						fmt.Printf("Using cached fitness score for offspring %d\n", index)
-						resultsChan <- offspringResult{offspringWeights, score, index}
-					} else {
-						// Select top 10 companies based on the security analysis score
-						top10Candles := getTop10Companies(ga.Companies, offspringWeights)
-						fmt.Printf("Selected top 10 companies for offspring %d\n", index)
-
-						// Extract the tickers from the top 10 companies
-						top10Tickers := extractTickers(top10Candles)
-						fmt.Printf("Top 10 tickers for offspring %d\n", index)
-
-						// Calculate fitness for the top 10 companies
-						fitnessScore := CalculateFitness(ga, top10Candles, top10Tickers)
-						if math.IsNaN(fitnessScore) || math.IsInf(fitnessScore, 0) {
-							fmt.Printf("Invalid fitness score for offspring %d in generation %d\n", index, generation)
-							resultsChan <- offspringResult{nil, 0, index}
-							return
-						}
-						fmt.Printf("Calculated fitness score %f for offspring %d\n", fitnessScore, index)
-
-						// Store the calculated fitness score in the cache
-						fitnessCache[weightsKey] = fitnessScore
-						resultsChan <- offspringResult{offspringWeights, fitnessScore, index}
+					var score float64
+					var found bool
+					if score, found = GAUtils.GetFromCache(weightsKey); !found {
+						fitnessStart := time.Now()
+						fmt.Printf("getting top 10 companies for index %d/%d in generation %d\n", index, batchtot, generation)
+						top10Candles := GAUtils.GetTop10Companies(ga.Companies, offspringWeights)
+						fmt.Printf("extracting tickers for index %d/%d in generation %d\n", index, batchtot, generation)
+						top10Tickers := GAUtils.ExtractTickers(top10Candles)
+						fmt.Printf("calculating fitness for index %d/%d in generation %d\n", index, batchtot, generation)
+						score = CalculateFitness(ga, top10Candles, top10Tickers)
+						fmt.Printf("fitness for index %d/%d in generation %d is %f\n", index, batchtot, generation, score)
+						GAUtils.AddToCache(weightsKey, score)
+						fmt.Printf("calculated fitness for index %d/%d in generation %d in %s\n", index, batchtot, generation, time.Since(fitnessStart))
 					}
-				}(i)
+					fmt.Printf("submitting to offspring results channel for index %d/%d in generation %d\n", index, batchtot, generation)
+					resultsChan <- offspringResult{offspringWeights, score, index}
+					fmt.Printf("completed index %d/%d in generation %d in %s\n", index, batchtot, generation, time.Since(indexStartTime))
+				}(i, batchEnd-batchStart)
 			}
 
-			wg.Wait()
-			close(resultsChan)
+			batchWg.Wait()
+			close(resultsChan) // Close the new channel
 
 			localBestScore := bestScore
 			localBestWeights := bestWeights
@@ -170,29 +129,28 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 				if result.weights != nil && result.score > localBestScore {
 					localBestScore = result.score
 					localBestWeights = result.weights
-					fmt.Printf("New best score %f found in generation %d for offspring %d\n", localBestScore, generation, result.index)
 				}
 				newGenerationWeights[result.index] = result.weights
 			}
 
 			mutex.Lock()
-			fmt.Printf("Locking mutex in generation %d to calculate best score \n", generation)
 			if localBestScore > bestScore {
 				bestScore = localBestScore
 				bestWeights = localBestWeights
+				fmt.Printf("got local best score %f in generation %d\n", bestScore, generation)
 			}
 			mutex.Unlock()
+			fmt.Printf("completed batch %d/%d in generation %d in %s\n", batchStart/batchSize, len(ga.PopulationWeights)/batchSize, generation, time.Since(batchStartTime))
 		}
 
 		ga.PopulationWeights = newGenerationWeights
-		fmt.Printf("Generation %d completed with best score %f\n", generation, bestScore)
-		fmt.Printf("Generation %d completed in %s\n", generation, time.Since(startTime))
+		fmt.Printf("Generation %d completed with best score %f in %s\n", generation, bestScore, time.Since(genStartTime))
 	}
 
 	// Perform final backtest with the best weights
 	if bestWeights != nil {
-		top10Candles := getTop10Companies(ga.Companies, bestWeights)
-		top10Tickers := extractTickers(top10Candles)
+		top10Candles := GAUtils.GetTop10Companies(ga.Companies, bestWeights)
+		top10Tickers := GAUtils.ExtractTickers(top10Candles)
 
 		// Prepare the backtest parameters
 		backtestParams := Backtest.BackTestParameters{
@@ -207,76 +165,8 @@ func startEvolution(ga *GeneticAlgorithm) *Optimization.SecurityAnalysisWeights 
 		backtestResults := Backtest.BackTest(backtestParams)
 
 		// Print out the backtest statistics
-		printBacktestResults(backtestResults)
+		GAUtils.PrintBacktestResults(backtestResults)
 	}
 
 	return bestWeights
-}
-
-func getTop10Companies(companies []Analysis.CompanyData, weights *Optimization.SecurityAnalysisWeights) []map[string][]objects.StockCandle {
-	weightedCompanies := make([]weightedCompany, len(companies))
-	for i, company := range companies {
-		score, err := Optimization.CalculateWeightedAverage(company, weights, "path")
-		if err != nil {
-			fmt.Printf("failed to calculate weighted average for company %s\n", company.Ticker)
-			continue
-		}
-		weightedCompanies[i] = weightedCompany{
-			Company: company,
-			Weight:  score,
-		}
-	}
-
-	// Sort companies based on weight
-	sort.Slice(weightedCompanies, func(i, j int) bool {
-		return weightedCompanies[i].Weight > weightedCompanies[j].Weight
-	})
-
-	// Select top 10 companies and create a slice of map[string][]objects.StockCandle
-	top10Candles := make([]map[string][]objects.StockCandle, 0, 10)
-	for i := 0; i < 10 && i < len(weightedCompanies); i++ {
-		company := weightedCompanies[i].Company
-		top10Candles = append(top10Candles, map[string][]objects.StockCandle{company.Ticker: company.CandleSticks})
-	}
-
-	return top10Candles
-}
-
-func extractTickers(candles []map[string][]objects.StockCandle) []string {
-	tickers := make([]string, 0, len(candles))
-	for _, candleMap := range candles {
-		for ticker := range candleMap {
-			tickers = append(tickers, ticker)
-		}
-	}
-	return tickers
-}
-
-func printBacktestResults(results map[string]Backtest.PortfolioResults) {
-	for strategy, backtestResult := range results {
-		fmt.Printf("Result for strategy: %s\n", strategy)
-		fmt.Printf("Total Return: %f\n", backtestResult.Total.TotalProfitLoss)
-		fmt.Printf("Annualized Return: %f\n", backtestResult.Total.AnnualizedReturn)
-		fmt.Printf("Volatility: %f\n", backtestResult.Total.Volatility)
-		fmt.Printf("Sharpe Ratio: %f\n", backtestResult.Total.SharpeRatio)
-		fmt.Printf("Sortino Ratio: %f\n", backtestResult.Total.SortinoRatio)
-		fmt.Printf("Max Drawdown: %f\n", backtestResult.Total.MaxDrawdown)
-		fmt.Printf("YoY Profit/Loss:\n")
-		for year, profitLoss := range backtestResult.Total.YoYProfitLoss {
-			fmt.Printf("\t%s: %f\n", year, profitLoss)
-		}
-
-		fmt.Printf("Tickers in portfolio:\n")
-		for ticker, _ := range backtestResult.IndividualStocks {
-			fmt.Printf("\t%s\n", ticker)
-		}
-
-	}
-}
-
-func generateWeightsKey(weights *Optimization.SecurityAnalysisWeights) string {
-	weightsStr := fmt.Sprintf("%v", weights)
-	hash := sha256.New()
-	hash.Write([]byte(weightsStr))
-	return hex.EncodeToString(hash.Sum(nil))
 }

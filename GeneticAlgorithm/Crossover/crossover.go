@@ -1,4 +1,4 @@
-package GeneticAlgorithm
+package Crossover
 
 import (
 	"fmt"

@@ -57,6 +57,12 @@ func CalculateFitness(ga *GeneticAlgorithm, candles []map[string][]objects.Stock
 		return 0.0 // Return a default low score or handle as needed
 	}
 
+	for _, candlemap := range candles {
+		for candleKey, candle := range candlemap {
+			fmt.Printf("Candlemap key: %s, candle: %v\n", candleKey, candle)
+		}
+	}
+
 	fmt.Printf("Calculating fitness for %d stocks\n", len(candles))
 	subSections := getSubsections(candles)
 	fmt.Printf("Testing %d stocks with %d subsections\n", len(candles), len(subSections))
@@ -83,7 +89,9 @@ func CalculateFitness(ga *GeneticAlgorithm, candles []map[string][]objects.Stock
 
 			// Evaluate the results and send to resultsChan
 			for _, portfolioResults := range backtestResults {
-				resultsChan <- Backtest.EvaluateResults(portfolioResults.Total)
+				btResult := Backtest.EvaluateResults(portfolioResults.Total)
+				fmt.Printf("got backtest result: %f\n", btResult)
+				resultsChan <- btResult
 			}
 
 		}(subsection)
@@ -111,7 +119,7 @@ func CalculateFitness(ga *GeneticAlgorithm, candles []map[string][]objects.Stock
 	}
 
 	finalScore := resultScores / float64(totalResults)
-	fmt.Printf("Final fitness score: %f\n", finalScore)
+	fmt.Printf("Final fitness score: %f\n, with %f resultScores and %d totalResults", finalScore, resultScores, totalResults)
 
 	return finalScore
 }

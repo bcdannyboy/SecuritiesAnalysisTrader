@@ -7,7 +7,7 @@ import (
 )
 
 func CalculateWeightedAverage(Weights interface{}, DataToWeight interface{}, Path string) (float64, error) {
-	totalWeightedValue, totalWeight, err := calculateWeightedAverageRecursive(Weights, DataToWeight, Path)
+	totalWeightedValue, totalWeight, err := calculateWeightedAverageRecursive(Weights, DataToWeight, Path, 0, map[uintptr]bool{})
 	if err != nil {
 		fmt.Printf("got error from CalculateWeightedAverage: %s\n", err)
 		return math.NaN(), err
@@ -15,19 +15,33 @@ func CalculateWeightedAverage(Weights interface{}, DataToWeight interface{}, Pat
 
 	if totalWeight == 0 {
 		fmt.Printf("got totalWeight == 0, returning 0\n")
-		return 0, nil
+		return 0, fmt.Errorf("got totalWeight == 0")
 	}
 
 	finalValue := totalWeightedValue / totalWeight
 	return finalValue, nil
 }
 
-func calculateWeightedAverageRecursive(Weights interface{}, DataToWeight interface{}, Path string) (float64, float64, error) {
+func calculateWeightedAverageRecursive(Weights interface{}, DataToWeight interface{}, Path string, depth int, visited map[uintptr]bool) (float64, float64, error) {
+	const maxDepth = 1000000000
+	if depth > maxDepth {
+		return 0, 0, fmt.Errorf("maximum recursion depth exceeded at path: %s", Path)
+	}
+
 	var totalWeightedValue float64
 	var totalWeight float64
 
 	vWeights := reflect.Indirect(reflect.ValueOf(Weights))
 	vDataToWeight := reflect.Indirect(reflect.ValueOf(DataToWeight))
+
+	// Check for circular references only if the value is addressable
+	if vWeights.CanAddr() {
+		ptr := vWeights.UnsafeAddr()
+		if visited[ptr] {
+			return 0, 0, nil // Circular reference detected, skip processing
+		}
+		visited[ptr] = true
+	}
 
 	// Calculate the maximum absolute value for normalization
 	maxValue := findMaxAbsoluteValue(vDataToWeight)
@@ -72,36 +86,144 @@ func calculateWeightedAverageRecursive(Weights interface{}, DataToWeight interfa
 				newPath := path + "." + field.Name
 				subWeightValue := weightValue.Field(i)
 				subDataValue := extractValueByName(dataValue, field.Name)
-				err := handleValue(subWeightValue, subDataValue, weight, newPath)
+
+				if !subWeightValue.IsValid() || !subDataValue.IsValid() {
+					// Handle invalid values appropriately
+					continue
+				}
+
+				subTotalWeightedValue, subTotalWeight, err := calculateWeightedAverageRecursive(subWeightValue.Interface(), subDataValue.Interface(), newPath, depth+1, visited)
 				if err != nil {
 					return err
 				}
+				totalWeightedValue += subTotalWeightedValue
+				totalWeight += subTotalWeight
 			}
 
 		case reflect.Slice, reflect.Array:
 			for i := 0; i < weightValue.Len(); i++ {
 				newPath := fmt.Sprintf("%s[%d]", path, i)
 				subWeightValue := weightValue.Index(i)
-				subDataValue := dataValue.Index(i)
-				err := handleValue(subWeightValue, subDataValue, weight, newPath)
-				if err != nil {
-					return err
+
+				if dataValue.Kind() == reflect.Slice || dataValue.Kind() == reflect.Array {
+					if i < dataValue.Len() {
+						subDataValue := dataValue.Index(i)
+						subTotalWeightedValue, subTotalWeight, err := calculateWeightedAverageRecursive(subWeightValue.Interface(), subDataValue.Interface(), newPath, depth+1, visited)
+						if err != nil {
+							return err
+						}
+						totalWeightedValue += subTotalWeightedValue
+						totalWeight += subTotalWeight
+					} else {
+						fmt.Printf("Warning: dataValue does not have index %d at path %s\n", i, newPath)
+					}
+				} else {
+					// Recursively handle non-slice/array types
+					if dataValue.Kind() == reflect.Struct {
+						for j := 0; j < dataValue.NumField(); j++ {
+							fieldPath := newPath + "." + dataValue.Type().Field(j).Name
+							fieldValue := dataValue.Field(j)
+							subTotalWeightedValue, subTotalWeight, err := calculateWeightedAverageRecursive(subWeightValue.Interface(), fieldValue.Interface(), fieldPath, depth+1, visited)
+							if err != nil {
+								return err
+							}
+							totalWeightedValue += subTotalWeightedValue
+							totalWeight += subTotalWeight
+						}
+					} else {
+						// Handle other types as needed
+						fmt.Printf("Warning: dataValue is not a slice, array, or struct at path %s\n", newPath)
+					}
 				}
 			}
 
 		case reflect.Map:
-			for _, key := range weightValue.MapKeys() {
-				newPath := path + "[" + fmt.Sprint(key.Interface()) + "]"
-				subWeightValue := weightValue.MapIndex(key)
-				subDataValue := dataValue.MapIndex(key)
-				err := handleValue(subWeightValue, subDataValue, weight, newPath)
-				if err != nil {
-					return err
+			if weightValue.Kind() == reflect.Map && dataValue.Kind() == reflect.Map {
+				for _, key := range weightValue.MapKeys() {
+					newPath := path + "[" + fmt.Sprint(key.Interface()) + "]"
+					subWeightValue := weightValue.MapIndex(key)
+					subDataValue := dataValue.MapIndex(key)
+					if !subWeightValue.IsValid() || !subDataValue.IsValid() {
+						fmt.Printf("Warning: Invalid map key %v at path %s\n", key, newPath)
+						continue
+					}
+					subTotalWeightedValue, subTotalWeight, err := calculateWeightedAverageRecursive(subWeightValue.Interface(), subDataValue.Interface(), newPath, depth+1, visited)
+					if err != nil {
+						return err
+					}
+					totalWeightedValue += subTotalWeightedValue
+					totalWeight += subTotalWeight
+				}
+			} else {
+				// Handle non-map types within the map
+				if dataValue.Kind() == reflect.Struct {
+					for i := 0; i < dataValue.NumField(); i++ {
+						field := dataValue.Type().Field(i)
+						newPath := path + "." + field.Name
+						fieldValue := dataValue.Field(i)
+						fieldWeightValue := weightValue.MapIndex(reflect.ValueOf(field.Name)) // Get the corresponding weight for the field
+						if !fieldWeightValue.IsValid() {
+							continue // Skip if no corresponding weight found
+						}
+						subTotalWeightedValue, subTotalWeight, err := calculateWeightedAverageRecursive(fieldWeightValue.Interface(), fieldValue.Interface(), newPath, depth+1, visited)
+						if err != nil {
+							return err
+						}
+						totalWeightedValue += subTotalWeightedValue
+						totalWeight += subTotalWeight
+					}
+				} else {
+					// Handle other types as needed
+					if dataValue.CanInterface() {
+						// Check if the type of dataValue is one that should be recursively processed
+						switch dataValue.Kind() {
+						case reflect.Struct, reflect.Slice, reflect.Array, reflect.Map:
+							// Only recurse if the type is complex and requires further decomposition
+							subTotalWeightedValue, subTotalWeight, err := calculateWeightedAverageRecursive(weightValue.Interface(), reflect.ValueOf(dataValue.Interface()).Interface(), path, depth+1, visited)
+							if err != nil {
+								return err
+							}
+							totalWeightedValue += subTotalWeightedValue
+							totalWeight += subTotalWeight
+						default:
+							// For simple types, handle them directly without recursion
+							// You can add logic here to handle simple types like integers, floats, etc.
+							fmt.Printf("Info: Encountered a simple type at path %s. WeightValue Kind: %s, DataValue Kind: %s\n", path, weightValue.Kind(), dataValue.Kind())
+						}
+					} else {
+						fmt.Printf("Warning: Cannot handle type at path %s. WeightValue Kind: %s, DataValue Kind: %s\n", path, weightValue.Kind(), dataValue.Kind())
+					}
 				}
 			}
 
 		default:
-			fmt.Printf("Unhandled type: %s at path %s\n", weightValue.Kind(), path)
+			// ignore if string
+			if weightValue.Kind() != reflect.String && weightValue.Kind() != reflect.Interface {
+				fmt.Printf("Unhandled type: %s at path %s\n", weightValue.Kind(), path)
+			}
+
+			// handle if interface
+			if weightValue.Kind() == reflect.Interface {
+				if !weightValue.IsNil() {
+					subTotalWeightedValue, subTotalWeight, err := calculateWeightedAverageRecursive(weightValue.Elem().Interface(), dataValue.Interface(), path, depth+1, visited)
+					if err != nil {
+						return err
+					}
+					totalWeightedValue += subTotalWeightedValue
+					totalWeight += subTotalWeight
+				}
+			}
+
+			if dataValue.CanInterface() {
+				subTotalWeightedValue, subTotalWeight, err := calculateWeightedAverageRecursive(weightValue.Interface(), reflect.ValueOf(dataValue.Interface()).Interface(), path, depth+1, visited)
+				if err != nil {
+					return err
+				}
+				totalWeightedValue += subTotalWeightedValue
+				totalWeight += subTotalWeight
+			} else {
+				fmt.Printf("Warning: Cannot handle type at path %s. WeightValue Kind: %s, DataValue Kind: %s\n", path, weightValue.Kind(), dataValue.Kind())
+			}
 		}
 		return nil
 	}

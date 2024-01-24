@@ -1,6 +1,7 @@
 package Backtest
 
 import (
+	"fmt"
 	"math"
 	"sync"
 )
@@ -21,6 +22,12 @@ func BackTest(Params BackTestParameters) map[string]PortfolioResults {
 	ResultsMap := make(map[string]PortfolioResults)
 	var wg sync.WaitGroup
 	resultsChan := make(chan map[string]PortfolioResults)
+
+	for _, candleMap := range Params.Candles {
+		for candleKey, candlesArr := range candleMap {
+			fmt.Printf("got %s candles: %d\n", candleKey, len(candlesArr))
+		}
+	}
 
 	for _, strategy := range Params.Strategies {
 		wg.Add(1)
@@ -50,6 +57,8 @@ func BackTest(Params BackTestParameters) map[string]PortfolioResults {
 }
 
 func EvaluateResults(results StockResults) float64 {
+	fmt.Printf("got sharpe ratio: %f\n", results.SharpeRatio)
+	fmt.Printf("got sortino ratio: %f\n", results.SortinoRatio)
 	// Normalize or constrain values to avoid extreme effects
 	normalizedSharpeRatio := math.Max(results.SharpeRatio, -10)   // anything beyond -10 is just as bad
 	normalizedSortinoRatio := math.Max(results.SortinoRatio, -10) // anything beyond -10 is just as bad
@@ -57,11 +66,15 @@ func EvaluateResults(results StockResults) float64 {
 	// Calculate average YoY Profit Loss
 	var totalYoYProfitLoss float64
 	for _, profitLoss := range results.YoYProfitLoss {
+		fmt.Printf("got YoY profit loss: %f\n", profitLoss)
 		totalYoYProfitLoss += profitLoss
 	}
 	avgYoYProfitLoss := 0.0
 	if len(results.YoYProfitLoss) > 0 {
 		avgYoYProfitLoss = totalYoYProfitLoss / float64(len(results.YoYProfitLoss))
+		fmt.Printf("got avg YoY profit loss: %f\n", avgYoYProfitLoss)
+	} else {
+		fmt.Printf("got no YoY profit loss count\n")
 	}
 
 	// Calculate the weighted score
@@ -72,6 +85,8 @@ func EvaluateResults(results StockResults) float64 {
 		WeightSortinoRatio*normalizedSortinoRatio +
 		WeightMaxDrawdown*(1/math.Max(results.MaxDrawdown, 0.0001)) + // Avoid division by zero
 		WeightYoYProfitLoss*avgYoYProfitLoss
+
+	fmt.Printf("got score: %f\n", score)
 
 	return score
 }

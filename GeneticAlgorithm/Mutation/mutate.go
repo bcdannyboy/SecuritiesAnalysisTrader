@@ -1,4 +1,4 @@
-package GeneticAlgorithm
+package Mutation
 
 import (
 	"fmt"

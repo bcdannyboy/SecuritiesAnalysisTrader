@@ -11,6 +11,7 @@ import (
 	fmp "github.com/spacecodewor/fmpcloud-go"
 	"math/rand"
 	"os"
+	"runtime"
 	"strconv"
 )
 
@@ -25,6 +26,8 @@ func main() {
 		panic(fmt.Sprintf("Error loading .env file: %s", err.Error()))
 	}
 
+	numCPU := runtime.NumCPU()
+	fmt.Printf("found %d CPUs\n", numCPU)
 	api_key := os.Getenv("API_KEY")
 	if api_key == "" {
 		panic("API_KEY is empty")
@@ -73,7 +76,7 @@ func main() {
 		RandSymbols := []string{}
 		symbolMap := make(map[string]bool) // Map to track added symbols
 
-		for len(RandSymbols) < 3 {
+		for len(RandSymbols) < 100 {
 			Symbol := SymbolList[rand.Intn(len(SymbolList))]
 			fmt.Printf("Debug picking random symbol: %s\n", Symbol)
 
